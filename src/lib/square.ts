@@ -1,0 +1,159 @@
+import { Client, Environment } from 'squareconnect'
+
+// Initialize Square client
+const squareClient = new Client({
+  environment: process.env.SQUARE_ENVIRONMENT === 'production' ? Environment.Production : Environment.Sandbox,
+  accessToken: process.env.SQUARE_ACCESS_TOKEN,
+})
+
+export { squareClient }
+
+// Square API service classes
+export class SquareBookingsService {
+  static async getBookingServices(locationId: string) {
+    try {
+      const response = await squareClient.bookingsApi.listServices({
+        locationId,
+      })
+      return response.result
+    } catch (error) {
+      console.error('Error fetching booking services:', error)
+      throw error
+    }
+  }
+
+  static async createBooking(bookingData: any) {
+    try {
+      const response = await squareClient.bookingsApi.createBooking(bookingData)
+      return response.result
+    } catch (error) {
+      console.error('Error creating booking:', error)
+      throw error
+    }
+  }
+
+  static async getBookings(locationId: string, startDate?: string, endDate?: string) {
+    try {
+      const response = await squareClient.bookingsApi.searchAvailability({
+        query: {
+          filter: {
+            locationId,
+            startAtRange: startDate && endDate ? {
+              startAt: startDate,
+              endAt: endDate,
+            } : undefined,
+          },
+        },
+      })
+      return response.result
+    } catch (error) {
+      console.error('Error fetching bookings:', error)
+      throw error
+    }
+  }
+}
+
+export class SquareCatalogService {
+  static async getCatalogItems(locationId?: string) {
+    try {
+      const response = await squareClient.catalogApi.listCatalog({
+        types: 'ITEM',
+      })
+      return response.result
+    } catch (error) {
+      console.error('Error fetching catalog items:', error)
+      throw error
+    }
+  }
+
+  static async createCatalogItem(itemData: any) {
+    try {
+      const response = await squareClient.catalogApi.upsertCatalogObject({
+        idempotencyKey: crypto.randomUUID(),
+        object: itemData,
+      })
+      return response.result
+    } catch (error) {
+      console.error('Error creating catalog item:', error)
+      throw error
+    }
+  }
+
+  static async updateCatalogItem(itemId: string, itemData: any) {
+    try {
+      const response = await squareClient.catalogApi.upsertCatalogObject({
+        idempotencyKey: crypto.randomUUID(),
+        object: {
+          ...itemData,
+          id: itemId,
+        },
+      })
+      return response.result
+    } catch (error) {
+      console.error('Error updating catalog item:', error)
+      throw error
+    }
+  }
+}
+
+export class SquareCheckoutService {
+  static async createCheckoutLink(orderData: any) {
+    try {
+      const response = await squareClient.checkoutApi.createPaymentLink({
+        idempotencyKey: crypto.randomUUID(),
+        ...orderData,
+      })
+      return response.result
+    } catch (error) {
+      console.error('Error creating checkout link:', error)
+      throw error
+    }
+  }
+}
+
+export class SquareCustomersService {
+  static async getCustomers() {
+    try {
+      const response = await squareClient.customersApi.listCustomers()
+      return response.result
+    } catch (error) {
+      console.error('Error fetching customers:', error)
+      throw error
+    }
+  }
+
+  static async createCustomer(customerData: any) {
+    try {
+      const response = await squareClient.customersApi.createCustomer(customerData)
+      return response.result
+    } catch (error) {
+      console.error('Error creating customer:', error)
+      throw error
+    }
+  }
+
+  static async getCustomer(customerId: string) {
+    try {
+      const response = await squareClient.customersApi.retrieveCustomer(customerId)
+      return response.result
+    } catch (error) {
+      console.error('Error fetching customer:', error)
+      throw error
+    }
+  }
+}
+
+// Helper function to get location ID (assuming single location for MVP)
+export async function getDefaultLocationId(): Promise<string> {
+  try {
+    const response = await squareClient.locationsApi.listLocations()
+    const locations = response.result.locations
+    if (!locations || locations.length === 0) {
+      throw new Error('No locations found')
+    }
+    return locations[0].id!
+  } catch (error) {
+    console.error('Error fetching location:', error)
+    throw error
+  }
+}

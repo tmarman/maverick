@@ -1,0 +1,306 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // For credentials login
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts         Account[]
+  sessions         Session[]
+  squareConnection SquareConnection?
+  githubConnection GitHubConnection?
+  businesses       Business[]
+  chatSessions     ChatSession[]
+  documentsCreated Document[]        @relation("DocumentCreator")
+  featuresAssigned Feature[]
+  aiAgentsCreated  AIAgent[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Maverick-specific models
+model SquareConnection {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  merchantId   String    @unique
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("square_connections")
+}
+
+model GitHubConnection {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  githubId     String    @unique
+  username     String    @unique
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  scopes       String    @db.Text // JSON string of granted scopes array
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("github_connections")
+}
+
+model Business {
+  id              String    @id @default(cuid())
+  userId          String
+  name            String
+  description     String?
+  industry        String?
+  businessType    String?   // Valid values: 'online', 'physical', 'hybrid', 'service'
+  location        String?
+  legalStructure  String?   // Valid values: 'llc', 'corp', 's-corp'
+  state           String?   // Incorporation state
+  status          String    @default("DRAFT") // Valid values: DRAFT, IN_FORMATION, FORMED, ACTIVE, SUSPENDED
+  squareServices  String    @db.Text // JSON string of selected Square services array
+  appType         String?   // Valid values: 'website', 'ecommerce', 'booking', etc.
+  appFeatures     String    @db.Text // JSON string of selected app features array
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction)
+  formations BusinessFormation[]
+  projects Project[]
+
+  @@map("businesses")
+}
+
+model BusinessFormation {
+  id                String    @id @default(cuid())
+  businessId        String
+  workflowId        String?   // Temporal workflow ID
+  status            String    @default("INITIATED") // Valid values: INITIATED, DOCUMENTS_GENERATED, LEGAL_REVIEW, STATE_FILING, EIN_ASSIGNED, BANKING_SETUP, APP_GENERATION, COMPLETED, FAILED
+  currentStep       String?
+  completedSteps    String    @db.Text // JSON string array of completed steps
+  documentsGenerated String   @db.Text // JSON string array of generated documents
+  stateFilingId     String?
+  einNumber         String?
+  bankingSetup      Boolean   @default(false)
+  appGenerated      Boolean   @default(false)
+  deploymentUrl     String?
+  repositoryUrl     String?
+  cost              Decimal?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("business_formations")
+}
+
+model ChatSession {
+  id              String   @id @default(cuid())
+  userId          String
+  sessionData     String   @db.Text // JSON string storing wizard data and chat history
+  completionPercentage Int @default(0)
+  currentStep     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_sessions")
+}
+
+// Project Management Models
+model Project {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  type        String    // Valid values: SOFTWARE, MARKETING, OPERATIONS, LEGAL, FINANCIAL, RESEARCH, CONTENT
+  status      String    @default("PLANNING") // Valid values: PLANNING, ACTIVE, ON_HOLD, COMPLETED, ARCHIVED, CANCELLED
+  
+  // JSON fields converted to Text for SQL Server compatibility
+  githubConfig     String?   @db.Text // JSON string for repository settings, webhook URLs
+  aiAgentConfig    String?   @db.Text // JSON string for AI agents to use, preferences
+  metadata         String?   @db.Text // JSON string for project-specific flexible data
+  
+  // Relationships
+  business    Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId  String
+  documents   Document[]
+  features    Feature[]
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  @@map("projects")
+}
+
+model Document {
+  id          String    @id @default(cuid())
+  title       String
+  type        String    // Valid values: PRD, CANVAS, CHAT, SPEC, CODE_REVIEW, MEETING_NOTES, STRATEGY, RESEARCH, WIREFRAME, LEGAL
+  status      String    @default("DRAFT") // Valid values: DRAFT, IN_REVIEW, APPROVED, PUBLISHED, ARCHIVED
+  
+  // Core content as Text for SQL Server compatibility
+  content     String    @db.Text // JSON string for canvas elements, chat messages, rich content
+  aiContext   String?   @db.Text // JSON string for AI system prompts, context, conversation history
+  settings    String?   @db.Text // JSON string for document-specific settings, permissions
+  
+  // Collaboration mode
+  collaborationMode String @default("HYBRID") // Valid values: CANVAS, CHAT, HYBRID, DOCUMENT
+  
+  // Relationships
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  projectId   String
+  
+  // Creator
+  createdBy   User      @relation("DocumentCreator", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdById String
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("documents")
+}
+
+model Feature {
+  id              String    @id @default(cuid())
+  title           String
+  description     String?
+  status          String    @default("PLANNED") // Valid values: PLANNED, IN_PROGRESS, IN_REVIEW, TESTING, DONE, CANCELLED, BLOCKED
+  priority        String    @default("MEDIUM") // Valid values: LOW, MEDIUM, HIGH, URGENT
+  
+  // GitHub integration
+  githubIssueNumber    Int?
+  githubPRNumber       Int?
+  githubBranch         String?
+  
+  // JSON converted to Text for SQL Server compatibility
+  acceptanceCriteria   String?   @db.Text // JSON string for user stories, requirements
+  aiGeneratedData      String?   @db.Text // JSON string for AI-generated specs, code snippets
+  estimatedEffort      String?   // "1d", "1w", "1m" - human readable
+  
+  // Relationships
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  projectId       String
+  
+  assignedTo      User?     @relation(fields: [assignedToId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  assignedToId    String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("features")
+}
+
+model AIAgent {
+  id              String   @id @default(cuid())
+  name            String   @unique // "product_expert", "lawyer", "developer"
+  displayName     String   // "Product Expert", "Legal Advisor", "Senior Developer"
+  systemPrompt    String   @db.Text
+  specialization  String   // "PRD writing", "incorporation", "code review"
+  isActive        Boolean  @default(true)
+  
+  // Configuration as Text for SQL Server compatibility
+  configuration   String?  @db.Text // JSON string for model settings, temperature, max tokens, etc.
+  
+  // Who can use this agent (null = everyone)
+  createdBy       User     @relation(fields: [createdById], references: [id], onDelete: NoAction)
+  createdById     String
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("ai_agents")
+}
+
+model Recommendation {
+  id              String    @id @default(cuid())
+  category        String    // "incorporation", "marketing", "development"
+  title           String
+  content         String    @db.Text
+  
+  // For future vector search converted to Text for SQL Server compatibility
+  tags            String?   @db.Text // JSON string array of tags for filtering
+  metadata        String?   @db.Text // JSON string for additional structured data
+  
+  confidenceScore Float?
+  sourceType      String    @default("EXPERT_KNOWLEDGE") // Valid values: EXPERT_KNOWLEDGE, USER_GENERATED, AI_GENERATED, COMMUNITY
+  
+  // For analytics
+  usageCount      Int       @default(0)
+  lastUsed        DateTime?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([category])
+  @@index([sourceType])
+  @@map("recommendations")
+}
+
+// Enums converted to String fields with validation comments for SQL Server compatibility
+// BusinessStatus: DRAFT, IN_FORMATION, FORMED, ACTIVE, SUSPENDED
+// FormationStatus: INITIATED, DOCUMENTS_GENERATED, LEGAL_REVIEW, STATE_FILING, EIN_ASSIGNED, BANKING_SETUP, APP_GENERATION, COMPLETED, FAILED
+// ProjectType: SOFTWARE, MARKETING, OPERATIONS, LEGAL, FINANCIAL, RESEARCH, CONTENT
+// ProjectStatus: PLANNING, ACTIVE, ON_HOLD, COMPLETED, ARCHIVED, CANCELLED
+// DocumentType: PRD (Product Requirements Document), CANVAS (Business Model Canvas, etc.), CHAT (Chat conversations with AI), SPEC (Technical specifications), CODE_REVIEW (Code review discussions), MEETING_NOTES (Meeting notes and decisions), STRATEGY (Business strategy documents), RESEARCH (Market research, user research), WIREFRAME (UI/UX wireframes and mockups), LEGAL (Legal documents and contracts)
+// DocumentStatus: DRAFT, IN_REVIEW, APPROVED, PUBLISHED, ARCHIVED
+// CollaborationMode: CANVAS (Visual canvas mode), CHAT (Chat-based collaboration), HYBRID (Both canvas and chat), DOCUMENT (Traditional document editing)
+// FeatureStatus: PLANNED, IN_PROGRESS, IN_REVIEW, TESTING, DONE, CANCELLED, BLOCKED
+// Priority: LOW, MEDIUM, HIGH, URGENT
+// RecommendationSource: EXPERT_KNOWLEDGE (Curated by experts), USER_GENERATED (Created by users), AI_GENERATED (Generated by AI), COMMUNITY (Community-contributed)
