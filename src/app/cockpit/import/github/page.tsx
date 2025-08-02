@@ -27,7 +27,7 @@ export default function GitHubImportPage() {
         // Use NextAuth signIn to handle GitHub OAuth with proper callback
         const { signIn } = await import('next-auth/react')
         await signIn('github', { 
-          callbackUrl: '/accounts?tab=integrations&connected=github'
+          callbackUrl: '/cockpit/settings?tab=integrations&connected=github'
         })
       } else {
         console.error('Failed to prepare GitHub linking')
@@ -40,7 +40,7 @@ export default function GitHubImportPage() {
   }
 
   const goToSettings = () => {
-    router.push('/accounts?tab=integrations')
+    router.push('/cockpit/settings?tab=integrations')
   }
 
   const benefits = [

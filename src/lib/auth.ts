@@ -404,9 +404,9 @@ export const authOptions: NextAuthOptions = {
       if (url.startsWith('/')) return `${baseUrl}${url}`
       else if (new URL(url).origin === baseUrl) return url
       
-      // Check if this is a GitHub OAuth callback from accounts page
-      if (url.includes('accounts?tab=integrations')) {
-        return `${baseUrl}/accounts?tab=integrations&connected=github`
+      // Check if this is a GitHub OAuth callback from cockpit settings or accounts page
+      if (url.includes('cockpit/settings') || url.includes('accounts?tab=integrations')) {
+        return `${baseUrl}/cockpit/settings?tab=integrations&connected=github`
       }
       
       // Default redirect to cockpit

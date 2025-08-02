@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -28,30 +28,15 @@ interface Organization {
   }
 }
 
-function AccountsPageContent() {
+function SettingsPageContent() {
   const { data: session } = useSession()
   const searchParams = useSearchParams()
-  const router = useRouter()
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [currentOrg, setCurrentOrg] = useState<Organization | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [connectionSuccess, setConnectionSuccess] = useState<string | null>(null)
   const [connectionError, setConnectionError] = useState<string | null>(null)
-
-  useEffect(() => {
-    // Redirect to new cockpit settings location
-    const tab = searchParams.get('tab')
-    const connected = searchParams.get('connected')
-    const error = searchParams.get('error')
-    
-    let redirectUrl = '/cockpit/settings'
-    if (tab) redirectUrl += `?tab=${tab}`
-    if (connected) redirectUrl += `${tab ? '&' : '?'}connected=${connected}`
-    if (error) redirectUrl += `${tab || connected ? '&' : '?'}error=${error}`
-    
-    router.replace(redirectUrl)
-  }, [searchParams, router])
 
   useEffect(() => {
     loadOrganizations()
@@ -119,7 +104,7 @@ function AccountsPageContent() {
         // Use NextAuth signIn to handle GitHub OAuth with proper callback
         const { signIn } = await import('next-auth/react')
         await signIn('github', { 
-          callbackUrl: '/accounts?tab=integrations&connected=github'
+          callbackUrl: '/cockpit/settings?tab=integrations&connected=github'
         })
       } else {
         console.error('Failed to prepare GitHub linking')
@@ -133,7 +118,7 @@ function AccountsPageContent() {
     // Direct Square OAuth flow
     const clientId = process.env.NEXT_PUBLIC_SQUARE_CLIENT_ID || 'YOUR_SQUARE_CLIENT_ID'
     const redirectUri = `${window.location.origin}/auth/square`
-    const state = 'accounts-integration' // Track that this came from accounts page
+    const state = 'cockpit-settings-integration' // Track that this came from cockpit settings
     
     const squareAuthUrl = `https://connect.squareup.com/oauth2/authorize?` +
       `client_id=${clientId}&` +
@@ -166,87 +151,25 @@ function AccountsPageContent() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Account Settings</h1>
-          <p className="text-gray-600 mt-1">
-            Manage your organizations, billing, and integrations
-          </p>
-        </div>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Organization
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
+        <p className="text-text-secondary mt-1">
+          Manage your account, integrations, and preferences
+        </p>
       </div>
-
-      {/* Organization Selector */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building className="w-5 h-5" />
-            Organizations
-          </CardTitle>
-          <CardDescription>
-            Switch between your personal account and organizations
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            {organizations.map((org) => (
-              <div
-                key={org.id}
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                  currentOrg?.id === org.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-                onClick={() => setCurrentOrg(org)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      {org.type === 'personal' ? (
-                        <User className="w-5 h-5" />
-                      ) : (
-                        <Building className="w-5 h-5" />
-                      )}
-                    </div>
-                    <div>
-                      <div className="font-medium">{org.name}</div>
-                      <div className="text-sm text-gray-500">
-                        {org.type === 'personal' ? 'Personal Account' : `${org.members} members`}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getPlanColor(org.plan)}>
-                      {org.plan}
-                    </Badge>
-                    <Badge className={getStatusColor(org.billing.status)}>
-                      {org.billing.status}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Success Message */}
       {connectionSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center">
             <div className="w-5 h-5 text-green-600 mr-2">✅</div>
             <div className="text-green-800 font-medium">
@@ -258,7 +181,7 @@ function AccountsPageContent() {
 
       {/* Error Message */}
       {connectionError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center">
             <div className="w-5 h-5 text-red-600 mr-2">❌</div>
             <div className="text-red-800 font-medium">
@@ -272,10 +195,9 @@ function AccountsPageContent() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="billing">Billing</TabsTrigger>
+            <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -324,49 +246,11 @@ function AccountsPageContent() {
                   </Button>
                   <Button className="w-full justify-start" variant="outline">
                     <Settings className="w-4 h-4 mr-2" />
-                    Organization Settings
+                    Account Preferences
                   </Button>
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          {/* Billing Tab */}
-          <TabsContent value="billing" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Billing Information</CardTitle>
-                <CardDescription>
-                  Manage your subscription and payment methods
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h3 className="font-medium capitalize">{currentOrg.plan} Plan</h3>
-                    <p className="text-sm text-gray-500">
-                      {currentOrg.billing.status === 'trial'
-                        ? 'Free trial - 14 days remaining'
-                        : `Next billing: ${currentOrg.billing.nextBilling || 'N/A'}`}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold">
-                      {currentOrg.plan === 'founder' ? '$29' : currentOrg.plan === 'growth' ? '$99' : '$299'}/mo
-                    </div>
-                    <Badge className={getStatusColor(currentOrg.billing.status)}>
-                      {currentOrg.billing.status}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <Button>Upgrade Plan</Button>
-                  <Button variant="outline">Add Payment Method</Button>
-                  <Button variant="outline">Download Invoice</Button>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* Integrations Tab */}
@@ -478,46 +362,59 @@ function AccountsPageContent() {
             </Card>
           </TabsContent>
 
-          {/* Members Tab */}
-          <TabsContent value="members" className="space-y-6">
+          {/* Billing Tab */}
+          <TabsContent value="billing" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Team Members</CardTitle>
+                <CardTitle>Billing Information</CardTitle>
                 <CardDescription>
-                  Invite and manage team members for this organization
+                  Manage your subscription and payment methods
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="font-medium text-gray-900 mb-2">No team members yet</h3>
-                  <p className="text-gray-500 mb-4">
-                    Invite team members to collaborate on projects
-                  </p>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Invite Member
-                  </Button>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h3 className="font-medium capitalize">{currentOrg.plan} Plan</h3>
+                    <p className="text-sm text-gray-500">
+                      {currentOrg.billing.status === 'trial'
+                        ? 'Free trial - 14 days remaining'
+                        : `Next billing: ${currentOrg.billing.nextBilling || 'N/A'}`}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold">
+                      {currentOrg.plan === 'founder' ? '$29' : currentOrg.plan === 'growth' ? '$99' : '$299'}/mo
+                    </div>
+                    <Badge className={getStatusColor(currentOrg.billing.status)}>
+                      {currentOrg.billing.status}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button>Upgrade Plan</Button>
+                  <Button variant="outline">Add Payment Method</Button>
+                  <Button variant="outline">Download Invoice</Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
+          {/* Account Tab */}
+          <TabsContent value="account" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Organization Settings</CardTitle>
+                <CardTitle>Account Preferences</CardTitle>
                 <CardDescription>
-                  Configure your organization preferences
+                  Manage your personal account settings
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8">
-                  <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="font-medium text-gray-900 mb-2">Settings coming soon</h3>
+                  <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="font-medium text-gray-900 mb-2">Account settings coming soon</h3>
                   <p className="text-gray-500">
-                    Organization settings and preferences will be available here
+                    Profile management and preferences will be available here
                   </p>
                 </div>
               </CardContent>
@@ -529,16 +426,14 @@ function AccountsPageContent() {
   )
 }
 
-export default function AccountsPage() {
+export default function SettingsPage() {
   return (
     <Suspense fallback={
-      <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     }>
-      <AccountsPageContent />
+      <SettingsPageContent />
     </Suspense>
   )
 }
