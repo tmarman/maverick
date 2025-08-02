@@ -26,7 +26,9 @@
       "Bash(git push:*)",
       "Bash(git pull:*)",
       "Bash(gh run list:*)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(gemini:*)",
+      "Bash(claude -p \"What is 2+2? Just respond with the number.\")"
     ],
     "deny": []
   }

@@ -328,15 +328,74 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string
-        session.user.squareConnected = (token.squareConnected as boolean) || false
-        session.user.githubConnected = (token.githubConnected as boolean) || false
-        session.user.githubUsername = token.githubUsername as string
+        
+        // Refresh GitHub connection status from database
+        try {
+          const user = await withRetry(() => prisma.user.findUnique({
+            where: { id: token.id as string },
+            include: { 
+              githubConnection: true,
+              squareConnection: true 
+            }
+          }))
+          
+          if (user) {
+            session.user.githubConnected = !!user.githubConnection
+            session.user.githubUsername = user.githubConnection?.username || token.githubUsername as string
+            session.user.squareConnected = !!user.squareConnection
+          } else {
+            session.user.squareConnected = (token.squareConnected as boolean) || false
+            session.user.githubConnected = (token.githubConnected as boolean) || false
+            session.user.githubUsername = token.githubUsername as string
+          }
+        } catch (error) {
+          console.error('Error refreshing connection status:', error)
+          session.user.squareConnected = (token.squareConnected as boolean) || false
+          session.user.githubConnected = (token.githubConnected as boolean) || false
+          session.user.githubUsername = token.githubUsername as string
+        }
       }
       return session
     },
     
     async signIn({ user, account, profile }) {
-      // Allow all sign-ins
+      // Handle GitHub account linking for existing users
+      if (account?.provider === 'github') {
+        try {
+          // Check if there's an existing session/user trying to link GitHub
+          const existingUser = await withRetry(() => prisma.user.findUnique({
+            where: { email: user.email! },
+            include: { githubConnection: true }
+          }))
+          
+          if (existingUser && !existingUser.githubConnection) {
+            // User exists but doesn't have GitHub linked - this is an account linking scenario
+            console.log(`Linking GitHub account to existing user: ${user.email}`)
+            
+            // Link the GitHub account to the existing user
+            await withRetry(() => prisma.gitHubConnection.create({
+              data: {
+                userId: existingUser.id,
+                githubId: account.providerAccountId,
+                username: (profile as any)?.login || '',
+                accessToken: account.access_token!,
+                refreshToken: account.refresh_token || undefined,
+                expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : undefined,
+                scopes: JSON.stringify(account.scope?.split(' ') || [])
+              }
+            }))
+            
+            // Update the user object to reflect the new connection
+            user.id = existingUser.id
+            user.githubConnected = true
+            user.githubUsername = (profile as any)?.login
+          }
+        } catch (error) {
+          console.error('Error linking GitHub account:', error)
+          return false
+        }
+      }
+      
       return true
     },
     
@@ -344,6 +403,11 @@ export const authOptions: NextAuthOptions = {
       // Allow explicit redirects
       if (url.startsWith('/')) return `${baseUrl}${url}`
       else if (new URL(url).origin === baseUrl) return url
+      
+      // Check if this is a GitHub OAuth callback from accounts page
+      if (url.includes('accounts?tab=integrations')) {
+        return `${baseUrl}/accounts?tab=integrations&connected=github`
+      }
       
       // Default redirect to cockpit
       return `${baseUrl}/cockpit`

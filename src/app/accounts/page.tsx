@@ -36,13 +36,15 @@ function AccountsPageContent() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [connectionSuccess, setConnectionSuccess] = useState<string | null>(null)
+  const [connectionError, setConnectionError] = useState<string | null>(null)
 
   useEffect(() => {
     loadOrganizations()
     
-    // Check URL parameters for tab and connection status
+    // Check URL parameters for tab, connection status, and errors  
     const tab = searchParams.get('tab')
     const connected = searchParams.get('connected')
+    const error = searchParams.get('error')
     
     if (tab) {
       setActiveTab(tab)
@@ -52,6 +54,12 @@ function AccountsPageContent() {
       setConnectionSuccess(connected)
       // Clear the success message after 5 seconds
       setTimeout(() => setConnectionSuccess(null), 5000)
+    }
+
+    if (error) {
+      setConnectionError(error)
+      // Clear the error message after 8 seconds
+      setTimeout(() => setConnectionError(null), 8000)
     }
   }, [searchParams])
 
@@ -86,11 +94,24 @@ function AccountsPageContent() {
   }
 
   const connectGitHub = async () => {
-    // Use NextAuth signIn to handle GitHub OAuth with proper callback
-    const { signIn } = await import('next-auth/react')
-    await signIn('github', { 
-      callbackUrl: '/accounts?tab=integrations&connected=github' 
-    })
+    try {
+      // Show loading state or preparation message
+      const preparationResponse = await fetch('/api/auth/link-github', {
+        method: 'POST'
+      })
+      
+      if (preparationResponse.ok) {
+        // Use NextAuth signIn to handle GitHub OAuth with proper callback
+        const { signIn } = await import('next-auth/react')
+        await signIn('github', { 
+          callbackUrl: '/accounts?tab=integrations&connected=github'
+        })
+      } else {
+        console.error('Failed to prepare GitHub linking')
+      }
+    } catch (error) {
+      console.error('GitHub connection error:', error)
+    }
   }
 
   const connectSquare = async () => {
@@ -215,6 +236,18 @@ function AccountsPageContent() {
             <div className="w-5 h-5 text-green-600 mr-2">✅</div>
             <div className="text-green-800 font-medium">
               {connectionSuccess === 'github' ? 'GitHub' : 'Square'} account connected successfully!
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {connectionError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <div className="w-5 h-5 text-red-600 mr-2">❌</div>
+            <div className="text-red-800 font-medium">
+              Connection failed: {connectionError.replace('-', ' ')}. Please try again.
             </div>
           </div>
         </div>
@@ -402,6 +435,30 @@ function AccountsPageContent() {
                     <li>• <strong>Square:</strong> Process payments, manage business formation, handle billing</li>
                   </ul>
                 </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                  <h4 className="font-medium text-blue-900 mb-2">💡 Special Benefits & Referral Programs</h4>
+                  <div className="text-sm text-blue-800 space-y-2">
+                    <div>🎯 <strong>Square Partner Benefits:</strong> Earn $5-$200 per referral through Square's affiliate program, plus access to exclusive developer tools and fee reductions</div>
+                    <div>🚀 <strong>GitHub Integration:</strong> Seamless deployment from repositories to production with automated CI/CD pipelines and GitHub Partner Program benefits</div>
+                    <div>💰 <strong>Earn While You Build:</strong> Generate affiliate revenue by referring customers to Square while using it for your own business</div>
+                    <div>💼 <strong>Combined Power:</strong> Use GitHub for development and Square for payments in one unified business platform</div>
+                  </div>
+                </div>
+
+                {!currentOrg.integrations.github && !currentOrg.integrations.square && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+                    <h4 className="font-medium text-green-900 mb-2">🎬 Getting Started</h4>
+                    <div className="text-sm text-green-800 space-y-2">
+                      <div><strong>Step 1:</strong> Connect GitHub to import existing repositories or create new projects</div>
+                      <div><strong>Step 2:</strong> Link Square for payment processing and business formation tools</div>
+                      <div><strong>Step 3:</strong> Start building with Maverick's AI-powered development platform</div>
+                      <div className="pt-2 border-t border-green-200">
+                        <strong>🎁 Bonus:</strong> Complete both integrations to unlock the full Maverick experience and potential affiliate earnings!
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

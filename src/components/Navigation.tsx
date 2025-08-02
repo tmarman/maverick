@@ -39,6 +39,12 @@ export function Navigation() {
                 Cockpit
               </Link>
               <Link 
+                href="/import/github" 
+                className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
+              >
+                Import
+              </Link>
+              <Link 
                 href="/pricing" 
                 className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
               >
@@ -117,6 +123,12 @@ export function Navigation() {
                 className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
               >
                 Cockpit
+              </Link>
+              <Link 
+                href="/import/github" 
+                className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
+              >
+                Import
               </Link>
               <Link 
                 href="/pricing" 
