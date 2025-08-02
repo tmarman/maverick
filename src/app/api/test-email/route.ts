@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { azureEmailService } from '@/lib/azure-email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +9,9 @@ export async function POST(request: NextRequest) {
     }
 
     let success = false
+    
+    // Lazy load Azure email service
+    const { azureEmailService } = await import('@/lib/azure-email')
     
     if (type === 'magic') {
       // Test magic link email

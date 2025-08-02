@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getDatabase, withRetry, DatabaseError } from '@/lib/database-health'
-import { azureEmailService } from '@/lib/azure-email'
 import { v4 as uuidv4 } from 'uuid'
 
 interface PaymentRequest {
@@ -150,6 +149,7 @@ export async function POST(request: NextRequest) {
     // 2. Send confirmation email
     console.log('Sending confirmation email...')
     try {
+      const { azureEmailService } = await import('@/lib/azure-email')
       await azureEmailService.sendWelcomeEmail(
         businessData.founderEmail,
         businessData.founderName
