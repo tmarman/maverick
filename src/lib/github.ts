@@ -64,7 +64,7 @@ export class GitHubService {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new Error(`Failed to create repository: ${error.message}`)
+      throw new Error(`Failed to create repository: ${error instanceof Error ? error.message : String(error)}`)
     }
 
     return response.json()
@@ -90,7 +90,7 @@ export class GitHubService {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new Error(`Failed to upload file: ${error.message}`)
+      throw new Error(`Failed to upload file: ${error instanceof Error ? error.message : String(error)}`)
     }
 
     return response.json()
@@ -105,7 +105,7 @@ export class GitHubService {
         const result = await this.uploadFile(repoName, file.path, file.content, message)
         results.push({ path: file.path, success: true, result })
       } catch (error) {
-        results.push({ path: file.path, success: false, error: error.message })
+        results.push({ path: file.path, success: false, error: error instanceof Error ? error.message : String(error) })
       }
     }
     
@@ -136,7 +136,7 @@ export class GitHubService {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new Error(`Failed to create webhook: ${error.message}`)
+      throw new Error(`Failed to create webhook: ${error instanceof Error ? error.message : String(error)}`)
     }
 
     return response.json()
@@ -184,7 +184,7 @@ export class GitHubService {
 
 // Helper function to get GitHub service for a user
 export async function getGitHubServiceForUser(userId: string): Promise<GitHubService | null> {
-  const githubConnection = await prisma.githubConnection.findUnique({
+  const githubConnection = await prisma.gitHubConnection.findUnique({
     where: { userId }
   })
 

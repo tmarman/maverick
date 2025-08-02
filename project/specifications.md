@@ -6,7 +6,7 @@ Maverick is the next-generation founder platform from Block — a powerful, AI-n
 
 Formation: Seamless company creation (LLC, C-Corp, EIN, banking)
 
-Goose: An embedded co-pilot AI for product building, ops, and growth
+Goose: An embedded AI assistant for product building, ops, and growth
 
 App Creation: Vibe-coded software tools that are local-first and customizable
 
@@ -26,7 +26,7 @@ Icons: Abstract and line-based; custom for Goose, Formation, etc.
 
 Core Components
 
-1. Maverick Dashboard (Mission Control)
+1. Maverick Dashboard
 
 Where founders steer their company — from formation through growth.
 
@@ -42,9 +42,9 @@ AI-assisted guidance ("How do I file a state report?", "Add payroll?")
 
 Human + AI chat channel (Goose)
 
-2. Goose — The Embedded Co-Pilot
+2. Goose — The Embedded AI Assistant
 
-AI-native sidekick that helps build, answer, generate, and execute.
+AI-native assistant that helps build, answer, generate, and execute.
 
 Capabilities:
 
@@ -80,7 +80,7 @@ GooseKit UI: Pre-styled minimalist components that match Square's design
 
 Auth: OAuth2, biometric fallback, multi-user
 
-4. Formation Layer (Launch Sequence)
+4. Formation Layer
 
 Incorporation + compliance + banking as a service
 
@@ -124,7 +124,7 @@ Finalize GooseKit SDK (components + AI UX)
 
 Secure EIN/state filing APIs + Square Banking hooks
 
-Internal pilot with founders using Formation
+Internal testing with founders using Formation
 
 Design audit to align fully with Block/Goose visual identity
 

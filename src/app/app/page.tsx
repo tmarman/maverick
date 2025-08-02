@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Navigation } from '@/components/Navigation'
 import { BusinessList } from '@/components/BusinessList'
 import { ProjectList } from '@/components/ProjectList'
@@ -11,13 +12,43 @@ import { DemoApp } from '@/components/DemoApp'
 
 export default function App() {
   const { data: session, status } = useSession()
+  const router = useRouter()
   const [selectedBusiness, setSelectedBusiness] = useState<string | null>(null)
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null)
   const [showAI, setShowAI] = useState(false)
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
 
-  // Show loading while checking auth
-  if (status === 'loading') {
+  // Check user profile and onboarding status
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.id) {
+      fetchUserProfile()
+    }
+  }, [status, session])
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('/api/user/profile')
+      if (response.ok) {
+        const profile = await response.json()
+        setUserProfile(profile)
+        
+        // Redirect to onboarding if not completed
+        if (!profile.onboardingCompleted) {
+          router.push('/onboarding')
+          return
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error)
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
+  // Show loading while checking auth or profile
+  if (status === 'loading' || (session && profileLoading)) {
     return (
       <div className="min-h-screen bg-background-primary">
         <Navigation />
@@ -34,6 +65,21 @@ export default function App() {
   // Show demo version if not authenticated
   if (!session) {
     return <DemoApp />
+  }
+
+  // This will be handled by the useEffect redirect, but adding safety check
+  if (userProfile && !userProfile.onboardingCompleted) {
+    return (
+      <div className="min-h-screen bg-background-primary">
+        <Navigation />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-accent-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-text-secondary">Setting up your account...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

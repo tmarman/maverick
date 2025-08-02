@@ -5,6 +5,7 @@
  * Run this after setting up your Azure database to verify everything is working
  */
 
+require('dotenv').config({ path: '.env.local' })
 const { PrismaClient } = require('@prisma/client')
 
 async function verifyDatabase() {

@@ -9,17 +9,31 @@ export function Hero() {
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Full-width headline section */}
         <div className="text-center pt-6 sm:pt-8 md:pt-12 lg:pt-16 xl:pt-20 px-4 sm:px-6 lg:px-8">
+          {/* Logo */}
+          <div className="flex justify-center items-center mb-8">
+            <img 
+              src="/design/icon.png" 
+              alt="Maverick" 
+              className="h-16 w-16 mr-4"
+            />
+            <img 
+              src="/design/textmark.png" 
+              alt="Maverick" 
+              className="h-12"
+            />
+          </div>
+          
           {/* Tagline */}
           <div className="mb-6">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-accent-primary text-text-inverse">
-              🤖 AI-Powered Business Creation
+              🚀  The Complete Founder Platform
             </span>
           </div>
           
-          <h1 className="text-4xl tracking-tight font-extrabold text-text-primary sm:text-5xl md:text-6xl lg:text-7xl max-w-6xl mx-auto">
-            <span className="block">Turn your idea into a</span>
-            <span className="block text-accent-primary">complete business</span>
-            <span className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-normal text-text-secondary mt-4">Legal formation, banking, and custom software. All automated.</span>
+          <h1 className="text-3xl tracking-tight font-extrabold text-text-primary sm:text-4xl md:text-5xl lg:text-6xl max-w-6xl mx-auto">
+            <span className="inline">From idea to </span>
+            <span className="text-accent-primary">revenue</span>
+            <span className="block text-xl sm:text-2xl md:text-3xl lg:text-4xl font-normal text-text-secondary mt-6">We handle incorporation, build your software, and provide expert guidance.</span>
           </h1>
         </div>
 
@@ -29,8 +43,8 @@ export function Hero() {
             {/* Left column - Description and features */}
             <div>
               <p className="text-lg text-text-secondary sm:text-xl leading-relaxed mb-8">
-                We handle the <strong>legal formation</strong>, provide <strong>AI mentorship</strong> to guide your decisions, 
-                and <strong>generate your apps</strong> so you can focus on what matters: building your business.
+                You bring the vision. We provide the <strong>AI mentorship</strong>, handle the <strong>legal complexity</strong>, 
+                and <strong>build your software</strong>. Focus on your customers, not paperwork.
               </p>
 
               {/* Three core pillars */}
@@ -42,8 +56,8 @@ export function Hero() {
                     </svg>
                   </div>
                   <div>
-                    <div className="font-semibold text-text-primary">Complete Legal Formation</div>
-                    <div className="text-sm text-text-secondary">Stock grants, vesting schedules, Delaware C-Corps—everything YC startups need</div>
+                    <div className="font-semibold text-text-primary">Business Formation</div>
+                    <div className="text-sm text-text-secondary">LLC, S-Corp, C-Corp—choose the right structure for your business goals</div>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
@@ -53,8 +67,8 @@ export function Hero() {
                     </svg>
                   </div>
                   <div>
-                    <div className="font-semibold text-text-primary">AI-Driven Mentorship</div>
-                    <div className="text-sm text-text-secondary">Goose guides you through every decision, from market strategy to technical choices</div>
+                    <div className="font-semibold text-text-primary">AI Business Partner</div>
+                    <div className="text-sm text-text-secondary">Get guidance on product decisions, market strategy, and growth—24/7</div>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
@@ -64,8 +78,8 @@ export function Hero() {
                     </svg>
                   </div>
                   <div>
-                    <div className="font-semibold text-text-primary">No-Code App Generation</div>
-                    <div className="text-sm text-text-secondary">Generate production-ready apps and websites without writing a single line of code</div>
+                    <div className="font-semibold text-text-primary">Custom Software Built</div>
+                    <div className="text-sm text-text-secondary">Production apps, websites, and tools—built to your specs, ready to scale</div>
                   </div>
                 </div>
               </div>
@@ -73,10 +87,10 @@ export function Hero() {
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <div className="rounded-md shadow-lg">
                   <Link
-                    href="/chat-wizard"
+                    href="/app"
                     className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-md text-text-inverse bg-accent-primary hover:bg-accent-hover transition-all duration-200 transform hover:scale-105"
                   >
-                    💬 Chat with Goose AI
+                    🚀  Start Your Business
                   </Link>
                 </div>
                 <div>
@@ -84,7 +98,7 @@ export function Hero() {
                     href="/examples"
                     className="w-full flex items-center justify-center px-8 py-4 border-2 border-border-standard text-lg font-semibold rounded-md text-text-primary bg-background-primary hover:bg-background-secondary transition-all duration-200"
                   >
-                    💼 See Success Stories
+                    💼 See Examples
                   </Link>
                 </div>
               </div>
@@ -100,7 +114,7 @@ export function Hero() {
                       </svg>
                     </div>
                     <div className="text-sm font-medium text-text-primary">Legal Formation</div>
-                    <div className="text-xs text-text-muted">Investor-ready</div>
+                    <div className="text-xs text-text-muted">Right structure</div>
                   </div>
                   <div className="text-center">
                     <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mx-auto mb-2">

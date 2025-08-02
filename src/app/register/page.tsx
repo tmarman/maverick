@@ -7,13 +7,9 @@ import { Navigation } from '@/components/Navigation'
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    businessName: '',
-    agreeToTerms: false
+    confirmPassword: ''
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -21,13 +17,11 @@ export default function Register() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required'
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required'
     if (!formData.email.trim()) newErrors.email = 'Email is required'
+    if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Please enter a valid email address'
     if (!formData.password) newErrors.password = 'Password is required'
     if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters'
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
-    if (!formData.agreeToTerms) newErrors.agreeToTerms = 'You must agree to the terms and conditions'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -40,15 +34,44 @@ export default function Register() {
 
     setIsLoading(true)
     
-    // TODO: Implement actual registration logic
-    console.log('Registration attempt:', formData)
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        // Registration successful - now sign them in
+        const signInResult = await signIn('credentials', {
+          email: formData.email,
+          password: formData.password,
+          redirect: false,
+        })
+
+        if (signInResult?.ok) {
+          // Redirect to wizard after successful login
+          window.location.href = '/wizard'
+        } else {
+          setErrors({ email: 'Registration successful but login failed. Please try logging in.' })
+        }
+      } else {
+        // Registration failed
+        setErrors({ email: result.error || 'Registration failed' })
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      setErrors({ email: 'Network error. Please try again.' })
+    } finally {
       setIsLoading(false)
-      // Redirect to wizard on success
-      window.location.href = '/wizard'
-    }, 1500)
+    }
   }
 
   const handleOAuthSignup = async (provider: 'github' | 'square') => {
@@ -137,45 +160,7 @@ export default function Register() {
               </div>
             </div>
 
-            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-              {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-text-primary">
-                    First Name
-                  </label>
-                  <input
-                    id="firstName"
-                    type="text"
-                    required
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className={`mt-1 block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary bg-background-primary ${
-                      errors.firstName ? 'border-red-500' : 'border-border-standard'
-                    }`}
-                    placeholder="First name"
-                  />
-                  {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
-                </div>
-                <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-text-primary">
-                    Last Name
-                  </label>
-                  <input
-                    id="lastName"
-                    type="text"
-                    required
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className={`mt-1 block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary bg-background-primary ${
-                      errors.lastName ? 'border-red-500' : 'border-border-standard'
-                    }`}
-                    placeholder="Last name"
-                  />
-                  {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
-                </div>
-              </div>
-
+            <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-text-primary">
@@ -188,30 +173,15 @@ export default function Register() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={`mt-1 block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary bg-background-primary ${
+                  className={`mt-1 block w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary bg-background-primary transition-colors ${
                     errors.email ? 'border-red-500' : 'border-border-standard'
                   }`}
-                  placeholder="Enter your email"
+                  placeholder="Enter your email address"
                 />
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               </div>
 
-              {/* Business Name (Optional) */}
-              <div>
-                <label htmlFor="businessName" className="block text-sm font-medium text-text-primary">
-                  Business Name <span className="text-text-muted">(Optional)</span>
-                </label>
-                <input
-                  id="businessName"
-                  type="text"
-                  value={formData.businessName}
-                  onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                  className="mt-1 block w-full px-3 py-3 border border-border-standard rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary bg-background-primary"
-                  placeholder="Your business name (if you have one)"
-                />
-              </div>
-
-              {/* Password Fields */}
+              {/* Password */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-text-primary">
                   Password
@@ -223,14 +193,16 @@ export default function Register() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className={`mt-1 block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary bg-background-primary ${
+                  className={`mt-1 block w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary bg-background-primary transition-colors ${
                     errors.password ? 'border-red-500' : 'border-border-standard'
                   }`}
-                  placeholder="Create a password"
+                  placeholder="Create a secure password"
                 />
                 {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                <p className="text-text-muted text-xs mt-1">Must be at least 8 characters long</p>
               </div>
 
+              {/* Confirm Password */}
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-primary">
                   Confirm Password
@@ -242,37 +214,13 @@ export default function Register() {
                   required
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className={`mt-1 block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary bg-background-primary ${
+                  className={`mt-1 block w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary bg-background-primary transition-colors ${
                     errors.confirmPassword ? 'border-red-500' : 'border-border-standard'
                   }`}
                   placeholder="Confirm your password"
                 />
                 {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
               </div>
-
-              {/* Terms and Conditions */}
-              <div className="flex items-start">
-                <input
-                  id="agreeToTerms"
-                  type="checkbox"
-                  checked={formData.agreeToTerms}
-                  onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
-                  className={`mt-1 h-4 w-4 text-accent-primary focus:ring-accent-primary border-border-standard rounded ${
-                    errors.agreeToTerms ? 'border-red-500' : ''
-                  }`}
-                />
-                <label htmlFor="agreeToTerms" className="ml-2 block text-sm text-text-secondary">
-                  I agree to the{' '}
-                  <Link href="/terms" className="text-accent-primary hover:text-accent-hover">
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link href="/privacy" className="text-accent-primary hover:text-accent-hover">
-                    Privacy Policy
-                  </Link>
-                </label>
-              </div>
-              {errors.agreeToTerms && <p className="text-red-500 text-xs">{errors.agreeToTerms}</p>}
 
               <div>
                 <button
@@ -290,6 +238,17 @@ export default function Register() {
                   )}
                 </button>
               </div>
+
+              <p className="text-center text-xs text-text-muted">
+                By creating an account, you agree to our{' '}
+                <Link href="/terms" className="text-accent-primary hover:text-accent-hover">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link href="/privacy" className="text-accent-primary hover:text-accent-hover">
+                  Privacy Policy
+                </Link>
+              </p>
             </form>
 
             <div className="mt-6">

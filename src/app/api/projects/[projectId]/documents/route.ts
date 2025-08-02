@@ -5,12 +5,13 @@ const prisma = new PrismaClient()
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
+  const { projectId } = await params
   try {
     const documents = await prisma.document.findMany({
       where: {
-        projectId: params.projectId
+        projectId: projectId
       },
       include: {
         createdBy: {
@@ -40,8 +41,9 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
+  const { projectId } = await params
   try {
     const data = await request.json()
     
@@ -52,7 +54,7 @@ export async function POST(
       data: {
         title: data.title,
         type: data.type,
-        projectId: params.projectId,
+        projectId: projectId,
         createdById,
         content: JSON.stringify(data.content || {}),
         aiContext: data.aiContext ? JSON.stringify(data.aiContext) : null,

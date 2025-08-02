@@ -1,8 +1,10 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import EmailProvider from 'next-auth/providers/email'
 import GitHubProvider from 'next-auth/providers/github'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from './prisma'
+import { withRetry } from './database-health'
 import bcrypt from 'bcryptjs'
 
 declare module 'next-auth' {
@@ -32,6 +34,40 @@ declare module 'next-auth' {
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
+    // Magic Link Email Provider (Primary signup method)
+    EmailProvider({
+      from: process.env.AZURE_COMMUNICATION_FROM_EMAIL || 'donotreply@voxelbox.com',
+      sendVerificationRequest: async ({ identifier: email, url, provider, theme }) => {
+        // Use Azure Communication Services for magic links
+        try {
+          const { azureEmailService } = await import('@/lib/azure-email')
+          const success = await azureEmailService.sendMagicLinkEmail(email, url)
+          
+          if (!success) {
+            console.error(`Failed to send magic link email to ${email}`)
+          }
+          
+          // Also log for development
+          if (process.env.NODE_ENV === 'development') {
+            console.log('\n🪄 MAGIC LINK SIGNIN')
+            console.log(`Email: ${email}`)
+            console.log(`Link: ${url}`)
+            console.log('Email sent via Azure Communication Services!\n')
+          }
+        } catch (error) {
+          console.error('Magic link email error:', error)
+          
+          // Fallback: log the link for development
+          if (process.env.NODE_ENV === 'development') {
+            console.log('\n🪄 MAGIC LINK SIGNIN (FALLBACK)')
+            console.log(`Email: ${email}`)
+            console.log(`Link: ${url}`)
+            console.log('Use this link to sign in!\n')
+          }
+        }
+      }
+    }),
+
     // GitHub OAuth provider
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
@@ -56,13 +92,17 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const user = await prisma.user.findUnique({
+          // Ensure database is warmed up before authentication
+          const { ensureDatabaseWarmed } = await import('./database-warmup')
+          await ensureDatabaseWarmed()
+          
+          const user = await withRetry(() => prisma.user.findUnique({
             where: { email: credentials.email },
             include: { 
               squareConnection: true,
               githubConnection: true 
             }
-          })
+          }))
 
           if (!user || !user.password) {
             return null
@@ -77,7 +117,7 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             email: user.email,
             name: user.name || user.email.split('@')[0],
-            image: user.image,
+            image: user.image || undefined,
             squareConnected: !!user.squareConnection,
             githubConnected: !!user.githubConnection,
             githubUsername: user.githubConnection?.username
@@ -112,24 +152,82 @@ export const authOptions: NextAuthOptions = {
           session: 'false'
         }
       },
-      token: 'https://connect.squareup.com/oauth2/token',
+      token: {
+        url: 'https://connect.squareup.com/oauth2/token',
+        async request({ params, provider }) {
+          console.log('🔄 Square token exchange request:', {
+            clientId: provider.clientId,
+            hasClientSecret: !!provider.clientSecret,
+            code: params.code?.slice(0, 20) + '...',
+            redirect_uri: params.redirect_uri
+          })
+          
+          const response = await fetch('https://connect.squareup.com/oauth2/token', {
+            method: 'POST',
+            headers: {
+              'Square-Version': '2025-01-23',
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              client_id: provider.clientId,
+              client_secret: provider.clientSecret,
+              code: params.code,
+              grant_type: 'authorization_code',
+              redirect_uri: params.redirect_uri
+            }),
+          })
+          
+          const responseText = await response.text()
+          console.log('📥 Square token response:', {
+            status: response.status,
+            statusText: response.statusText,
+            response: responseText.slice(0, 200) + '...'
+          })
+          
+          if (!response.ok) {
+            throw new Error(`Square token exchange failed: ${response.status} ${response.statusText} - ${responseText}`)
+          }
+          
+          return JSON.parse(responseText)
+        }
+      },
       userinfo: {
         url: 'https://connect.squareup.com/v2/merchants',
         async request({ tokens }) {
+          console.log('👤 Square userinfo request with access token:', tokens.access_token?.slice(0, 20) + '...')
+          
           const response = await fetch('https://connect.squareup.com/v2/merchants', {
             headers: {
               'Square-Version': '2025-01-23',
               'Authorization': `Bearer ${tokens.access_token}`,
             },
           })
-          const data = await response.json()
+          
+          const responseText = await response.text()
+          console.log('📥 Square merchant response:', {
+            status: response.status,
+            response: responseText.slice(0, 200) + '...'
+          })
+          
+          if (!response.ok) {
+            throw new Error(`Square merchant info failed: ${response.status} - ${responseText}`)
+          }
+          
+          const data = JSON.parse(responseText)
           const merchant = data.merchants?.[0]
           
-          return {
+          console.log('🏪 Merchant info:', {
             id: merchant?.id,
+            name: merchant?.business_name,
+            mainLocationId: merchant?.main_location_id
+          })
+          
+          return {
+            id: merchant?.id || merchant?.main_location_id,
             name: merchant?.business_name || 'Square Merchant',
-            email: merchant?.main_location_id, // We'll use this as a unique identifier
-            image: null
+            email: `square-${merchant?.id || merchant?.main_location_id}@square.local`, // Create a proper email
+            image: undefined
           }
         }
       },
@@ -137,18 +235,21 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.SQUARE_CLIENT_SECRET!,
       profile: async (profile, tokens) => {
         // Store Square tokens in database
-        if (tokens.access_token) {
-          await prisma.squareConnection.upsert({
+        if (tokens.access_token && typeof tokens.access_token === 'string') {
+          const accessToken = tokens.access_token as string
+          const refreshToken = typeof tokens.refresh_token === 'string' ? tokens.refresh_token : undefined
+          
+          await withRetry(() => prisma.squareConnection.upsert({
             where: { merchantId: profile.id },
             update: {
-              accessToken: tokens.access_token,
-              refreshToken: tokens.refresh_token,
+              accessToken,
+              refreshToken,
               expiresAt: tokens.expires_at ? new Date(tokens.expires_at * 1000) : null,
             },
             create: {
               merchantId: profile.id,
-              accessToken: tokens.access_token,
-              refreshToken: tokens.refresh_token,
+              accessToken,
+              refreshToken,
               expiresAt: tokens.expires_at ? new Date(tokens.expires_at * 1000) : null,
               user: {
                 connectOrCreate: {
@@ -156,19 +257,19 @@ export const authOptions: NextAuthOptions = {
                   create: {
                     email: `square_${profile.id}@maverick.com`,
                     name: profile.name,
-                    image: profile.image,
+                    image: profile.image || undefined,
                   }
                 }
               }
             }
-          })
+          }))
         }
 
         return {
           id: profile.id,
           name: profile.name,
           email: profile.email,
-          image: profile.image,
+          image: profile.image || undefined,
           squareConnected: true
         }
       }
@@ -177,7 +278,6 @@ export const authOptions: NextAuthOptions = {
   
   pages: {
     signIn: '/login',
-    signUp: '/register',
     error: '/auth/error',
   },
   
@@ -190,8 +290,8 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
-        token.squareConnected = user.squareConnected
-        token.githubConnected = user.githubConnected
+        token.squareConnected = user.squareConnected || false
+        token.githubConnected = user.githubConnected || false
         token.githubUsername = user.githubUsername
       }
       
@@ -202,9 +302,24 @@ export const authOptions: NextAuthOptions = {
       }
       
       // Store GitHub account info
-      if (account?.provider === 'github' && account.access_token) {
+      if (account?.provider === 'github' && account.access_token && user) {
         token.githubAccessToken = account.access_token
         token.githubRefreshToken = account.refresh_token
+        
+        // Store GitHub connection in database
+        try {
+          const { storeGitHubConnection } = await import('./github-service')
+          await storeGitHubConnection(user.id, {
+            githubId: account.providerAccountId,
+            username: (account as any).login || '',
+            accessToken: account.access_token,
+            refreshToken: account.refresh_token || undefined,
+            expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : undefined,
+            scopes: account.scope?.split(' ') || []
+          })
+        } catch (error) {
+          console.error('Failed to store GitHub connection:', error)
+        }
       }
       
       return token
@@ -213,8 +328,8 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string
-        session.user.squareConnected = token.squareConnected as boolean
-        session.user.githubConnected = token.githubConnected as boolean
+        session.user.squareConnected = (token.squareConnected as boolean) || false
+        session.user.githubConnected = (token.githubConnected as boolean) || false
         session.user.githubUsername = token.githubUsername as string
       }
       return session
@@ -226,16 +341,28 @@ export const authOptions: NextAuthOptions = {
     },
     
     async redirect({ url, baseUrl }) {
-      // Redirect to dashboard after successful auth
+      // Allow explicit redirects
       if (url.startsWith('/')) return `${baseUrl}${url}`
       else if (new URL(url).origin === baseUrl) return url
-      return `${baseUrl}/dashboard`
+      
+      // Default redirect to cockpit
+      return `${baseUrl}/cockpit`
     }
   },
   
   events: {
     async signIn({ user, account, profile, isNewUser }) {
       console.log('User signed in:', { user: user.email, provider: account?.provider, isNewUser })
+      
+      // Send welcome email for new users
+      if (isNewUser && user.email) {
+        try {
+          const { azureEmailService } = await import('@/lib/azure-email')
+          await azureEmailService.sendWelcomeEmail(user.email, user.name || undefined)
+        } catch (error) {
+          console.error('Welcome email error:', error)
+        }
+      }
     },
     async createUser({ user }) {
       console.log('New user created:', user.email)

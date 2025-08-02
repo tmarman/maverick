@@ -5,6 +5,11 @@ import { Providers } from '@/components/Providers'
 export const metadata: Metadata = {
   title: 'Maverick - AI-Native Founder Platform',
   description: 'The next-generation founder platform for service-based businesses',
+  icons: {
+    icon: '/design/icon.png',
+    shortcut: '/design/icon.png',
+    apple: '/design/icon.png',
+  },
 }
 
 export default function RootLayout({

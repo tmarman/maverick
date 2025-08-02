@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
+import { ClaudeCodeTerminal } from './ClaudeCodeTerminal'
 
 interface Document {
   id: string
@@ -39,7 +40,7 @@ export function DocumentCanvas({ projectId, selectedDocument, onSelectDocument }
   const { data: session } = useSession()
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'canvas' | 'chat' | 'documents'>('documents')
+  const [activeTab, setActiveTab] = useState<'canvas' | 'chat' | 'documents' | 'code'>('documents')
   
   // Canvas state
   const [currentDocument, setCurrentDocument] = useState<Document | null>(null)
@@ -412,7 +413,8 @@ export function DocumentCanvas({ projectId, selectedDocument, onSelectDocument }
           {[
             { id: 'documents', name: 'Documents', icon: '📄' },
             { id: 'canvas', name: 'Canvas', icon: '🎨' },
-            { id: 'chat', name: 'AI Chat', icon: '💬' }
+            { id: 'chat', name: 'AI Chat', icon: '💬' },
+            { id: 'code', name: 'Generate Code', icon: '⚡' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -666,6 +668,61 @@ export function DocumentCanvas({ projectId, selectedDocument, onSelectDocument }
                   Send
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'code' && (
+          <div className="h-full bg-background-secondary flex flex-col">
+            {/* Code Generation Header */}
+            <div className="border-b border-border-subtle p-4">
+              <h3 className="font-semibold text-text-primary">Claude Code Generator</h3>
+              <p className="text-sm text-text-secondary">
+                {currentDocument ? `Generate code from: ${currentDocument.title}` : 'Select a document to generate code'}
+              </p>
+            </div>
+            
+            {/* Claude Code Terminal */}
+            <div className="flex-1 p-4">
+              {currentDocument ? (
+                <ClaudeCodeTerminal
+                  projectId={projectId}
+                  workingDir={`/tmp/maverick/projects/${projectId}`}
+                  initialPrompt={`Generate a complete application based on this Product Requirements Document:
+
+${markdownContent}
+
+Please analyze the requirements and create:
+1. A complete web application with appropriate tech stack
+2. Database schema and models
+3. API endpoints for all functionality
+4. Frontend components and pages
+5. Authentication and authorization
+6. Tests and documentation
+
+Create the application in a clean, production-ready structure.`}
+                  onGenerated={(files) => {
+                    console.log('Generated files:', files)
+                    // TODO: Auto-commit to GitHub
+                  }}
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-6xl mb-4">⚡</div>
+                    <h4 className="font-semibold text-text-primary mb-2">Ready to Generate Code</h4>
+                    <p className="text-text-secondary mb-4">
+                      Select a PRD document from the Documents tab to start generating code
+                    </p>
+                    <button 
+                      onClick={() => setActiveTab('documents')}
+                      className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-hover"
+                    >
+                      Browse Documents
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

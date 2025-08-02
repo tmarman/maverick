@@ -151,11 +151,11 @@ export class DatabaseService {
         squareServices: data.squareServices ? JSON.stringify(data.squareServices) : '[]',
         appType: data.appType,
         appFeatures: data.appFeatures ? JSON.stringify(data.appFeatures) : '[]',
-        userId,
+        ownerId: userId,
         status: 'DRAFT'
       },
       include: {
-        user: true,
+        owner: true,
         projects: true
       }
     })
@@ -165,7 +165,7 @@ export class DatabaseService {
     return this.prisma.business.findUnique({
       where: { id: businessId },
       include: {
-        user: true,
+        owner: true,
         projects: {
           include: {
             documents: true,
@@ -249,27 +249,7 @@ export class DatabaseService {
     })
   }
 
-  // Feature operations  
-  async createFeature(data: CreateFeatureData) {
-    return this.prisma.feature.create({
-      data: {
-        title: data.title,
-        description: data.description,
-        projectId: data.projectId,
-        priority: data.priority || 'MEDIUM',
-        status: 'PLANNED',
-        // Convert objects to JSON strings for SQL Server
-        acceptanceCriteria: data.acceptanceCriteria ? JSON.stringify(data.acceptanceCriteria) : null,
-        aiGeneratedData: null,
-        estimatedEffort: data.estimatedEffort,
-        assignedToId: data.assignedToId
-      },
-      include: {
-        project: true,
-        assignedTo: true
-      }
-    })
-  }
+  // Feature operations (removed duplicate - using more comprehensive version below)
 
   async updateFeatureGitHubInfo(featureId: string, githubData: {
     issueNumber?: number
@@ -371,10 +351,252 @@ export class DatabaseService {
     }
   }
 
+  // Feature operations (for cockpit) - Real Prisma implementation
+  async createFeature(data: {
+    id: string
+    title: string
+    description?: string
+    status: 'planned' | 'in_progress' | 'in_review' | 'done' | 'blocked'
+    priority: 'low' | 'medium' | 'high' | 'urgent'
+    functionalArea: 'Software' | 'Legal' | 'Operations' | 'Marketing'
+    userId: string
+    productId: string // This is actually projectId in our schema
+    estimatedEffort?: string
+    assignee?: string
+    chatHistory?: any[]
+    createdAt: Date
+    updatedAt: Date
+  }) {
+    try {
+      const feature = await this.prisma.feature.create({
+        data: {
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          status: data.status.toUpperCase(),
+          priority: data.priority.toUpperCase(),
+          functionalArea: data.functionalArea.toUpperCase(),
+          projectId: data.productId, // Map productId to projectId
+          estimatedEffort: data.estimatedEffort,
+          assignedToId: data.assignee === 'Claude' ? null : data.assignee,
+          chatHistory: JSON.stringify(data.chatHistory || []),
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt
+        },
+        include: {
+          project: true,
+          assignedTo: true
+        }
+      })
+
+      return {
+        ...feature,
+        chatHistory: feature.chatHistory ? JSON.parse(feature.chatHistory) : [],
+        status: feature.status.toLowerCase(),
+        priority: feature.priority.toLowerCase(),
+        functionalArea: feature.functionalArea
+      }
+    } catch (error) {
+      console.error('Failed to create feature in database:', error)
+      // Fallback to in-memory feature
+      return {
+        ...data,
+        chatHistory: data.chatHistory || []
+      }
+    }
+  }
+
+  async getFeature(featureId: string, userEmail: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { email: userEmail },
+        select: { id: true }
+      })
+      
+      if (!user) return null
+
+      const feature = await this.prisma.feature.findFirst({
+        where: {
+          id: featureId,
+          project: {
+            business: {
+              OR: [
+                { ownerId: user.id },
+                { members: { some: { userId: user.id } } }
+              ]
+            }
+          }
+        },
+        include: {
+          project: true,
+          assignedTo: true
+        }
+      })
+
+      if (!feature) return null
+
+      return {
+        ...feature,
+        chatHistory: feature.chatHistory ? JSON.parse(feature.chatHistory) : [],
+        status: feature.status.toLowerCase(),
+        priority: feature.priority.toLowerCase(),
+        functionalArea: feature.functionalArea
+      }
+    } catch (error) {
+      console.error('Failed to get feature from database:', error)
+      return null
+    }
+  }
+
+  async updateFeature(featureId: string, updates: {
+    chatHistory?: any[]
+    updatedAt?: Date
+    status?: string
+    [key: string]: any
+  }) {
+    try {
+      const updateData: any = {
+        updatedAt: updates.updatedAt || new Date()
+      }
+
+      if (updates.chatHistory) {
+        updateData.chatHistory = JSON.stringify(updates.chatHistory)
+      }
+
+      if (updates.status) {
+        updateData.status = updates.status.toUpperCase()
+      }
+
+      await this.prisma.feature.update({
+        where: { id: featureId },
+        data: updateData
+      })
+
+      return true
+    } catch (error) {
+      console.error('Failed to update feature in database:', error)
+      return false
+    }
+  }
+
+  async getFeaturesByProduct(productId: string, userEmail: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { email: userEmail },
+        select: { id: true }
+      })
+      
+      if (!user) return []
+
+      const features = await this.prisma.feature.findMany({
+        where: {
+          projectId: productId, // Map productId to projectId
+          project: {
+            business: {
+              OR: [
+                { ownerId: user.id },
+                { members: { some: { userId: user.id } } }
+              ]
+            }
+          }
+        },
+        include: {
+          assignedTo: true
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      return features.map(feature => ({
+        ...feature,
+        chatHistory: feature.chatHistory ? JSON.parse(feature.chatHistory) : [],
+        status: feature.status.toLowerCase(),
+        priority: feature.priority.toLowerCase(),
+        functionalArea: feature.functionalArea
+      }))
+    } catch (error) {
+      console.error('Failed to get features from database:', error)
+      return []
+    }
+  }
+
+  // Get user's accessible companies (businesses)
+  async getUserCompanies(userEmail: string) {
+    try {
+      const userWithBusinesses = await this.prisma.user.findUnique({
+        where: { email: userEmail },
+        include: {
+          ownedBusinesses: {
+            include: {
+              projects: {
+                include: {
+                  features: {
+                    select: {
+                      id: true,
+                      status: true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          businessMemberships: {
+            where: { status: 'ACCEPTED' },
+            include: {
+              business: {
+                include: {
+                  projects: {
+                    include: {
+                      features: {
+                        select: {
+                          id: true,
+                          status: true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      })
+
+      if (!userWithBusinesses) return []
+
+      // Combine owned businesses and member businesses
+      const allBusinesses = [
+        ...userWithBusinesses.ownedBusinesses,
+        ...userWithBusinesses.businessMemberships.map(m => m.business)
+      ]
+
+      // Transform to the expected format
+      return allBusinesses.map(business => ({
+        id: business.id,
+        name: business.name,
+        description: business.description,
+        repositoryUrl: null, // This will come from GitHub integration
+        products: business.projects.map(project => ({
+          id: project.id,
+          name: project.name,
+          description: project.description,
+          path: `/projects/${project.name}/`,
+          submoduleUrl: null, // This will come from GitHub integration
+          features: project.features.map(feature => ({
+            id: feature.id,
+            status: feature.status.toLowerCase()
+          }))
+        }))
+      }))
+    } catch (error) {
+      console.error('Failed to get user companies:', error)
+      return []
+    }
+  }
+
   // User's businesses and projects
   async getUserBusinesses(userId: string) {
     return this.prisma.business.findMany({
-      where: { userId },
+      where: { ownerId: userId },
       include: {
         projects: {
           select: {

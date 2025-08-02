@@ -5,12 +5,13 @@ const prisma = new PrismaClient()
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { businessId: string } }
+  { params }: { params: Promise<{ businessId: string }> }
 ) {
+  const { businessId } = await params
   try {
     const projects = await prisma.project.findMany({
       where: {
-        businessId: params.businessId
+        businessId: businessId
       },
       include: {
         _count: {
@@ -39,8 +40,9 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { businessId: string } }
+  { params }: { params: Promise<{ businessId: string }> }
 ) {
+  const { businessId } = await params
   try {
     const data = await request.json()
     
@@ -49,7 +51,7 @@ export async function POST(
         name: data.name,
         description: data.description,
         type: data.type,
-        businessId: params.businessId,
+        businessId: businessId,
         githubConfig: data.githubConfig ? JSON.stringify(data.githubConfig) : null,
         aiAgentConfig: data.aiAgentConfig ? JSON.stringify(data.aiAgentConfig) : null,
         metadata: null

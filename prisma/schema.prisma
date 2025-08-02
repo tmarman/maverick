@@ -44,7 +44,13 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
-  password      String?   // For credentials login
+  password      String?   // For credentials login (optional after magic link)
+  phone         String?   // Optional phone number
+  timezone      String?   // User's timezone
+  preferences   String?   @db.Text // JSON string for user preferences
+  resetToken    String?   // Password reset token
+  resetTokenExpiry DateTime? // Password reset token expiry
+  onboardingCompleted Boolean @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -53,7 +59,8 @@ model User {
   sessions         Session[]
   squareConnection SquareConnection?
   githubConnection GitHubConnection?
-  businesses       Business[]
+  ownedBusinesses  Business[]        @relation("BusinessOwner")
+  businessMemberships BusinessMember[]
   chatSessions     ChatSession[]
   documentsCreated Document[]        @relation("DocumentCreator")
   featuresAssigned Feature[]
@@ -105,7 +112,7 @@ model GitHubConnection {
 
 model Business {
   id              String    @id @default(cuid())
-  userId          String
+  ownerId         String    // Business owner (creator)
   name            String
   description     String?
   industry        String?
@@ -117,14 +124,46 @@ model Business {
   squareServices  String    @db.Text // JSON string of selected Square services array
   appType         String?   // Valid values: 'website', 'ecommerce', 'booking', etc.
   appFeatures     String    @db.Text // JSON string of selected app features array
+  
+  // Subscription and billing
+  subscriptionPlan String?  // founder, growth, enterprise
+  subscriptionStatus String @default("TRIAL") // TRIAL, ACTIVE, PAST_DUE, CANCELLED
+  subscriptionId  String?   // Square subscription ID
+  billingEmail    String?   // May differ from owner email
+  
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: NoAction)
-  formations BusinessFormation[]
-  projects Project[]
+  // Relations
+  owner           User              @relation("BusinessOwner", fields: [ownerId], references: [id], onDelete: NoAction)
+  members         BusinessMember[]
+  formations      BusinessFormation[]
+  projects        Project[]
 
   @@map("businesses")
+}
+
+// Business team membership model
+model BusinessMember {
+  id          String    @id @default(cuid())
+  businessId  String
+  userId      String
+  role        String    @default("MEMBER") // Valid values: OWNER, ADMIN, MEMBER, VIEWER
+  permissions String?   @db.Text // JSON string for specific permissions
+  invitedBy   String?   // User ID of who invited this member
+  invitedAt   DateTime? 
+  joinedAt    DateTime?
+  status      String    @default("PENDING") // PENDING, ACCEPTED, DECLINED, REMOVED
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([businessId, userId]) // User can only be a member once per business
+  @@map("business_members")
 }
 
 model BusinessFormation {
@@ -223,6 +262,7 @@ model Feature {
   description     String?
   status          String    @default("PLANNED") // Valid values: PLANNED, IN_PROGRESS, IN_REVIEW, TESTING, DONE, CANCELLED, BLOCKED
   priority        String    @default("MEDIUM") // Valid values: LOW, MEDIUM, HIGH, URGENT
+  functionalArea  String    @default("SOFTWARE") // Valid values: SOFTWARE, LEGAL, OPERATIONS, MARKETING
   
   // GitHub integration
   githubIssueNumber    Int?
@@ -232,6 +272,7 @@ model Feature {
   // JSON converted to Text for SQL Server compatibility
   acceptanceCriteria   String?   @db.Text // JSON string for user stories, requirements
   aiGeneratedData      String?   @db.Text // JSON string for AI-generated specs, code snippets
+  chatHistory          String?   @db.Text // JSON string for chat messages and AI conversations
   estimatedEffort      String?   // "1d", "1w", "1m" - human readable
   
   // Relationships

@@ -4,12 +4,16 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    const { firstName, lastName, email, password, businessName } = await request.json()
+    // Ensure database is warmed up before operations
+    const { ensureDatabaseWarmed } = await import('@/lib/database-warmup')
+    await ensureDatabaseWarmed()
+    
+    const { email, password } = await request.json()
 
     // Validation
-    if (!firstName || !lastName || !email || !password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Email and password are required' },
         { status: 400 }
       )
     }
@@ -39,18 +43,9 @@ export async function POST(request: NextRequest) {
     // Create user
     const user = await prisma.user.create({
       data: {
-        name: `${firstName} ${lastName}`,
+        name: email.split('@')[0], // Use email prefix as default name
         email,
         password: hashedPassword,
-        // Create initial business if provided
-        ...(businessName && {
-          businesses: {
-            create: {
-              name: businessName,
-              status: 'DRAFT'
-            }
-          }
-        })
       },
       select: {
         id: true,
@@ -68,8 +63,15 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Registration error:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    })
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : String(error) : undefined
+      },
       { status: 500 }
     )
   }

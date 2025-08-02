@@ -7,8 +7,9 @@ const prisma = new PrismaClient()
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const session = await getServerSession(authOptions)
     
@@ -18,10 +19,10 @@ export async function GET(
 
     const document = await prisma.document.findFirst({
       where: {
-        id: params.id,
+        id: id,
         project: {
           business: {
-            userId: session.user.id
+            ownerId: session.user.id
           }
         }
       },
@@ -50,8 +51,9 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const session = await getServerSession(authOptions)
     
@@ -65,10 +67,10 @@ export async function PUT(
     // Verify document ownership
     const existingDocument = await prisma.document.findFirst({
       where: {
-        id: params.id,
+        id: id,
         project: {
           business: {
-            userId: session.user.id
+            ownerId: session.user.id
           }
         }
       }
@@ -79,7 +81,7 @@ export async function PUT(
     }
 
     const updatedDocument = await prisma.document.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(title && { title }),
         ...(content && { content }),
@@ -101,8 +103,9 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const session = await getServerSession(authOptions)
     
@@ -113,10 +116,10 @@ export async function DELETE(
     // Verify document ownership
     const existingDocument = await prisma.document.findFirst({
       where: {
-        id: params.id,
+        id: id,
         project: {
           business: {
-            userId: session.user.id
+            ownerId: session.user.id
           }
         }
       }
@@ -127,7 +130,7 @@ export async function DELETE(
     }
 
     await prisma.document.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     return NextResponse.json({ success: true })

@@ -275,9 +275,9 @@ export function DemoApp() {
                   ].map((tab) => (
                     <button
                       key={tab.id}
-                      onClick={() => setSelectedDemo('document')}
+                      onClick={() => setSelectedDemo(tab.id === 'document' ? 'document' : tab.id === 'project' ? 'project' : 'business')}
                       className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                        selectedDemo === 'document' && tab.id === 'documents'
+                        selectedDemo === tab.id
                           ? 'bg-accent-primary text-white'
                           : 'bg-background-tertiary text-text-secondary hover:bg-border-subtle'
                       }`}
@@ -343,7 +343,7 @@ export function DemoApp() {
               href="/register" 
               className="px-4 py-2 bg-accent-hover text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
             >
-              Get Started
+              🚀 Start My Business
             </Link>
           </div>
         </div>

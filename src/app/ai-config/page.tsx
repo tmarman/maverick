@@ -27,7 +27,7 @@ export default function AIConfig() {
   const [testResponse, setTestResponse] = useState('')
   const [testLoading, setTestLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState('llama3.1:8b')
-  const [selectedProvider, setSelectedProvider] = useState<'ollama' | 'lmstudio'>('ollama')
+  const [selectedProvider, setSelectedProvider] = useState<'ollama' | 'lmstudio' | 'claude-code'>('ollama')
 
   useEffect(() => {
     checkAIStatus()
@@ -256,9 +256,10 @@ export default function AIConfig() {
                 <label className="block text-sm font-medium text-text-primary mb-2">Provider</label>
                 <select
                   value={selectedProvider}
-                  onChange={(e) => setSelectedProvider(e.target.value as 'ollama' | 'lmstudio')}
+                  onChange={(e) => setSelectedProvider(e.target.value as 'ollama' | 'lmstudio' | 'claude-code')}
                   className="w-full p-3 border border-border-standard rounded-lg bg-background-primary text-text-primary"
                 >
+                  <option value="claude-code">Claude Code (Recommended)</option>
                   {availability?.ollama && <option value="ollama">Ollama</option>}
                   {availability?.lmstudio && <option value="lmstudio">LM Studio</option>}
                 </select>

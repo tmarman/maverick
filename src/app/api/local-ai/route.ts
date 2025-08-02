@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createLocalAI, getLocalAIStatus } from '@/lib/ollama'
+import { generateClaudeCodeResponse } from '@/lib/claude-code-provider'
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,6 +20,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { message, type, context, action, data } = body
 
+    // Check if Claude Code should be used as provider
+    const useClaudeCode = data?.provider === 'claude-code' || (!data?.provider && process.env.PREFER_CLAUDE_CODE === 'true')
+    
     const ai = createLocalAI({
       preferredProvider: data?.provider || 'ollama',
       defaultModel: data?.model || 'llama3.1:8b'
@@ -64,9 +68,21 @@ ${context?.documentContent ? context.documentContent.substring(0, 1000) + (conte
           
           Provide helpful, actionable advice about business formation, strategy, development, and operations. Be encouraging and specific.`
           
-          const chatResponse = await ai.generateChatResponse([
-            { role: 'user', content: message }
-          ], systemPrompt)
+          let chatResponse: string
+          
+          if (useClaudeCode) {
+            // Use Claude Code for enhanced responses
+            chatResponse = await generateClaudeCodeResponse(
+              message,
+              systemPrompt,
+              context?.projectId
+            )
+          } else {
+            // Use local AI (Ollama/LM Studio)
+            chatResponse = await ai.generateChatResponse([
+              { role: 'user', content: message }
+            ], systemPrompt)
+          }
           
           return NextResponse.json({ 
             success: true, 

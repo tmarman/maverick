@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Navigation } from '@/components/Navigation'
 
-export default function SquareAuth() {
+function SquareAuthContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('')
   const searchParams = useSearchParams()
@@ -70,9 +70,11 @@ export default function SquareAuth() {
         setStatus('success')
         setMessage('Successfully connected to Square!')
         
-        // Redirect based on mode
+        // Redirect based on state
         setTimeout(() => {
-          if (state === 'register' || mode === 'register') {
+          if (state === 'accounts-integration') {
+            window.location.href = '/accounts?tab=integrations&connected=square'
+          } else if (state === 'register' || mode === 'register') {
             window.location.href = '/wizard'
           } else {
             window.location.href = '/dashboard'
@@ -202,5 +204,20 @@ export default function SquareAuth() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SquareAuth() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background-primary">
+        <Navigation />
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
+        </div>
+      </div>
+    }>
+      <SquareAuthContent />
+    </Suspense>
   )
 }
