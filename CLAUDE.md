@@ -42,6 +42,7 @@ Root level: Only package.json, README.md, CLAUDE.md, and essential config files
 - When committing, use "Created with Maverick" and no other co-authored notes
 - Use the 🚀 (Rocket) emoji with "Created with Maverick" commits
 - **Do not mention Claude in any commit messages**
+- All commits will show 🚀 Created with Maverick and will not mention Claude or any other AI system. No mention of Claude, as we'll probably swap out and use multiple models here
 
 ## Development Commands
 
