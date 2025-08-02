@@ -35,10 +35,9 @@ export class ClaudeCodeProvider {
     const fullPrompt = `${context}\n\nUser Request: ${message}`
 
     try {
-      // Use Claude Code with --print for single response
+      // Use Claude Code with -p for single response
       const response = await this.executeClaude([
-        '--print',
-        '--output-format', 'text',
+        '-p',
         fullPrompt
       ], workDir)
 
@@ -81,8 +80,7 @@ export class ClaudeCodeProvider {
 
     try {
       const response = await this.executeClaude([
-        '--print',
-        '--output-format', 'text',
+        '-p',
         fullPrompt
       ], workDir)
 

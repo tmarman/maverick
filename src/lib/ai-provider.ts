@@ -137,7 +137,7 @@ export class MultiAIProvider {
    * Execute Claude Code command
    */
   private async executeClaudeCode(prompt: string, workingDir: string, additionalArgs?: string[]): Promise<string> {
-    const args = ['--print', '--output-format', 'text', ...(additionalArgs || []), prompt]
+    const args = ['-p', prompt, ...(additionalArgs || [])]
     return this.executeCommand('claude', args, workingDir)
   }
 
