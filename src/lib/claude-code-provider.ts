@@ -98,7 +98,7 @@ export class ClaudeCodeProvider {
    */
   private async executeClaude(args: string[], workingDir: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const process = spawn('claude', args, {
+      const childProcess = spawn('claude', args, {
         cwd: workingDir,
         stdio: ['pipe', 'pipe', 'pipe'],
         env: {
@@ -110,15 +110,15 @@ export class ClaudeCodeProvider {
       let output = ''
       let error = ''
 
-      process.stdout.on('data', (data) => {
+      childProcess.stdout.on('data', (data) => {
         output += data.toString()
       })
 
-      process.stderr.on('data', (data) => {
+      childProcess.stderr.on('data', (data) => {
         error += data.toString()
       })
 
-      process.on('close', (code) => {
+      childProcess.on('close', (code) => {
         if (code === 0) {
           resolve(output)
         } else {
@@ -126,7 +126,7 @@ export class ClaudeCodeProvider {
         }
       })
 
-      process.on('error', (err) => {
+      childProcess.on('error', (err) => {
         reject(new Error(`Failed to start Claude Code: ${err.message}`))
       })
     })

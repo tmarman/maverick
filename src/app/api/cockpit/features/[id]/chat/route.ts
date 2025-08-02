@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/database-service'
-import { generateClaudeCodeResponse } from '@/lib/claude-code-provider'
+import { generateAIChatResponse } from '@/lib/ai-provider'
 
 export async function POST(
   request: NextRequest,
@@ -64,10 +64,11 @@ Your role: Help break down this feature into actionable tasks, provide technical
 
 Focus on being practical, specific, and development-focused in your responses. This is part of a product management cockpit where founders build their businesses systematically.`
 
-    // Use the existing Claude Code provider with long-running sessions
-    const claudeResponse = await generateClaudeCodeResponse(
-      message,
+    // Use the multi-AI provider with auto-selection and fallback
+    const aiResponse = await generateAIChatResponse(
+      [{ role: 'user' as const, content: message, timestamp: new Date() }],
       context,
+      'auto', // Auto-select best available provider
       `feature-${featureId}` // Use feature-specific project ID for session management
     )
 
@@ -82,7 +83,7 @@ Focus on being practical, specific, and development-focused in your responses. T
     const assistantMessage = {
       id: `msg-${Date.now()}-assistant`,
       role: 'assistant' as const,
-      content: claudeResponse,
+      content: aiResponse,
       timestamp: new Date()
     }
 

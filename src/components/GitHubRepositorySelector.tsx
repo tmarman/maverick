@@ -2,31 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-
-interface GitHubRepository {
-  id: number
-  name: string
-  full_name: string
-  description: string | null
-  html_url: string
-  clone_url: string
-  ssh_url: string
-  default_branch: string
-  language: string | null
-  size: number
-  stargazers_count: number
-  forks_count: number
-  open_issues_count: number
-  pushed_at: string
-  created_at: string
-  updated_at: string
-  private: boolean
-  owner: {
-    login: string
-    avatar_url: string
-    type: string
-  }
-}
+import { GitHubRepository } from '@/types/github-integration'
 
 interface GitHubRepositorySelectorProps {
   onRepositorySelect: (repository: GitHubRepository) => void

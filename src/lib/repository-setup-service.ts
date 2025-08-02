@@ -200,7 +200,7 @@ export class RepositorySetupService {
       }
     }
 
-    const templateStructure = structure[template] || structure['full-stack']
+    const templateStructure = structure[template as keyof typeof structure] || structure['full-stack']
     await this.createDirectoryStructure(mainDir, templateStructure)
   }
 
