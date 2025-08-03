@@ -147,9 +147,9 @@ describe('Security Library', () => {
           alsoSafe: 'value'
         }
       })
-      expect(result).not.toHaveProperty('__proto__')
-      expect(result).not.toHaveProperty('constructor')  
-      expect(result).not.toHaveProperty('prototype')
+      expect(result.hasOwnProperty('__proto__')).toBe(false)
+      expect(result.hasOwnProperty('constructor')).toBe(false)  
+      expect(result.hasOwnProperty('prototype')).toBe(false)
     })
 
     it('should handle deeply nested objects', () => {
