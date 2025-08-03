@@ -80,13 +80,13 @@ export default function DocsPage() {
       <div className="border-b border-border-subtle bg-background-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/cockpit" className="flex items-center space-x-3">
+            <Link href="/app" className="flex items-center space-x-3">
               <img src="/design/icon.png" alt="Maverick" className="h-8 w-8" />
               <img src="/design/textmark.png" alt="Maverick" className="h-6" />
             </Link>
             <div className="flex items-center space-x-4">
               <Badge variant="outline">Documentation</Badge>
-              <Link href="/cockpit" className="text-sm text-text-secondary hover:text-text-primary">
+              <Link href="/app" className="text-sm text-text-secondary hover:text-text-primary">
                 ← Back to Cockpit
               </Link>
             </div>
@@ -229,7 +229,7 @@ export default function DocsPage() {
             </p>
             <div className="flex justify-center gap-4">
               <Link
-                href="/cockpit"
+                href="/app"
                 className="px-6 py-3 bg-white text-accent-primary rounded-lg hover:bg-gray-100 transition-colors font-medium"
               >
                 Open Cockpit

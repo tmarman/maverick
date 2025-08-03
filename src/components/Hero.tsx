@@ -84,21 +84,13 @@ export function Hero() {
                 </div>
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <div className="flex justify-center mb-8">
                 <div className="rounded-md shadow-lg">
                   <Link
                     href="/app"
-                    className="w-full flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-md text-text-inverse bg-accent-primary hover:bg-accent-hover transition-all duration-200 transform hover:scale-105"
+                    className="flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-md text-text-inverse bg-accent-primary hover:bg-accent-hover transition-all duration-200 transform hover:scale-105"
                   >
                     🚀  Start Your Business
-                  </Link>
-                </div>
-                <div>
-                  <Link
-                    href="/examples"
-                    className="w-full flex items-center justify-center px-8 py-4 border-2 border-border-standard text-lg font-semibold rounded-md text-text-primary bg-background-primary hover:bg-background-secondary transition-all duration-200"
-                  >
-                    💼 See Examples
                   </Link>
                 </div>
               </div>

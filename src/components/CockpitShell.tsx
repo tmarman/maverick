@@ -198,9 +198,9 @@ export default function CockpitShell({ children, sidebarContent, title }: Cockpi
                     
                     <div className="space-y-1">
                       <Link
-                        href="/cockpit/settings"
+                        href="/app/settings"
                         className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center space-x-2 ${
-                          isActiveRoute('/cockpit/settings') 
+                          isActiveRoute('/app/settings') 
                             ? 'bg-accent-primary text-text-inverse' 
                             : 'text-text-secondary hover:text-text-primary hover:bg-background-secondary'
                         }`}

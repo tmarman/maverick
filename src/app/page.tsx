@@ -38,7 +38,7 @@ export default function Home() {
                   
                   <div className="text-center mt-8">
                     <a 
-                      href="/cockpit" 
+                      href="/app" 
                       className="inline-flex items-center px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-hover font-semibold"
                     >
                       🚀 Launch Cockpit
@@ -91,7 +91,7 @@ export default function Home() {
               Start with our AI-powered business cockpit and turn your ideas into reality.
             </p>
             <a 
-              href="/cockpit" 
+              href="/app" 
               className="inline-flex items-center px-8 py-4 bg-white text-accent-primary rounded-lg hover:bg-gray-50 font-bold text-lg shadow-lg"
             >
               🚀 Enter Cockpit
