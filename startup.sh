@@ -17,21 +17,46 @@ if [ ! -d ".next" ]; then
     echo "Contents of current directory:"
     ls -la
     
-    echo "=== Installing dependencies first ==="
-    # Azure deployment removes node_modules, so we need to reinstall
-    npm install --production
+    echo "=== Checking node_modules setup ==="
+    if [ -L "node_modules" ]; then
+        echo "node_modules is a symlink pointing to: $(readlink node_modules)"
+        ls -la /node_modules/.bin/next 2>/dev/null || echo "next not found in /node_modules/.bin/"
+    else
+        echo "node_modules is not a symlink, installing dependencies..."
+        npm install --production --prefer-offline --no-audit --no-fund --timeout=300000
+    fi
     
     echo "=== Setting up build environment ==="
     export NODE_ENV=production
-    export PATH="./node_modules/.bin:$PATH"
+    # Check both possible paths for node_modules
+    if [ -d "/node_modules/.bin" ]; then
+        export PATH="/node_modules/.bin:$PATH"
+        echo "Using global node_modules: /node_modules/.bin"
+    else
+        export PATH="./node_modules/.bin:$PATH" 
+        echo "Using local node_modules: ./node_modules/.bin"
+    fi
     echo "PATH: $PATH"
     echo "Checking for next binary:"
     which next || echo "next not found in PATH"
-    ls -la ./node_modules/.bin/next 2>/dev/null || echo "next binary not found"
+    ls -la /node_modules/.bin/next 2>/dev/null || ls -la ./node_modules/.bin/next 2>/dev/null || echo "next binary not found in either location"
     
     echo "=== Running build ==="
-    # Try npm run build first, then fallback to npx
-    npm run build || npx next build
+    # Try different approaches to run the build
+    if command -v next >/dev/null 2>&1; then
+        echo "Running: next build"
+        next build
+    elif [ -f "/node_modules/.bin/next" ]; then
+        echo "Running: /node_modules/.bin/next build"
+        /node_modules/.bin/next build
+    elif [ -f "./node_modules/.bin/next" ]; then
+        echo "Running: ./node_modules/.bin/next build"
+        ./node_modules/.bin/next build
+    else
+        echo "Running: npx next build"
+        npx next build
+    fi
+    
     if [ $? -ne 0 ]; then
         echo "ERROR: Build failed!"
         exit 1
