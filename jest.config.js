@@ -15,7 +15,7 @@ const config = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   
   // Module name mapping for absolute imports
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   
@@ -38,6 +38,11 @@ const config = {
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }]
   },
+  
+  // Transform ES modules from node_modules
+  transformIgnorePatterns: [
+    'node_modules/(?!(react-markdown|remark-gfm|unified|bail|is-plain-obj|trough|vfile|vfile-message|unist-util-stringify-position|mdast-util-from-markdown|mdast-util-to-string|micromark|parse-entities|character-entities|character-entities-legacy|character-reference-invalid|is-alphanumerical|is-decimal|is-hexadecimal)/)'
+  ],
   
   // Module file extensions
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
@@ -68,6 +73,9 @@ const config = {
   testEnvironmentOptions: {
     url: 'http://localhost:3000'
   },
+  
+  // Setup files to run before tests
+  setupFiles: ['<rootDir>/jest.globals.js'],
   
   // Global setup
   globals: {

@@ -16,6 +16,15 @@ jest.mock('@/lib/username-mentions', () => ({
   formatMentionsForStorage: jest.fn((text) => text)
 }))
 
+// Mock react-markdown to avoid ES modules issues
+jest.mock('react-markdown', () => {
+  return function ReactMarkdown({ children }: { children: string }) {
+    return <div>{children}</div>
+  }
+})
+
+jest.mock('remark-gfm', () => () => {})
+
 // Mock fetch
 global.fetch = jest.fn()
 

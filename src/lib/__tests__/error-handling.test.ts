@@ -13,10 +13,10 @@ import {
 } from '../error-handling'
 import { NextRequest } from 'next/server'
 
-// Mock console methods
-const mockConsoleError = jest.spyOn(console, 'error').mockImplementation()
-const mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation()
-const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation()
+// Mock console methods - will be set up in beforeEach
+let mockConsoleError: jest.SpyInstance
+let mockConsoleWarn: jest.SpyInstance  
+let mockConsoleLog: jest.SpyInstance
 
 // Mock NextResponse
 jest.mock('next/server', () => ({
@@ -30,8 +30,18 @@ jest.mock('next/server', () => ({
 }))
 
 describe('Error Handling Library', () => {
-  
+  beforeEach(() => {
+    // Set up console spies after jest.setup.js has run
+    mockConsoleError = jest.spyOn(console, 'error').mockImplementation()
+    mockConsoleWarn = jest.spyOn(console, 'warn').mockImplementation()
+    mockConsoleLog = jest.spyOn(console, 'log').mockImplementation()
+  })
+
   afterEach(() => {
+    // Restore console methods and clear mocks
+    mockConsoleError?.mockRestore()
+    mockConsoleWarn?.mockRestore()
+    mockConsoleLog?.mockRestore()
     jest.clearAllMocks()
   })
 

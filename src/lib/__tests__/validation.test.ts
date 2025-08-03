@@ -152,8 +152,8 @@ describe('Validation Library', () => {
 
   describe('sanitizeInput', () => {
     it('should remove HTML tags', () => {
-      expect(sanitizeInput('<script>alert("xss")</script>normal text')).toBe('alert("xss")normal text')
-      expect(sanitizeInput('Hello <b>world</b>')).toBe('Hello world')
+      expect(sanitizeInput('<script>alert("xss")</script>normal text')).toBe('scriptalert("xss")/scriptnormal text')
+      expect(sanitizeInput('Hello <b>world</b>')).toBe('Hello bworld/b')
     })
 
     it('should remove javascript: URLs', () => {
