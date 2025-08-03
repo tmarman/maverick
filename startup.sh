@@ -79,4 +79,13 @@ fi
 echo "=== Starting server ==="
 export NODE_ENV=production
 export PORT=${PORT:-8080}
-node server.js
+
+# Check if next module is available for full server
+if [ -f "./node_modules/.bin/next" ] || [ -f "/node_modules/.bin/next" ] || command -v next >/dev/null 2>&1; then
+    echo "Next.js module available, using full server with WebSocket support"
+    node server.js
+else
+    echo "Next.js module not available, using simplified production server"
+    echo "Note: WebSocket features (Claude Code integration) will not be available"
+    node server.production.js
+fi
