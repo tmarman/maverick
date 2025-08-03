@@ -23,6 +23,8 @@ import {
 import { toast } from '@/hooks/use-toast'
 import { MentionText, MentionInput } from '@/components/MentionText'
 import { defaultProjectUsers, getMentionedUsers, formatMentionsForStorage } from '@/lib/username-mentions'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface ChatMessage {
   id: string
@@ -124,19 +126,7 @@ Try saying something like:
 
   const handleTaskSelect = (task: TaskItem) => {
     setSelectedTask(task)
-    
-    // Add a system message to show task selection
-    const contextMessage: ChatMessage = {
-      id: `task-selected-${task.id}`,
-      role: 'assistant',
-      content: `📍 **Task Selected**: ${task.title}\n\n${task.description ? task.description + '\n\n' : ''}I now have context about this ${task.type.toLowerCase()}. Ask me anything about it - implementation details, next steps, dependencies, or how to modify it!`,
-      timestamp: new Date()
-    }
-    
-    setMessages(prev => [...prev, contextMessage])
-    
-    // Auto-scroll to show the context message
-    setTimeout(() => scrollToBottom(), 100)
+    // Context is now displayed in the UI below without adding chat messages
   }
 
   const handleSendMessage = async () => {
@@ -460,17 +450,38 @@ Try saying something like:
               
               {/* Show selected task context */}
               {selectedTask && (
-                <div className="mt-2 flex items-center gap-2 text-sm text-blue-700 bg-blue-50 p-2 rounded-md">
-                  <Target className="w-4 h-4" />
-                  <span>Context: <strong>{selectedTask.title}</strong></span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedTask(null)}
-                    className="ml-auto h-6 w-6 p-0 text-blue-500 hover:text-blue-700"
-                  >
-                    ×
-                  </Button>
+                <div className="mt-2 text-sm text-blue-700 bg-blue-50 p-3 rounded-md border border-blue-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-4 h-4" />
+                    <span className="font-medium">Context: {selectedTask.title}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedTask(null)}
+                      className="ml-auto h-6 w-6 p-0 text-blue-500 hover:text-blue-700"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                  {selectedTask.description && (
+                    <div className="text-blue-600 text-xs max-h-20 overflow-y-auto">
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm]}
+                        className="prose prose-xs prose-blue max-w-none"
+                        components={{
+                          p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                          ul: ({ children }) => <ul className="list-disc ml-4 mb-1">{children}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal ml-4 mb-1">{children}</ol>,
+                          li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                          em: ({ children }) => <em className="italic">{children}</em>,
+                          code: ({ children }) => <code className="bg-blue-100 px-1 rounded text-xs">{children}</code>
+                        }}
+                      >
+                        {selectedTask.description}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
