@@ -23,17 +23,41 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: npm install, build, and test
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: List build artifacts (debug)
         run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+          echo "Checking .next directory:"
+          ls -la .next/ || echo ".next directory not found!"
+          echo "Checking root directory:"
+          ls -la
+
+      - name: Prepare deployment package
+        run: |
+          # Remove node_modules to save space and avoid conflicts
+          rm -rf node_modules
+          # Create a clean deployment package
+          echo "Final package contents:"
+          ls -la
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: |
+            .
+            !node_modules
+            !coverage
+            !.git
 
   deploy:
     runs-on: ubuntu-latest
