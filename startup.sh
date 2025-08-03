@@ -16,13 +16,27 @@ if [ ! -d ".next" ]; then
     echo "ERROR: .next directory not found!"
     echo "Contents of current directory:"
     ls -la
-    echo "Running npm run build with environment variables..."
+    
+    echo "=== Installing dependencies first ==="
+    # Azure deployment removes node_modules, so we need to reinstall
+    npm install --production
+    
+    echo "=== Setting up build environment ==="
     export NODE_ENV=production
-    npm run build
+    export PATH="./node_modules/.bin:$PATH"
+    echo "PATH: $PATH"
+    echo "Checking for next binary:"
+    which next || echo "next not found in PATH"
+    ls -la ./node_modules/.bin/next 2>/dev/null || echo "next binary not found"
+    
+    echo "=== Running build ==="
+    # Try npm run build first, then fallback to npx
+    npm run build || npx next build
     if [ $? -ne 0 ]; then
         echo "ERROR: Build failed!"
         exit 1
     fi
+    echo "SUCCESS: Build completed"
 else
     echo "SUCCESS: .next directory found"
     ls -la .next/
