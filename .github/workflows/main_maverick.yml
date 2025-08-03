@@ -41,18 +41,18 @@ jobs:
         run: |
           echo "Checking .next directory:"
           ls -la .next/ || echo ".next directory not found!"
-          echo "Checking .next/standalone:"
-          ls -la .next/standalone/ || echo ".next/standalone not found!"
-          echo "Checking .next/static:"
-          ls -la .next/static/ || echo ".next/static not found!"
+          echo "Checking root directory for server.js:"
+          ls -la server.js || echo "server.js not found!"
+          echo "Checking package.json scripts:"
+          grep -A 5 '"scripts"' package.json
 
       - name: Prepare Azure deployment package
         run: |
           echo "Preparing deployment package for Azure"
           echo "Root directory contents:"
           ls -la
-          echo "Checking .next/standalone structure:"
-          find .next/standalone -type f | head -10 || echo "No standalone files found"
+          echo "Verifying npm start will work:"
+          cat package.json | grep '"start"'
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
