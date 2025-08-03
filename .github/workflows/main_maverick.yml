@@ -41,14 +41,22 @@ jobs:
         run: |
           echo "Checking .next directory:"
           ls -la .next/ || echo ".next directory not found!"
-          echo "Checking root directory:"
-          ls -la
+          echo "Checking .next/standalone:"
+          ls -la .next/standalone/ || echo ".next/standalone not found!"
+          echo "Checking .next/static:"
+          ls -la .next/static/ || echo ".next/static not found!"
 
-      - name: Prepare deployment package
+      - name: Prepare Azure deployment package
         run: |
-          # Remove node_modules to avoid permission issues in Azure
-          echo "Preparing clean deployment package"
-          echo "Final package contents:"
+          echo "Preparing standalone deployment package for Azure"
+          # Copy standalone server files to root
+          cp -r .next/standalone/* .
+          # Copy static assets
+          mkdir -p .next/static
+          cp -r .next/static .next/
+          # Copy public assets
+          cp -r public .
+          echo "Azure deployment package contents:"
           ls -la
 
       - name: Upload artifact for deployment job
@@ -97,5 +105,5 @@ jobs:
           app-name: 'maverick'
           slot-name: 'Production'
           package: .
-          startup-command: './startup.sh'
+          startup-command: 'node server.js'
           
