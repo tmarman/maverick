@@ -17,7 +17,7 @@ export async function GET(
         _count: {
           select: {
             documents: true,
-            features: true
+            workItems: true
           }
         }
       },
@@ -60,13 +60,13 @@ export async function POST(
         _count: {
           select: {
             documents: true,
-            features: true
+            workItems: true
           }
         }
       }
     })
     
-    return NextResponse.json(project, { status: 201 })
+    return NextResponse.json({ project }, { status: 201 })
   } catch (error) {
     console.error('Error creating project:', error)
     return NextResponse.json(

@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     // Validate that user has access to this business/project
     const user = await db.getUserCompanies(session.user.email)
     const business = user.find(b => b.id === businessId)
-    const project = business?.products.find(p => p.id === projectId)
+    const project = business?.products.find((p: any) => p.id === projectId)
     
     if (!business || !project) {
       return NextResponse.json(
@@ -116,7 +116,7 @@ Example format:
       }
 
       // Create features in the database
-      const createdFeatures = []
+      const createdFeatures: any[] = []
       
       for (const featureData of features) {
         try {
@@ -154,8 +154,10 @@ I can help you refine this feature, break it down into tasks, generate implement
             updatedAt: new Date()
           }
 
-          const createdFeature = await db.createFeature(feature)
-          createdFeatures.push(createdFeature)
+          // TODO: Replace with WorkItem creation
+          // const createdFeature = await db.createFeature(feature)
+          // createdFeatures.push(createdFeature)
+          console.log('Feature creation disabled - use WorkItem API instead')
           
         } catch (error) {
           console.error('Failed to create feature:', featureData.title, error)
@@ -208,7 +210,9 @@ I can help analyze specific parts of your codebase, generate documentation, or c
         updatedAt: new Date()
       }
 
-      const createdFeature = await db.createFeature(fallbackFeature)
+      // TODO: Replace with WorkItem creation
+      // const createdFeature = await db.createFeature(fallbackFeature)
+      const createdFeature = { ...fallbackFeature, id: 'fallback-feature' }
 
       return NextResponse.json({
         message: 'Repository connected with basic analysis',

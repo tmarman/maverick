@@ -552,7 +552,7 @@ Maverick • From idea to revenue • maverick.com
             height: 32px;
         }
         .tagline {
-            background: #dc2626;
+            background: #000000;
             color: #ffffff;
             padding: 8px 16px;
             border-radius: 20px;
@@ -578,7 +578,7 @@ Maverick • From idea to revenue • maverick.com
         }
         .reset-button {
             display: inline-block;
-            background: #dc2626;
+            background: #000000;
             color: #ffffff;
             text-decoration: none;
             padding: 16px 32px;
@@ -589,11 +589,11 @@ Maverick • From idea to revenue • maverick.com
             transition: background-color 0.2s;
         }
         .reset-button:hover {
-            background: #b91c1c;
+            background: #333333;
         }
         .security-note {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
+            background: #f5f5f5;
+            border: 1px solid #e1e5e9;
             border-radius: 8px;
             padding: 20px;
             margin: 32px 0;
@@ -601,11 +601,11 @@ Maverick • From idea to revenue • maverick.com
             text-align: left;
         }
         .security-note strong {
-            color: #dc2626;
+            color: #000000;
         }
         .warning-box {
-            background: #fffbeb;
-            border: 1px solid #fed7aa;
+            background: #f5f5f5;
+            border: 1px solid #e1e5e9;
             border-radius: 8px;
             padding: 20px;
             margin: 32px 0;
@@ -613,7 +613,7 @@ Maverick • From idea to revenue • maverick.com
             text-align: left;
         }
         .warning-box strong {
-            color: #d97706;
+            color: #000000;
         }
         .url-box {
             word-break: break-all;
@@ -737,7 +737,7 @@ Get guidance on product decisions, market strategy, and growth—24/7
 💻 Custom Software Built
 Production apps, websites, and tools—built to your specs, ready to scale
 
-Get started: https://maverick.com/app
+Get started: https://maverick.com/cockpit
 
 Questions? Just reply to this email—we're here to help!
 

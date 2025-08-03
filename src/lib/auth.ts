@@ -287,6 +287,14 @@ export const authOptions: NextAuthOptions = {
   },
   
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url
+      // Default redirect to app for successful logins
+      return `${baseUrl}/app`
+    },
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
@@ -397,20 +405,6 @@ export const authOptions: NextAuthOptions = {
       }
       
       return true
-    },
-    
-    async redirect({ url, baseUrl }) {
-      // Allow explicit redirects
-      if (url.startsWith('/')) return `${baseUrl}${url}`
-      else if (new URL(url).origin === baseUrl) return url
-      
-      // Check if this is a GitHub OAuth callback from cockpit settings or accounts page
-      if (url.includes('cockpit/settings') || url.includes('accounts?tab=integrations')) {
-        return `${baseUrl}/cockpit/settings?tab=integrations&connected=github`
-      }
-      
-      // Default redirect to cockpit
-      return `${baseUrl}/cockpit`
     }
   },
   

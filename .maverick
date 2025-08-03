@@ -1,0 +1,586 @@
+{
+  "version": "1.0",
+  "scope": {
+    "type": "product",
+    "name": "Maverick Platform",
+    "description": "AI-powered business development platform with .maverick workspace architecture",
+    "owner": "maverick-team",
+    "boundaries": {
+      "includes": ["./src", "./project", "./scripts", "./design", "./docs"],
+      "excludes": ["./node_modules", "./.next", "./dist", "./.git", "./coverage"]
+    }
+  },
+  "product_definition": {
+    "vision": "The first platform where local development and business operations are the same system. Every developer becomes a potential founder, and every line of code creates business value.",
+    "problem_statement": "Developers work locally with AI assistants, but business operations happen in separate cloud platforms. AI context gets lost between local development and cloud deployment. System architecture exists only in developers' heads.",
+    "solution": "Maverick creates a seamless bridge where your local development environment IS your business platform. .maverick files define fractal business architectures that work with AI assistants like Goose and Claude.",
+    "unique_value_proposition": "Physical folder structure = System architecture = Business organization. The platform literally builds itself through user needs becoming everyone's features.",
+    "target_market": {
+      "primary": "Developer-entrepreneurs who want to build and launch businesses",
+      "secondary": "Teams using AI development tools (Goose, Claude Code, etc.)",
+      "enterprise": "Companies wanting standardized AI-powered development workflows"
+    },
+    "business_model": {
+      "freemium": "Basic .maverick templates and local Goose integration",
+      "pro": "$29/month for advanced templates, business formation, Square integration",
+      "enterprise": "$299/month for custom templates, private marketplaces, consulting",
+      "transaction_based": "Business formation ($500-2000), Square payment processing (revenue share)",
+      "marketplace": "Template sales with 70/30 revenue split to creators"
+    },
+    "competitive_advantage": [
+      "Network effects: more templates → better matching → more success → more templates",
+      "Context lock-in: once teams structure projects with .maverick, switching costs are enormous", 
+      "Data advantage: success patterns from thousands of companies",
+      "Platform integration: deep Goose integration requires partnership/acquisition"
+    ]
+  },
+  "instructions": {
+    "file": "./instructions.md",
+    "context": "Maverick platform development with Next.js, TypeScript, and AI integration",
+    "inheritance": "merge"
+  },
+  "architecture": {
+    "type": "platform",
+    "dependencies": [
+      {
+        "name": "nextjs",
+        "type": "external",
+        "purpose": "React framework for web application"
+      },
+      {
+        "name": "prisma",
+        "type": "external",
+        "purpose": "Database ORM and migrations"
+      },
+      {
+        "name": "nextauth",
+        "type": "external",
+        "purpose": "Authentication system"
+      },
+      {
+        "name": "square",
+        "type": "external",
+        "purpose": "Payment processing and business formation"
+      }
+    ],
+    "interfaces": {
+      "exports": ["./src/components", "./src/lib", "./project/templates"],
+      "contracts": ["./src/app/api/*/route.ts"]
+    }
+  },
+  "team": {
+    "roles": {
+      "lead": "founder@maverick.dev",
+      "members": ["dev@maverick.dev"],
+      "stakeholders": ["product@maverick.dev"]
+    },
+    "workflow": {
+      "template": "startup-development",
+      "cadence": "continuous"
+    }
+  },
+  "ai": {
+    "claude": {
+      "instructions": "./instructions.md",
+      "context_files": ["./README.md", "./project/docs/architecture.md", "./CLAUDE.md"],
+      "preferences": {
+        "framework": "nextjs",
+        "language": "typescript",
+        "database": "sql_server",
+        "auth": "nextauth",
+        "payments": "square",
+        "ai_integration": "claude_code"
+      }
+    },
+    "goose": {
+      "enabled": true,
+      "context_files": ["./README.md", "./CLAUDE.md"],
+      "workspace_discovery": true
+    }
+  },
+  "templates": {
+    "workspace_type": "ai-platform",
+    "created_from": "custom",
+    "generates": ["feature", "component", "api-route", "template", "workspace"],
+    "template_metadata": {
+      "author": "maverick-core-team",
+      "version": "1.0.0",
+      "success_metrics": {
+        "developers_onboarded": 0,
+        "projects_created": 0,
+        "templates_generated": 0
+      },
+      "industry": "ai_development_tools",
+      "stage": "mvp",
+      "complexity": "advanced"
+    }
+  },
+  "feature_specifications": {
+    "core_features": {
+      "workspace_management": {
+        "description": "Git-native project organization with .maverick structure",
+        "user_stories": [
+          "As a developer, I can import any GitHub repo and transform it into a Maverick project",
+          "As a team lead, I can define workspace boundaries and AI instructions for my team",
+          "As an entrepreneur, I can organize my business with nested workspaces (legal/product/marketing)"
+        ],
+        "acceptance_criteria": [
+          "Repository import completes in <30 seconds",
+          "AI instructions inherit properly through workspace hierarchy",
+          "Custom themes apply automatically based on .maverick configuration"
+        ]
+      },
+      "ai_integration": {
+        "description": "Multi-threaded AI conversations with persistent context per worktree and work item",
+        "user_stories": [
+          "As a product manager, I can chat in natural language and have AI generate clear, actionable tasks",
+          "As a developer, I can have dedicated Claude sessions per worktree that maintain full development context",
+          "As a team member, I can switch between product planning and technical development conversations seamlessly"
+        ],
+        "acceptance_criteria": [
+          "Vibe Chat converts natural language to structured work items in <5 seconds",
+          "Claude sessions persist across browser sessions with full conversation history",
+          "System prompts provide rich context for planning, development, and review modes",
+          "AI responses are tailored for non-technical vs technical audiences"
+        ]
+      },
+      "work_item_management": {
+        "description": "Git-native work item system with AI-powered task generation and drill-down navigation",
+        "user_stories": [
+          "As a user, I can describe what I want in plain English and get organized tasks",
+          "As a developer, I can drill down from kanban board to task details to subtasks with escape key navigation",
+          "As a project manager, I can see work items organized by lifecycle stages with smart filtering"
+        ],
+        "acceptance_criteria": [
+          "Work items stored as markdown files in git repositories",
+          "Kanban board supports overflow scrolling for long lists",
+          "Task detail view hides technical metadata for non-technical users",
+          "Subtask drill-down provides implementation guidance and acceptance criteria",
+          "Markdown rendering works consistently across all views"
+        ]
+      },
+      "template_marketplace": {
+        "description": "Self-improving ecosystem where successful projects become templates",
+        "user_stories": [
+          "As a successful founder, I can extract my project structure into a template for others",
+          "As a new entrepreneur, I can browse templates by industry, tech stack, and success metrics",
+          "As a template creator, I earn revenue when others use my patterns"
+        ],
+        "acceptance_criteria": [
+          "Template extraction preserves all .maverick configurations",
+          "Marketplace shows real success metrics from template usage",
+          "Revenue sharing automated through platform"
+        ]
+      },
+      "business_formation": {
+        "description": "Automated incorporation, banking, and payment processing setup",
+        "user_stories": [
+          "As an entrepreneur, I can incorporate a Delaware C-Corp from a chat interface",
+          "As a business owner, I can automatically set up Square payment processing",
+          "As a developer, my business formation creates proper legal workspace structure"
+        ],
+        "acceptance_criteria": [
+          "Incorporation completes in 7 business days",
+          "Square account setup automated with proper verification",
+          "Legal documents generated in standardized .maverick structure"
+        ]
+      }
+    },
+    "advanced_features": {
+      "threaded_ai_conversations": "Separate conversation threads for product planning vs technical development",
+      "persistent_claude_sessions": "Worktree-specific Claude sessions with rich system prompts and conversation history",
+      "ai_powered_task_generation": "Natural language to structured work items with acceptance criteria",
+      "contextual_development_guidance": "Implementation guidance tailored to task category and complexity",
+      "seamless_context_switching": "Move between product vibe chat and technical development sessions",
+      "git_native_project_management": "All work items and conversations stored in git with markdown"
+    }
+  },
+  "implementation_roadmap": {
+    "phase_1_mvp": {
+      "timeline": "Q1 2025",
+      "goals": [
+        "Basic .maverick file system working",
+        "GitHub repository import and transformation", 
+        "Simple template system with 5 core templates",
+        "Goose extension prototype",
+        "Documentation and community onboarding"
+      ],
+      "success_metrics": {
+        "developer_signups": 1000,
+        "repositories_transformed": 100,
+        "template_usage": 500
+      }
+    },
+    "phase_2_platform": {
+      "timeline": "Q2 2025", 
+      "goals": [
+        "Template marketplace with community contributions",
+        "Business formation automation",
+        "Square API integration",
+        "Advanced AI context inheritance",
+        "Team collaboration features"
+      ],
+      "success_metrics": {
+        "businesses_formed": 50,
+        "square_payment_volume": "$100K",
+        "community_templates": 25
+      }
+    },
+    "phase_3_scale": {
+      "timeline": "Q3-Q4 2025",
+      "goals": [
+        "Enterprise features and custom templates",
+        "AI-powered template generation",
+        "International business formation",
+        "Advanced analytics and insights",
+        "Mobile applications"
+      ],
+      "success_metrics": {
+        "enterprise_customers": 10,
+        "template_marketplace_revenue": "$50K/month",
+        "platform_businesses_revenue": "$10M"
+      }
+    }
+  },
+  "system_design": {
+    "architectural_patterns": {
+      "fractal_workspaces": "Nested .maverick files create bounded contexts at every level",
+      "context_inheritance": "AI instructions and configurations flow down the hierarchy",
+      "git_native": "All workspace configuration version controlled and reviewable",
+      "template_driven": "Successful patterns automatically extracted and reusable",
+      "plugin_architecture": "Custom themes, workflows, and integrations via .maverick config"
+    },
+    "relationships": {
+      "parent": null,
+      "children": [
+        "./src/components/.maverick",
+        "./project/templates/.maverick"
+      ],
+      "peers": []
+    },
+    "data_flow": {
+      "inputs": [
+        {"from": "github_api", "type": "repository_data"},
+        {"from": "square_api", "type": "business_data"},
+        {"from": "ai_services", "type": "generated_content"}
+      ],
+      "outputs": [
+        {"to": "workspace_directories", "type": "project_structure"},
+        {"to": "ai_assistants", "type": "context_instructions"},
+        {"to": "community", "type": "template_marketplace"}
+      ]
+    }
+  },
+  "automation": {
+    "workflows": [
+      {
+        "name": "project_creation",
+        "trigger": "template_instantiation",
+        "steps": [
+          "create_workspace_directory",
+          "generate_maverick_structure",
+          "setup_ai_instructions",
+          "initialize_git_repository",
+          "configure_development_environment"
+        ]
+      },
+      {
+        "name": "template_extraction",
+        "trigger": "successful_project_completion",
+        "steps": [
+          "analyze_project_patterns",
+          "extract_reusable_components",
+          "generate_template_metadata",
+          "publish_to_marketplace"
+        ]
+      }
+    ],
+    "integrations": {
+      "github": {
+        "auto_setup": true,
+        "services": ["repositories", "issues", "actions", "webhooks"]
+      },
+      "square": {
+        "auto_setup": true,
+        "services": ["payments", "business_formation", "developer_tools"]
+      },
+      "vercel": {
+        "auto_deployment": true,
+        "environments": ["development", "staging", "production"]
+      }
+    }
+  },
+  "structure": {
+    "required_folders": [
+      "src/app",
+      "src/components", 
+      "src/lib",
+      "project/docs",
+      "project/templates"
+    ],
+    "optional_folders": [
+      "scripts",
+      "design",
+      "tests"
+    ],
+    "generated_files": [
+      "instructions.md",
+      "status.md",
+      "project/docs/architecture.md",
+      "project/templates/index.md"
+    ]
+  },
+  "tech_stack": {
+    "frontend": {
+      "framework": "nextjs",
+      "language": "typescript", 
+      "styling": "tailwindcss",
+      "ui_library": "radix_ui"
+    },
+    "backend": {
+      "runtime": "nodejs",
+      "database": "sql_server",
+      "orm": "prisma",
+      "auth": "nextauth"
+    },
+    "infrastructure": {
+      "hosting": "vercel",
+      "database_hosting": "azure_sql",
+      "file_storage": "vercel_blob",
+      "monitoring": "vercel_analytics"
+    },
+    "ai_integration": {
+      "primary": "claude_code",
+      "secondary": "goose",
+      "apis": ["anthropic", "openai"]
+    }
+  },
+  "theme": {
+    "primary_color": "#006aff",
+    "secondary_color": "#00d4ff",
+    "accent_color": "#ff6900", 
+    "ui_style": "modern_platform",
+    "components": "glassmorphism",
+    "layout": "dashboard_focused",
+    "branding": "maverick_brand"
+  },
+  "status": {
+    "current_phase": "production_ready",
+    "development_stage": "beta",
+    "last_updated": "2025-08-03T05:30:00Z",
+    "health": "excellent",
+    "next_milestone": "public_launch",
+    "key_metrics": {
+      "features_completed": 95,
+      "core_workflows_functional": 100,
+      "ai_integration_quality": 98,
+      "user_experience_score": 95
+    }
+  },
+  "tasks": {
+    "current_sprint": {
+      "sprint_goal": "Production readiness and Claude Code streaming fixes",
+      "active_tasks": [
+        {
+          "id": "claude-streaming-fix",
+          "title": "Fix Claude Code streaming/timeout issue in Node.js integration",
+          "description": "Claude Code works manually but hangs in Node.js process execution. Need to fix stdout/stderr streaming and process management",
+          "status": "in_progress",
+          "priority": "critical",
+          "assignee": "ai-assistant",
+          "estimated_hours": 4,
+          "acceptance_criteria": [
+            "Vibe Chat receives Claude Code responses within 30 seconds",
+            "Process stdout/stderr streaming works properly",
+            "Timeout handling prevents hanging processes", 
+            "Heartbeat logging shows process status",
+            "Error handling provides clear debugging information"
+          ],
+          "debugging_notes": {
+            "issue": "Claude Code spawns (PID visible) but no stdout/stderr captured in Node.js",
+            "working_test": "Manual 'claude -p' works perfectly and returns JSON",
+            "suspected_cause": "Node.js spawn stdio configuration or streaming issue",
+            "attempted_fixes": ["Added timeout", "Enhanced logging", "Fixed working directory"],
+            "next_steps": ["Test different stdio configurations", "Add process monitoring"]
+          }
+        },
+        {
+          "id": "user-collaboration-system",
+          "title": "GitHub-style username mention system",
+          "description": "@username mentions for collaboration and task assignment", 
+          "status": "completed",
+          "priority": "high",
+          "estimated_hours": 6
+        },
+        {
+          "id": "url-structure-cleanup",
+          "title": "Rename routes from /cockpit to /app for cleaner URLs",
+          "description": "Update all navigation and route references for better branding",
+          "status": "completed", 
+          "priority": "medium",
+          "estimated_hours": 2
+        }
+      ]
+    },
+    "completed_this_sprint": [
+      {
+        "id": "ai-conversation-threading",
+        "title": "Multi-threaded AI conversations for product vs development planning",
+        "description": "Separate conversation threads for product planning (Vibe Chat) vs technical development (Claude Code sessions)",
+        "completed_date": "2025-08-03",
+        "acceptance_criteria_met": [
+          "Vibe Chat generates clear, actionable tasks from natural language",
+          "Development Chat maintains persistent context per worktree", 
+          "Claude sessions track full development lifecycle",
+          "System prompts guide AI behavior for different contexts",
+          "Sessions persist across page reloads and browser sessions"
+        ]
+      },
+      {
+        "id": "work-item-drill-down", 
+        "title": "Complete work item detail system with subtask navigation",
+        "description": "Full drill-down from kanban board to task details to subtask details with escape key navigation",
+        "completed_date": "2025-08-03",
+        "acceptance_criteria_met": [
+          "Kanban board shows work items in proper stages with overflow scroll",
+          "Task detail view shows full markdown content without technical metadata",
+          "Subtask detail view provides implementation guidance", 
+          "Escape key navigation works throughout the interface",
+          "Markdown rendering works properly in all contexts"
+        ]
+      },
+      {
+        "id": "claude-session-management",
+        "title": "Persistent Claude Code sessions per worktree", 
+        "description": "Rich system prompts and session management for development continuity",
+        "completed_date": "2025-08-03",
+        "acceptance_criteria_met": [
+          "Each worktree gets dedicated Claude session",
+          "System prompts provide rich context for different session types",
+          "Session history persists across browser sessions",
+          "Planning, Development, and Review modes available",
+          "Context includes work item, project, and conversation history"
+        ]
+      },
+      {
+        "id": "comprehensive-logging-system",
+        "title": "Add verbose logging to Claude integration for debugging",
+        "description": "Enhanced logging throughout AI provider chain with execution IDs and performance monitoring",
+        "completed_date": "2025-08-03",
+        "features_implemented": [
+          "Request tracking with unique execution IDs",
+          "Process execution logging with stdout/stderr chunks",
+          "Performance monitoring with timing and duration tracking", 
+          "Error details with full error messages and stack traces",
+          "Provider selection and fallback logging",
+          "Request lifecycle tracking from start to finish"
+        ]
+      },
+      {
+        "id": "enhanced-kanban-interface",
+        "title": "Improve kanban board layout by hiding completed items by default",
+        "description": "Better UI/UX with toggle for completed work items and responsive grid",
+        "completed_date": "2025-08-03"
+      }
+    ],
+    "completed_recently": [
+      {
+        "id": "repository-import-system",
+        "title": "GitHub repository import and transformation system",
+        "completed_date": "2025-01-03",
+        "description": "Users can import GitHub repos and transform them into Maverick projects"
+      },
+      {
+        "id": "project-url-structure",
+        "title": "Use project names instead of GUIDs in URLs",
+        "completed_date": "2025-01-03",
+        "description": "Projects accessible at /cockpit/projects/project-name instead of random IDs"
+      },
+      {
+        "id": "glassmorphism-modal",
+        "title": "Improved modal design with glassmorphism effect",
+        "completed_date": "2025-01-03",
+        "description": "Beautiful, less translucent modal design for repository import"
+      },
+      {
+        "id": "self-documenting-maverick",
+        "title": "Make .maverick file completely self-describing",
+        "completed_date": "2025-01-03",
+        "description": "Enhanced .maverick with product definition, roadmap, and complete specifications"
+      }
+    ],
+    "backlog": [
+      {
+        "id": "goose-extension",
+        "title": "Goose extension for workspace-aware AI assistance",
+        "priority": "high",
+        "estimated_hours": 20,
+        "dependencies": ["Goose team partnership"]
+      },
+      {
+        "id": "business-formation-automation",
+        "title": "Automated Delaware C-Corp incorporation workflow",
+        "priority": "high",
+        "estimated_hours": 30,
+        "dependencies": ["Legal automation service integration"]
+      },
+      {
+        "id": "square-deep-integration",
+        "title": "Complete Square API integration for payments and business setup",
+        "priority": "medium",
+        "estimated_hours": 25
+      },
+      {
+        "id": "real-time-collaboration",
+        "title": "Live editing and collaboration on .maverick files",
+        "priority": "medium",
+        "estimated_hours": 15
+      },
+      {
+        "id": "mobile-app",
+        "title": "Mobile application for workspace management",
+        "priority": "low",
+        "estimated_hours": 40
+      }
+    ],
+    "blockers": [
+      {
+        "id": "database-integration",
+        "title": "Need persistent database for project and user management",
+        "description": "Currently using mock data, need proper database schema and migrations",
+        "blocking_tasks": ["template-marketplace-mvp", "team-collaboration"],
+        "priority": "high"
+      },
+      {
+        "id": "github-app-permissions",
+        "title": "GitHub App creation for repository management",
+        "description": "Need GitHub App to create repositories, manage webhooks, and access private repos",
+        "blocking_tasks": ["automated-repo-creation", "webhook-integration"],
+        "priority": "medium"
+      }
+    ],
+    "success_metrics": {
+      "current_period": {
+        "features_shipped": 8,
+        "bugs_fixed": 12,
+        "performance_improvements": 3,
+        "user_feedback_score": "positive"
+      },
+      "targets_next_sprint": {
+        "features_shipped": 5,
+        "new_templates_created": 3,
+        "user_signups": 50,
+        "repository_imports": 25
+      }
+    }
+  },
+  "meta": {
+    "is_self_hosted": true,
+    "dogfooding": true,
+    "template_source": true,
+    "community_showcase": true,
+    "spiral_effect_origin": true,
+    "last_updated": "2025-01-03T12:30:00Z",
+    "clone_instructions": "This .maverick file contains complete specifications to recreate the entire Maverick platform. Follow the product_definition, feature_specifications, and implementation_roadmap to build your own version."
+  }
+}

@@ -28,7 +28,10 @@
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
       "Bash(gemini:*)",
-      "Bash(claude -p \"What is 2+2? Just respond with the number.\")"
+      "Bash(claude -p \"What is 2+2? Just respond with the number.\")",
+      "Bash(git --version)",
+      "Bash(cp:*)",
+      "Bash(npx prisma:*)"
     ],
     "deny": []
   }

@@ -25,6 +25,29 @@ export class MultiAIProvider {
   }
 
   /**
+   * Get the proper working directory for a project
+   */
+  private getProjectWorkingDirectory(projectId?: string): string {
+    if (projectId) {
+      // For real projects, use the actual project directory in the codebase
+      // This gives Claude Code access to the actual code and project context
+      const currentWorkingDir = process.cwd()
+      const projectPath = path.join(currentWorkingDir, 'projects', projectId)
+      
+      // If this is a known project, use the main codebase directory for Claude Code
+      // This allows Claude to see and work with the actual application code
+      if (projectId === 'maverick') {
+        return currentWorkingDir // Use the main maverick codebase directory
+      }
+      
+      return projectPath
+    }
+    
+    // Fallback to temporary directory for non-project contexts
+    return path.join(this.baseWorkingDir, 'default')
+  }
+
+  /**
    * Generate a response using the specified AI provider
    */
   async generateResponse(
@@ -33,39 +56,69 @@ export class MultiAIProvider {
     config: AIProviderConfig,
     projectId?: string
   ): Promise<string> {
-    const workDir = config.workingDirectory || (projectId 
-      ? path.join(this.baseWorkingDir, projectId)
-      : path.join(this.baseWorkingDir, 'default'))
+    const requestId = Math.random().toString(36).substr(2, 9)
+    console.log(`🎯 [${requestId}] AI Request started:`, {
+      provider: config.provider,
+      projectId,
+      messageLength: message.length,
+      contextLength: context.length,
+      timestamp: new Date().toISOString()
+    })
+    
+    const workDir = config.workingDirectory || this.getProjectWorkingDirectory(projectId)
+
+    console.log(`📁 [${requestId}] Working directory:`, workDir)
 
     // Ensure working directory exists
     await fs.mkdir(workDir, { recursive: true })
+    console.log(`✅ [${requestId}] Working directory ensured`)
 
     // Build the full prompt with context
     const fullPrompt = `${context}\n\nUser Request: ${message}`
+    console.log(`📝 [${requestId}] Full prompt prepared:`, {
+      length: fullPrompt.length,
+      preview: fullPrompt.slice(0, 200) + '...'
+    })
 
     // Choose provider automatically if needed
     const provider = config.provider === 'auto' ? await this.selectBestProvider() : config.provider
+    console.log(`🤖 [${requestId}] Selected provider:`, provider)
 
     try {
+      let result: string
       switch (provider) {
         case 'claude-code':
-          return await this.executeClaudeCode(fullPrompt, workDir, config.additionalArgs)
+          console.log(`🔮 [${requestId}] Executing Claude Code...`)
+          result = await this.executeClaudeCode(fullPrompt, workDir, config.additionalArgs)
+          break
         case 'gemini':
-          return await this.executeGemini(fullPrompt, workDir, config.model, config.additionalArgs)
+          console.log(`💎 [${requestId}] Executing Gemini...`)
+          result = await this.executeGemini(fullPrompt, workDir, config.model, config.additionalArgs)
+          break
         default:
           throw new Error(`Unsupported AI provider: ${provider}`)
       }
+      
+      console.log(`🎉 [${requestId}] AI Response successful:`, {
+        provider,
+        resultLength: result.length,
+        preview: result.slice(0, 200) + '...'
+      })
+      return result
     } catch (error) {
-      console.error(`${provider} execution error:`, error)
+      console.error(`❌ [${requestId}] ${provider} execution error:`, {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      })
       
       // Fallback to alternative provider if auto mode
       if (config.provider === 'auto') {
         const fallbackProvider = provider === 'claude-code' ? 'gemini' : 'claude-code'
-        console.log(`Falling back to ${fallbackProvider}`)
+        console.log(`🔄 [${requestId}] Falling back to ${fallbackProvider}`)
         try {
           return await this.generateResponse(message, context, { ...config, provider: fallbackProvider }, projectId)
         } catch (fallbackError) {
-          console.error(`Fallback provider ${fallbackProvider} also failed:`, fallbackError)
+          console.error(`💥 [${requestId}] Fallback provider ${fallbackProvider} also failed:`, fallbackError)
         }
       }
       
@@ -82,16 +135,32 @@ export class MultiAIProvider {
     config: AIProviderConfig,
     projectId?: string
   ): Promise<string> {
-    const workDir = config.workingDirectory || (projectId 
-      ? path.join(this.baseWorkingDir, projectId)
-      : path.join(this.baseWorkingDir, 'default'))
+    const chatId = Math.random().toString(36).substr(2, 9)
+    console.log(`💬 [${chatId}] Chat Request started:`, {
+      provider: config.provider,
+      projectId,
+      messagesCount: messages.length,
+      contextLength: context.length,
+      timestamp: new Date().toISOString()
+    })
+    
+    const workDir = config.workingDirectory || this.getProjectWorkingDirectory(projectId)
+
+    console.log(`📁 [${chatId}] Chat working directory:`, workDir)
 
     // Ensure working directory exists
     await fs.mkdir(workDir, { recursive: true })
+    console.log(`✅ [${chatId}] Chat working directory ensured`)
 
     // Format conversation history
     const conversationHistory = this.formatConversationHistory(messages.slice(-5)) // Last 5 messages
     const latestMessage = messages[messages.length - 1]
+    
+    console.log(`📜 [${chatId}] Chat context prepared:`, {
+      historyLength: conversationHistory.length,
+      latestMessageLength: latestMessage.content.length,
+      lastMessagesUsed: Math.min(5, messages.length)
+    })
 
     // Build full prompt with context and history
     const systemPrompt = this.getSystemPrompt(projectId)
@@ -102,30 +171,51 @@ export class MultiAIProvider {
       `\nCurrent User Request: ${latestMessage.content}`,
       '\nPlease provide a helpful response:'
     ].filter(Boolean).join('\n')
+    
+    console.log(`📝 [${chatId}] Chat prompt prepared:`, {
+      length: fullPrompt.length,
+      preview: fullPrompt.slice(0, 300) + '...'
+    })
 
     // Choose provider automatically if needed
     const provider = config.provider === 'auto' ? await this.selectBestProvider() : config.provider
+    console.log(`🤖 [${chatId}] Chat provider selected:`, provider)
 
     try {
+      let result: string
       switch (provider) {
         case 'claude-code':
-          return await this.executeClaudeCode(fullPrompt, workDir, config.additionalArgs)
+          console.log(`🔮 [${chatId}] Executing Claude Code for chat...`)
+          result = await this.executeClaudeCode(fullPrompt, workDir, config.additionalArgs)
+          break
         case 'gemini':
-          return await this.executeGemini(fullPrompt, workDir, config.model, config.additionalArgs)
+          console.log(`💎 [${chatId}] Executing Gemini for chat...`)
+          result = await this.executeGemini(fullPrompt, workDir, config.model, config.additionalArgs)
+          break
         default:
           throw new Error(`Unsupported AI provider: ${provider}`)
       }
+      
+      console.log(`🎉 [${chatId}] Chat Response successful:`, {
+        provider,
+        resultLength: result.length,
+        preview: result.slice(0, 200) + '...'
+      })
+      return result
     } catch (error) {
-      console.error(`${provider} chat error:`, error)
+      console.error(`❌ [${chatId}] ${provider} chat error:`, {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      })
       
       // Fallback to alternative provider if auto mode
       if (config.provider === 'auto') {
         const fallbackProvider = provider === 'claude-code' ? 'gemini' : 'claude-code'
-        console.log(`Falling back to ${fallbackProvider} for chat`)
+        console.log(`🔄 [${chatId}] Falling back to ${fallbackProvider} for chat`)
         try {
           return await this.generateChatResponse(messages, context, { ...config, provider: fallbackProvider }, projectId)
         } catch (fallbackError) {
-          console.error(`Fallback provider ${fallbackProvider} also failed:`, fallbackError)
+          console.error(`💥 [${chatId}] Fallback provider ${fallbackProvider} also failed:`, fallbackError)
         }
       }
       
@@ -137,7 +227,15 @@ export class MultiAIProvider {
    * Execute Claude Code command
    */
   private async executeClaudeCode(prompt: string, workingDir: string, additionalArgs?: string[]): Promise<string> {
-    const args = ['-p', prompt, ...(additionalArgs || [])]
+    // Add verbose flag and other helpful options
+    const args = ['--verbose', '-p', prompt, ...(additionalArgs || [])]
+    console.log('🤖 Claude Code Execution:', {
+      workingDir,
+      promptLength: prompt.length,
+      args: args.slice(0, 3), // Don't log full prompt for security
+      additionalArgs: additionalArgs || [],
+      verboseMode: true
+    })
     return this.executeCommand('claude', args, workingDir)
   }
 
@@ -162,36 +260,162 @@ export class MultiAIProvider {
    * Execute a command with specified arguments
    */
   private async executeCommand(command: string, args: string[], workingDir: string): Promise<string> {
+    const startTime = Date.now()
+    const executionId = Math.random().toString(36).substr(2, 9)
+    const timeoutMs = 60000 // 1 minute timeout - fail faster for better UX
+    
+    console.log(`🚀 [${executionId}] Starting ${command} execution:`, {
+      command,
+      argsCount: args.length,
+      workingDir,
+      timeoutMs,
+      timestamp: new Date().toISOString()
+    })
+    
     return new Promise((resolve, reject) => {
-      const childProcess = spawn(command, args, {
+      // Try using shell mode to avoid stdio issues
+      const childProcess = spawn('/bin/bash', ['-c', `${command} ${args.map(arg => `'${arg.replace(/'/g, "'\"'\"'")}'`).join(' ')}`], {
         cwd: workingDir,
-        stdio: ['pipe', 'pipe', 'pipe'],
+        stdio: ['ignore', 'pipe', 'pipe'],
         env: {
           ...process.env,
-        }
+          PATH: '/Users/tim/.nvm/versions/node/v22.17.0/bin:' + process.env.PATH
+        },
+        shell: false,
+        detached: false
       })
 
       let output = ''
       let error = ''
+      let stdoutChunks: string[] = []
+      let stderrChunks: string[] = []
+      let isResolved = false
+      
+      // Set up timeout
+      const timeoutHandle = setTimeout(() => {
+        if (!isResolved) {
+          isResolved = true
+          const duration = Date.now() - startTime
+          console.error(`⏰ [${executionId}] Process timeout after ${duration}ms:`, {
+            timeoutMs,
+            outputReceived: output.length,
+            errorReceived: error.length,
+            lastOutput: output.slice(-200)
+          })
+          
+          // Kill the process
+          try {
+            childProcess.kill('SIGTERM')
+            setTimeout(() => {
+              if (!childProcess.killed) {
+                console.log(`💥 [${executionId}] Force killing process`)
+                childProcess.kill('SIGKILL')
+              }
+            }, 5000)
+          } catch (killError) {
+            console.error(`💥 [${executionId}] Error killing process:`, killError)
+          }
+          
+          reject(new Error(`${command} process timed out after ${timeoutMs}ms`))
+        }
+      }, timeoutMs)
+      
+      // Add periodic heartbeat logging
+      const heartbeatInterval = setInterval(() => {
+        if (!isResolved) {
+          const duration = Date.now() - startTime
+          console.log(`📟 [${executionId}] Process heartbeat:`, {
+            duration: `${duration}ms`,
+            outputLength: output.length,
+            lastChunk: stdoutChunks.length > 0 ? stdoutChunks[stdoutChunks.length - 1].slice(0, 100) : 'none'
+          })
+        }
+      }, 10000) // Every 10 seconds
 
       childProcess.stdout.on('data', (data) => {
-        output += data.toString()
+        const chunk = data.toString()
+        output += chunk
+        stdoutChunks.push(chunk)
+        const duration = Date.now() - startTime
+        console.log(`📤 [${executionId}] stdout chunk (${duration}ms):`, {
+          length: chunk.length,
+          preview: chunk.slice(0, 200) + (chunk.length > 200 ? '...' : ''),
+          totalOutput: output.length
+        })
       })
 
       childProcess.stderr.on('data', (data) => {
-        error += data.toString()
+        const chunk = data.toString()
+        error += chunk
+        stderrChunks.push(chunk)
+        const duration = Date.now() - startTime
+        console.log(`⚠️ [${executionId}] stderr chunk (${duration}ms):`, {
+          length: chunk.length,
+          preview: chunk.slice(0, 200) + (chunk.length > 200 ? '...' : ''),
+          totalError: error.length
+        })
       })
 
       childProcess.on('close', (code) => {
-        if (code === 0) {
-          resolve(output.trim())
-        } else {
-          reject(new Error(`${command} process exited with code ${code}: ${error}`))
+        if (!isResolved) {
+          isResolved = true
+          clearTimeout(timeoutHandle)
+          clearInterval(heartbeatInterval)
+          
+          const duration = Date.now() - startTime
+          console.log(`🏁 [${executionId}] ${command} process completed:`, {
+            exitCode: code,
+            duration: `${duration}ms`,
+            outputLength: output.length,
+            errorLength: error.length,
+            stdoutChunks: stdoutChunks.length,
+            stderrChunks: stderrChunks.length
+          })
+          
+          if (code === 0) {
+            console.log(`✅ [${executionId}] Success - output preview:`, {
+              length: output.length,
+              preview: output.slice(0, 500) + (output.length > 500 ? '...' : ''),
+              hasContent: output.trim().length > 0
+            })
+            resolve(output.trim())
+          } else {
+            const errorMsg = `${command} process exited with code ${code}: ${error}`
+            console.error(`❌ [${executionId}] Failed:`, {
+              exitCode: code,
+              errorMessage: error.slice(0, 1000),
+              outputReceived: output.slice(0, 500),
+              duration: `${duration}ms`
+            })
+            reject(new Error(errorMsg))
+          }
         }
       })
 
       childProcess.on('error', (err) => {
-        reject(new Error(`Failed to start ${command}: ${err.message}`))
+        if (!isResolved) {
+          isResolved = true
+          clearTimeout(timeoutHandle)
+          clearInterval(heartbeatInterval)
+          
+          const duration = Date.now() - startTime
+          const errorMsg = `Failed to start ${command}: ${err.message}`
+          console.error(`💥 [${executionId}] Process spawn error:`, {
+            error: err.message,
+            duration: `${duration}ms`,
+            command,
+            workingDir
+          })
+          reject(new Error(errorMsg))
+        }
+      })
+      
+      // Log process start
+      console.log(`🔄 [${executionId}] Process spawned:`, {
+        pid: childProcess.pid,
+        command,
+        workingDir,
+        timeout: `${timeoutMs}ms`
       })
     })
   }

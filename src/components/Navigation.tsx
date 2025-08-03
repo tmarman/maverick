@@ -33,13 +33,13 @@ export function Navigation() {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               <Link 
-                href="/cockpit" 
+                href="/app" 
                 className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
               >
-                Cockpit
+                App
               </Link>
               <Link 
-                href="/cockpit/import/github" 
+                href="/app/repositories" 
                 className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
               >
                 Import
@@ -88,7 +88,7 @@ export function Navigation() {
                   Hi, {session?.user?.name || session?.user?.email}
                 </span>
                 <Link 
-                  href="/cockpit"
+                  href="/app"
                   className="bg-accent-primary hover:bg-accent-hover text-text-inverse px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   🚀 Launch Cockpit
@@ -119,13 +119,13 @@ export function Navigation() {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border-subtle mt-4">
               <Link 
-                href="/cockpit" 
+                href="/app" 
                 className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
               >
                 Cockpit
               </Link>
               <Link 
-                href="/cockpit/import/github" 
+                href="/app/import/github" 
                 className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
               >
                 Import
@@ -170,7 +170,7 @@ export function Navigation() {
                       Hi, {session?.user?.name || session?.user?.email}
                     </div>
                     <Link 
-                      href="/cockpit"
+                      href="/app"
                       className="bg-accent-primary hover:bg-accent-hover text-text-inverse block px-3 py-2 rounded-lg text-base font-medium transition-colors mt-2"
                     >
                       🚀 Launch Cockpit

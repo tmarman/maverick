@@ -1,0 +1,251 @@
+{
+  "version": "1.0",
+  "scope": {
+    "type": "product",
+    "name": "Square Application",
+    "description": "Complete Square API integration with payments, inventory, and business management",
+    "owner": "square-dev-team",
+    "boundaries": {
+      "includes": ["./src", "./square-config", "./webhooks", "./docs", "./tests"],
+      "excludes": ["./node_modules", "./dist", "./.env", "./square-credentials"]
+    }
+  },
+  "instructions": {
+    "file": "./instructions.md",
+    "context": "Square API development with payments, POS, inventory, and customer management",
+    "inheritance": "merge"
+  },
+  "architecture": {
+    "type": "square_integration",
+    "dependencies": [
+      {
+        "name": "square",
+        "type": "external",
+        "purpose": "Square API SDK"
+      },
+      {
+        "name": "square-webhooks",
+        "type": "external", 
+        "purpose": "Square webhook handling"
+      },
+      {
+        "path": "../shared",
+        "type": "internal",
+        "purpose": "Shared business logic"
+      }
+    ],
+    "interfaces": {
+      "exports": ["./api/square", "./components/square", "./types/square"],
+      "contracts": ["./api/payments.json", "./api/inventory.json", "./webhooks/events.json"]
+    }
+  },
+  "team": {
+    "roles": {
+      "lead": "square-lead@company.com",
+      "members": ["square-dev@company.com", "payments-dev@company.com"],
+      "stakeholders": ["business-ops@company.com", "finance@company.com"]
+    },
+    "workflow": {
+      "template": "square-development",
+      "cadence": "sprint"
+    }
+  },
+  "ai": {
+    "claude": {
+      "instructions": "./instructions.md",
+      "context_files": ["./README.md", "./square-config/api-reference.md"],
+      "preferences": {
+        "framework": "nextjs",
+        "language": "typescript",
+        "square_environment": "sandbox",
+        "payment_methods": ["card", "cash", "digital_wallet"],
+        "compliance": ["pci_dss", "data_protection"]
+      }
+    },
+    "gemini": {
+      "instructions": "./.gemini/instructions",
+      "specialization": "square_api_integration"
+    }
+  },
+  "templates": {
+    "workspace_type": "square-app",
+    "created_from": "template://square-app-v1",
+    "generates": ["payment-flow", "inventory-sync", "webhook-handler", "pos-integration"],
+    "template_metadata": {
+      "author": "maverick-square-team",
+      "version": "1.0.0", 
+      "success_metrics": {
+        "apps_deployed": 0,
+        "payment_volume": "$0",
+        "merchant_satisfaction": "95%"
+      },
+      "square_apis": ["payments", "orders", "inventory", "customers", "loyalty"],
+      "complexity": "advanced"
+    }
+  },
+  "system_design": {
+    "relationships": {
+      "parent": "../.maverick",
+      "children": ["./features/payments/.maverick", "./features/inventory/.maverick"],
+      "peers": ["../business-formation/.maverick"]
+    },
+    "data_flow": {
+      "inputs": [
+        {"from": "square_api", "type": "payment_events"},
+        {"from": "square_api", "type": "inventory_updates"},
+        {"from": "pos_system", "type": "transaction_data"}
+      ],
+      "outputs": [
+        {"to": "business_dashboard", "type": "analytics"},
+        {"to": "accounting_system", "type": "financial_data"}
+      ]
+    }
+  },
+  "automation": {
+    "workflows": [
+      {
+        "name": "square_app_setup",
+        "trigger": "template_instantiation",
+        "steps": [
+          "create_square_developer_account",
+          "setup_sandbox_environment", 
+          "configure_oauth_application",
+          "generate_api_credentials",
+          "setup_webhook_endpoints",
+          "configure_payment_flows"
+        ]
+      },
+      {
+        "name": "payment_processing",
+        "trigger": "payment_request",
+        "steps": [
+          "validate_payment_data",
+          "create_square_payment",
+          "handle_payment_response",
+          "update_order_status",
+          "send_confirmation"
+        ]
+      },
+      {
+        "name": "inventory_sync",
+        "trigger": "inventory_change",
+        "steps": [
+          "detect_inventory_update",
+          "sync_with_square_catalog",
+          "update_local_database",
+          "notify_stakeholders"
+        ]
+      }
+    ],
+    "integrations": {
+      "square_api": {
+        "environment": "sandbox",
+        "api_version": "2023-10-18",
+        "auto_setup": true,
+        "services": ["payments", "orders", "catalog", "customers", "loyalty", "invoices"]
+      },
+      "square_pos": {
+        "integration_type": "web_api",
+        "features": ["transaction_sync", "inventory_sync", "customer_sync"]
+      },
+      "square_webhooks": {
+        "auto_configure": true,
+        "events": ["payment.created", "order.updated", "inventory.updated"]
+      }
+    }
+  },
+  "structure": {
+    "required_folders": [
+      "src/api/square",
+      "src/components/payments",
+      "src/components/inventory", 
+      "src/webhooks",
+      "square-config",
+      "docs/square-integration"
+    ],
+    "optional_folders": [
+      "src/components/pos",
+      "src/components/loyalty",
+      "src/analytics",
+      "compliance"
+    ],
+    "generated_files": [
+      "src/api/square/payments.ts",
+      "src/api/square/catalog.ts",
+      "src/api/square/customers.ts",
+      "src/components/payments/PaymentForm.tsx",
+      "src/components/inventory/InventoryManager.tsx",
+      "src/webhooks/square-events.ts",
+      "square-config/environments.json",
+      "docs/square-setup.md"
+    ]
+  },
+  "square_specifics": {
+    "application_type": "web_app",
+    "square_apis": {
+      "payments": {
+        "features": ["card_payments", "digital_wallets", "gift_cards", "cash"],
+        "security": ["tokenization", "3ds", "cvv_verification"]
+      },
+      "orders": {
+        "features": ["order_creation", "order_management", "fulfillment"],
+        "integrations": ["pos", "online_store", "mobile_app"]
+      },
+      "catalog": {
+        "features": ["item_management", "pricing", "modifiers", "categories"],
+        "sync_options": ["real_time", "batch", "webhook_driven"]
+      },
+      "customers": {
+        "features": ["customer_profiles", "contact_info", "purchase_history"],
+        "privacy": ["gdpr_compliant", "data_encryption"]
+      },
+      "loyalty": {
+        "features": ["points_accrual", "rewards_redemption", "program_management"],
+        "customization": ["reward_tiers", "point_values", "promotion_rules"]
+      }
+    },
+    "compliance_requirements": [
+      "pci_dss_compliance",
+      "data_encryption_at_rest", 
+      "data_encryption_in_transit",
+      "secure_api_key_management",
+      "webhook_signature_verification",
+      "fraud_detection_integration"
+    ],
+    "testing_strategy": {
+      "sandbox_testing": "All Square API calls use sandbox environment",
+      "payment_testing": "Test with Square's test card numbers",
+      "webhook_testing": "Use Square's webhook testing tools",
+      "integration_testing": "End-to-end payment flow validation"
+    }
+  },
+  "business_model": {
+    "revenue_streams": [
+      "transaction_fees",
+      "subscription_fees", 
+      "premium_features",
+      "custom_integrations"
+    ],
+    "square_partnership": {
+      "referral_program": "Earn $5-$200 per merchant referral",
+      "fee_sharing": "Revenue share on payment processing",
+      "marketing_support": "Co-marketing opportunities",
+      "technical_support": "Priority Square developer support"
+    }
+  },
+  "theme": {
+    "primary_color": "#006aff",
+    "secondary_color": "#00d4ff", 
+    "accent_color": "#ff6900",
+    "ui_style": "square_design_system",
+    "components": "square_branded",
+    "layout": "dashboard_focused"
+  },
+  "status": {
+    "current_phase": "template_ready",
+    "development_stage": "not_started",
+    "square_integration_status": "configured",
+    "deployment_status": "pending",
+    "compliance_status": "requirements_defined"
+  }
+}

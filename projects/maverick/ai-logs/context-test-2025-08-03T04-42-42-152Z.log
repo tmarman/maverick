@@ -1,0 +1,12 @@
+{
+  "testName": "context-test",
+  "timestamp": "2025-08-03T04:47:42.164Z",
+  "workingDirectory": "/Users/tim/dev/square/maverick",
+  "prompt": "You are working on the Maverick project. List 3 files you can see in this codebase and briefly describe what each does.",
+  "exitCode": 143,
+  "stdout": "",
+  "stderr": "",
+  "duration": 300009,
+  "success": false,
+  "outputLength": 0
+}

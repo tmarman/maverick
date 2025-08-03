@@ -1,0 +1,115 @@
+{
+  "count": 12,
+  "lastUpdated": "2025-08-03T04:59:00.237Z",
+  "populated_features": true,
+  "items": [
+    {
+      "id": "cf82afb4-1be0-4a6d-9361-8c6a8a97d641",
+      "filename": "cf82afb4-1be0-4a6d-9361-8c6a8a97d641.md",
+      "path": "work-items/cf82afb4-1be0-4a6d-9361-8c6a8a97d641.md",
+      "title": "Project Canvas & Work Item Management",
+      "category": "Project Management",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    },
+    {
+      "id": "9614b896-534f-40ec-9189-e23e2ebac5eb",
+      "filename": "9614b896-534f-40ec-9189-e23e2ebac5eb.md",
+      "path": "work-items/9614b896-534f-40ec-9189-e23e2ebac5eb.md",
+      "title": "AI-Powered Work Item Analysis",
+      "category": "AI & Automation",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    },
+    {
+      "id": "7120213f-5f50-4fea-a930-662aa7cb884b",
+      "filename": "7120213f-5f50-4fea-a930-662aa7cb884b.md",
+      "path": "work-items/7120213f-5f50-4fea-a930-662aa7cb884b.md",
+      "title": "GitHub Repository Integration",
+      "category": "Version Control",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    },
+    {
+      "id": "1b52ef05-c425-4d0d-b027-bfbaf3159aa3",
+      "filename": "1b52ef05-c425-4d0d-b027-bfbaf3159aa3.md",
+      "path": "work-items/1b52ef05-c425-4d0d-b027-bfbaf3159aa3.md",
+      "title": "Project-Based Navigation & Routing",
+      "category": "UI/UX",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    },
+    {
+      "id": "7e9801e6-ade5-44ad-be9f-bdc88d3c1605",
+      "filename": "7e9801e6-ade5-44ad-be9f-bdc88d3c1605.md",
+      "path": "work-items/7e9801e6-ade5-44ad-be9f-bdc88d3c1605.md",
+      "title": "Markdown-Based Work Item Storage",
+      "category": "Data Architecture",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    },
+    {
+      "id": "aa199fdd-6c0f-4a41-a944-32a3e6e0b3f9",
+      "filename": "aa199fdd-6c0f-4a41-a944-32a3e6e0b3f9.md",
+      "path": "work-items/aa199fdd-6c0f-4a41-a944-32a3e6e0b3f9.md",
+      "title": "Claude Code Terminal Integration",
+      "category": "AI & Development",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    },
+    {
+      "id": "9223a697-6360-4a12-b369-865cd41239cf",
+      "filename": "9223a697-6360-4a12-b369-865cd41239cf.md",
+      "path": "work-items/9223a697-6360-4a12-b369-865cd41239cf.md",
+      "title": "Business Formation Workflow",
+      "category": "Business Formation",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    },
+    {
+      "id": "759a9763-a6ef-4301-bba3-8587d5313057",
+      "filename": "759a9763-a6ef-4301-bba3-8587d5313057.md",
+      "path": "work-items/759a9763-a6ef-4301-bba3-8587d5313057.md",
+      "title": "Document Canvas & Collaboration",
+      "category": "Collaboration",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    },
+    {
+      "id": "4a5eb82c-fb49-4d38-b444-0f905d503311",
+      "filename": "4a5eb82c-fb49-4d38-b444-0f905d503311.md",
+      "path": "work-items/4a5eb82c-fb49-4d38-b444-0f905d503311.md",
+      "title": "Multi-AI Provider System",
+      "category": "AI & Automation",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    },
+    {
+      "id": "b83facd1-8a4c-4306-aa32-74bb77c59492",
+      "filename": "b83facd1-8a4c-4306-aa32-74bb77c59492.md",
+      "path": "work-items/b83facd1-8a4c-4306-aa32-74bb77c59492.md",
+      "title": "Presentation Generator",
+      "category": "Content Generation",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    },
+    {
+      "id": "e53bc171-d675-47fa-ae65-ccc0fc2a0d1c",
+      "filename": "e53bc171-d675-47fa-ae65-ccc0fc2a0d1c.md",
+      "path": "work-items/e53bc171-d675-47fa-ae65-ccc0fc2a0d1c.md",
+      "title": "Authentication & Session Management",
+      "category": "Authentication",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    },
+    {
+      "id": "d5c25fd0-d668-4185-a60a-017b24ca1788",
+      "filename": "d5c25fd0-d668-4185-a60a-017b24ca1788.md",
+      "path": "work-items/d5c25fd0-d668-4185-a60a-017b24ca1788.md",
+      "title": "Project Insights & Analytics",
+      "category": "Analytics & Insights",
+      "status": "ACTIVE",
+      "priority": "HIGH"
+    }
+  ]
+}

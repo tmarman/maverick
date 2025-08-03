@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Simple rate limiting
-    const clientIP = request.ip || 'unknown'
+    const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     if (!checkRateLimit(clientIP, 50, 60000)) { // 50 requests per minute
       return NextResponse.json({
         error: {

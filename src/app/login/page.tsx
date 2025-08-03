@@ -27,8 +27,8 @@ export default function Login() {
         console.error('Login failed:', result.error)
         alert('Invalid email or password')
       } else if (result?.ok) {
-        // Redirect to app on success
-        window.location.href = '/app'
+        // Redirect to cockpit on success
+        window.location.href = '/cockpit'
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -47,13 +47,13 @@ export default function Login() {
       if (provider === 'github') {
         // Use NextAuth signIn for GitHub
         await signIn('github', { 
-          callbackUrl: '/app',
+          callbackUrl: '/cockpit',
           redirect: true 
         })
       } else if (provider === 'square') {
         // Use NextAuth signIn for Square
         await signIn('square', { 
-          callbackUrl: '/app',
+          callbackUrl: '/cockpit',
           redirect: true 
         })
       }

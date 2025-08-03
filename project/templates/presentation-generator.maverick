@@ -1,0 +1,223 @@
+{
+  "version": "1.0",
+  "scope": {
+    "type": "feature",
+    "name": "Presentation Generator",
+    "description": "AI-powered markdown to presentation converter with beautiful themes",
+    "owner": "product-team",
+    "boundaries": {
+      "includes": ["./src", "./templates", "./themes", "./api", "./components"],
+      "excludes": ["./node_modules", "./dist", "./generated-presentations"]
+    }
+  },
+  "instructions": {
+    "file": "./instructions.md",
+    "context": "Presentation generation feature with reveal.js, markdown parsing, and PDF export",
+    "inheritance": "merge"
+  },
+  "architecture": {
+    "type": "feature",
+    "dependencies": [
+      {
+        "name": "reveal.js",
+        "type": "external",
+        "purpose": "Web presentation framework"
+      },
+      {
+        "name": "puppeteer",
+        "type": "external", 
+        "purpose": "PDF export generation"
+      },
+      {
+        "path": "../ui",
+        "type": "internal",
+        "purpose": "Shared UI components"
+      }
+    ],
+    "interfaces": {
+      "exports": ["./components/PresentationGenerator", "./api/presentations"],
+      "contracts": ["./api/presentations/generate.json", "./api/presentations/export.json"]
+    }
+  },
+  "team": {
+    "roles": {
+      "lead": "frontend-lead@company.com",
+      "members": ["frontend-dev@company.com"],
+      "stakeholders": ["product-manager@company.com"]
+    },
+    "workflow": {
+      "template": "feature-development",
+      "cadence": "sprint"
+    }
+  },
+  "ai": {
+    "claude": {
+      "instructions": "./instructions.md",
+      "context_files": ["./README.md", "./api-docs.md"],
+      "preferences": {
+        "framework": "nextjs",
+        "language": "typescript",
+        "ui_library": "radix-ui",
+        "styling": "tailwindcss"
+      }
+    },
+    "gemini": {
+      "instructions": "./.gemini/instructions",
+      "specialization": "ui_design"
+    }
+  },
+  "templates": {
+    "workspace_type": "presentation-generator",
+    "created_from": "template://presentation-generator-v1",
+    "generates": ["presentation-theme", "markdown-converter", "export-format"],
+    "template_metadata": {
+      "author": "maverick-product-team",
+      "version": "1.0.0",
+      "success_metrics": {
+        "presentations_generated": 0,
+        "user_satisfaction": "95%",
+        "conversion_rate": "80%"
+      },
+      "use_cases": ["pitch_decks", "technical_presentations", "business_reports"],
+      "complexity": "intermediate"
+    }
+  },
+  "system_design": {
+    "relationships": {
+      "parent": "../.maverick",
+      "children": [],
+      "peers": ["../chat-interface/.maverick", "../workspace-manager/.maverick"]
+    },
+    "data_flow": {
+      "inputs": [
+        {"from": "user", "type": "markdown_content"},
+        {"from": "user", "type": "theme_selection"}
+      ],
+      "outputs": [
+        {"to": "browser", "type": "interactive_presentation"},
+        {"to": "file_system", "type": "pdf_export"}
+      ]
+    }
+  },
+  "automation": {
+    "workflows": [
+      {
+        "name": "presentation_generation",
+        "trigger": "api_request",
+        "steps": [
+          "parse_markdown_to_slides",
+          "apply_theme_styles",
+          "generate_reveal_js_html",
+          "save_to_public_directory",
+          "return_presentation_url"
+        ]
+      },
+      {
+        "name": "pdf_export",
+        "trigger": "export_request",
+        "steps": [
+          "launch_headless_browser",
+          "load_presentation",
+          "wait_for_reveal_js_ready",
+          "generate_pdf_buffer",
+          "return_downloadable_file"
+        ]
+      }
+    ],
+    "integrations": {
+      "reveal_js": {
+        "version": "4.3.1",
+        "plugins": ["markdown", "highlight", "zoom", "notes"]
+      },
+      "puppeteer": {
+        "headless": true,
+        "options": ["--no-sandbox", "--disable-setuid-sandbox"]
+      }
+    }
+  },
+  "structure": {
+    "required_folders": [
+      "components",
+      "api/presentations",
+      "themes",
+      "templates"
+    ],
+    "optional_folders": [
+      "examples",
+      "documentation"
+    ],
+    "generated_files": [
+      "components/PresentationGenerator.tsx",
+      "api/presentations/generate/route.ts",
+      "api/presentations/export/[id]/route.ts",
+      "themes/default.css",
+      "themes/dark.css",
+      "themes/gradient.css"
+    ]
+  },
+  "features": {
+    "core_features": [
+      "markdown_to_slides_conversion",
+      "multiple_theme_support",
+      "real_time_preview",
+      "pdf_export",
+      "interactive_presentation_viewer"
+    ],
+    "advanced_features": [
+      "custom_theme_creation",
+      "slide_animations",
+      "speaker_notes",
+      "presentation_analytics",
+      "collaborative_editing"
+    ],
+    "future_features": [
+      "video_export",
+      "ai_slide_optimization",
+      "voice_over_generation",
+      "interactive_elements",
+      "vr_presentation_mode"
+    ]
+  },
+  "tech_stack": {
+    "frontend": {
+      "framework": "nextjs",
+      "language": "typescript",
+      "ui_library": "radix-ui",
+      "styling": "tailwindcss"
+    },
+    "backend": {
+      "api": "nextjs_api_routes",
+      "presentation_engine": "reveal.js",
+      "pdf_generation": "puppeteer"
+    },
+    "deployment": {
+      "platform": "vercel",
+      "cdn": "vercel_edge",
+      "storage": "local_file_system"
+    }
+  },
+  "testing": {
+    "unit_tests": [
+      "markdown_parser",
+      "theme_application",
+      "slide_generation"
+    ],
+    "integration_tests": [
+      "api_endpoint_generation",
+      "pdf_export_pipeline",
+      "presentation_rendering"
+    ],
+    "e2e_tests": [
+      "full_presentation_workflow",
+      "theme_switching",
+      "export_functionality"
+    ]
+  },
+  "meta_moment": {
+    "created_from_user_need": "User wanted real presentation from markdown pitch deck",
+    "demonstrates_maverick_principle": "User need becomes platform feature",
+    "becomes_template_for": "Any content-to-presentation generation",
+    "spiral_effect": "Others can now generate presentations from any markdown content",
+    "next_evolution": "AI-optimized slide layouts, voice generation, video export"
+  }
+}

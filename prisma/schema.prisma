@@ -64,6 +64,7 @@ model User {
   chatSessions     ChatSession[]
   documentsCreated Document[]        @relation("DocumentCreator")
   featuresAssigned Feature[]
+  workItemsAssigned WorkItem[]
   aiAgentsCreated  AIAgent[]
 
   @@map("users")
@@ -124,6 +125,11 @@ model Business {
   squareServices  String    @db.Text // JSON string of selected Square services array
   appType         String?   // Valid values: 'website', 'ecommerce', 'booking', etc.
   appFeatures     String    @db.Text // JSON string of selected app features array
+  
+  // Repository Integration (Company as Root Repo)
+  githubRepoId    String?   // GitHub repository ID for the company
+  repositoryUrl   String?   // Company repository URL
+  defaultBranch   String?   @default("main") // Default branch for company repo
   
   // Subscription and billing
   subscriptionPlan String?  // founder, growth, enterprise
@@ -211,6 +217,12 @@ model Project {
   type        String    // Valid values: SOFTWARE, MARKETING, OPERATIONS, LEGAL, FINANCIAL, RESEARCH, CONTENT
   status      String    @default("PLANNING") // Valid values: PLANNING, ACTIVE, ON_HOLD, COMPLETED, ARCHIVED, CANCELLED
   
+  // Repository Integration (Project as Submodule)
+  githubRepoId     String?   // GitHub repository ID for this project
+  repositoryUrl    String?   // Project repository URL (will be submodule in company repo)
+  submodulePath    String?   // Path within company repo where this project is mounted
+  defaultBranch    String?   @default("main") // Default branch for project repo
+  
   // JSON fields converted to Text for SQL Server compatibility
   githubConfig     String?   @db.Text // JSON string for repository settings, webhook URLs
   aiAgentConfig    String?   @db.Text // JSON string for AI agents to use, preferences
@@ -220,7 +232,7 @@ model Project {
   business    Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
   businessId  String
   documents   Document[]
-  features    Feature[]
+  workItems   WorkItem[] // Renamed from features to support features AND bugs
   
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -256,6 +268,63 @@ model Document {
   @@map("documents")
 }
 
+// Hierarchical Work Item Model (Features & Bugs)
+model WorkItem {
+  id              String    @id @default(cuid())
+  title           String
+  description     String?
+  type            String    // Valid values: FEATURE, BUG, EPIC, STORY, TASK, SUBTASK
+  status          String    @default("PLANNED") // Valid values: PLANNED, IN_PROGRESS, IN_REVIEW, TESTING, DONE, CANCELLED, BLOCKED
+  priority        String    @default("MEDIUM") // Valid values: LOW, MEDIUM, HIGH, URGENT, CRITICAL
+  functionalArea  String    @default("SOFTWARE") // Valid values: SOFTWARE, LEGAL, OPERATIONS, MARKETING
+  
+  // Hierarchical relationships
+  parentId        String?   // Parent work item (for creating trees)
+  orderIndex      Int       @default(0) // For ordering within same parent
+  depth           Int       @default(0) // 0 = Top Level Feature/Bug, 1+ = Child items
+  
+  // GitHub integration & Worktree management
+  githubIssueNumber    Int?
+  githubPRNumber       Int?
+  githubBranch         String?
+  worktreeName         String?  // Name of the worktree for this work item
+  worktreePath         String?  // Full path to the worktree
+  worktreeStatus       String?  // Valid values: PENDING, ACTIVE, STALE, MERGED, REMOVED
+  
+  // JSON converted to Text for SQL Server compatibility
+  acceptanceCriteria   String?   @db.Text // JSON string for user stories, requirements
+  aiGeneratedData      String?   @db.Text // JSON string for AI-generated specs, code snippets
+  chatHistory          String?   @db.Text // JSON string for chat messages and AI conversations
+  estimatedEffort      String?   // "1d", "1w", "1m" - human readable
+  tags                 String?   @db.Text // JSON string array of tags
+  
+  // Deployment tracking
+  stagingDeployedAt    DateTime? // When this item was deployed to staging
+  productionDeployedAt DateTime? // When this item was deployed to production
+  
+  // Relationships
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  projectId       String
+  
+  assignedTo      User?     @relation(fields: [assignedToId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  assignedToId    String?
+  
+  // Self-referential for hierarchy
+  parent          WorkItem? @relation("WorkItemHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children        WorkItem[] @relation("WorkItemHierarchy")
+  
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([projectId, parentId]) // For efficient tree queries
+  @@index([type, status]) // For filtering
+  @@index([worktreeName]) // For worktree management
+  @@map("work_items")
+}
+
+
+// Legacy Feature model - keeping for migration compatibility
 model Feature {
   id              String    @id @default(cuid())
   title           String
@@ -276,9 +345,6 @@ model Feature {
   estimatedEffort      String?   // "1d", "1w", "1m" - human readable
   
   // Relationships
-  project         Project   @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  projectId       String
-  
   assignedTo      User?     @relation(fields: [assignedToId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   assignedToId    String?
   

@@ -1,0 +1,217 @@
+{
+  "version": "1.0",
+  "scope": {
+    "type": "product",
+    "name": "SaaS Product",
+    "description": "Complete SaaS product development workspace with modern tech stack",
+    "owner": "product-team",
+    "boundaries": {
+      "includes": ["./src", "./features", "./design", "./docs", "./tests"],
+      "excludes": ["./node_modules", "./dist", "./.next", "./coverage"]
+    }
+  },
+  "instructions": {
+    "file": "./instructions.md", 
+    "context": "SaaS product development with Next.js, TypeScript, and modern tooling",
+    "inheritance": "merge"
+  },
+  "architecture": {
+    "type": "microservice",
+    "dependencies": [
+      {
+        "path": "../shared",
+        "type": "internal"
+      },
+      {
+        "name": "stripe",
+        "type": "external"
+      },
+      {
+        "name": "auth0",
+        "type": "external"
+      }
+    ],
+    "interfaces": {
+      "exports": ["./api", "./types", "./components"],
+      "contracts": ["./api/contracts/*.json"]
+    }
+  },
+  "team": {
+    "roles": {
+      "lead": "cto@company.com",
+      "members": ["dev1@company.com", "dev2@company.com"],
+      "stakeholders": ["pm@company.com", "designer@company.com"]
+    },
+    "workflow": {
+      "template": "agile",
+      "cadence": "sprint"
+    }
+  },
+  "ai": {
+    "claude": {
+      "instructions": "./instructions.md",
+      "context_files": ["./README.md", "./docs/architecture.md", "./package.json"],
+      "preferences": {
+        "framework": "nextjs",
+        "language": "typescript",
+        "database": "postgresql",
+        "auth": "nextauth",
+        "payments": "stripe"
+      }
+    },
+    "gemini": {
+      "instructions": "./.gemini/instructions",
+      "specialization": "frontend_development"
+    }
+  },
+  "templates": {
+    "workspace_type": "saas-product",
+    "created_from": "template://saas-product-v1",
+    "generates": ["feature", "component", "api-route", "database-migration"],
+    "template_metadata": {
+      "author": "maverick-product",
+      "version": "1.0.0",
+      "success_metrics": {
+        "products_launched": 0,
+        "avg_time_to_mvp": "60_days",
+        "deployment_success_rate": "98%"
+      },
+      "tech_stack": ["nextjs", "typescript", "postgresql", "prisma"],
+      "complexity": "intermediate"
+    }
+  },
+  "system_design": {
+    "relationships": {
+      "parent": "../.maverick",
+      "children": ["./features/auth/.maverick", "./features/billing/.maverick"],
+      "peers": ["../marketing/.maverick"]
+    },
+    "data_flow": {
+      "inputs": [
+        {"from": "../", "type": "business_requirements"},
+        {"from": "../marketing", "type": "user_feedback"}
+      ],
+      "outputs": [
+        {"to": "../operations", "type": "deployment_artifacts"},
+        {"to": "../marketing", "type": "feature_announcements"}
+      ]
+    }
+  },
+  "automation": {
+    "workflows": [
+      {
+        "name": "ci_cd",
+        "trigger": "push",
+        "steps": [
+          "run_tests",
+          "build_application", 
+          "deploy_staging",
+          "run_e2e_tests",
+          "deploy_production"
+        ]
+      },
+      {
+        "name": "feature_development",
+        "trigger": "manual",
+        "steps": [
+          "create_feature_branch",
+          "generate_feature_scaffold",
+          "setup_tests",
+          "create_pr_template"
+        ]
+      }
+    ],
+    "integrations": {
+      "vercel": {
+        "auto_deployment": true,
+        "environments": ["staging", "production"]
+      },
+      "stripe": {
+        "auto_setup": true,
+        "services": ["subscriptions", "invoicing"]
+      },
+      "auth0": {
+        "auto_setup": true,
+        "features": ["social_login", "mfa"]
+      }
+    }
+  },
+  "structure": {
+    "required_folders": [
+      "src",
+      "features",
+      "design",
+      "docs",
+      "tests"
+    ],
+    "optional_folders": [
+      "scripts",
+      "migrations",
+      "seed-data"
+    ],
+    "generated_files": [
+      "package.json",
+      "tsconfig.json",
+      "next.config.js",
+      "tailwind.config.js",
+      "prisma/schema.prisma",
+      ".env.example",
+      "README.md",
+      "docs/api.md"
+    ]
+  },
+  "tech_stack": {
+    "frontend": {
+      "framework": "nextjs",
+      "language": "typescript",
+      "styling": "tailwindcss",
+      "ui_library": "radix-ui"
+    },
+    "backend": {
+      "runtime": "nodejs",
+      "database": "postgresql",
+      "orm": "prisma",
+      "auth": "nextauth"
+    },
+    "infrastructure": {
+      "hosting": "vercel",
+      "database_hosting": "planetscale",
+      "monitoring": "sentry",
+      "analytics": "mixpanel"
+    },
+    "payments": {
+      "processor": "stripe",
+      "billing": "stripe_billing",
+      "invoicing": "stripe_invoicing"
+    }
+  },
+  "development": {
+    "scripts": {
+      "dev": "next dev",
+      "build": "next build",
+      "start": "next start",
+      "test": "jest",
+      "test:e2e": "playwright test",
+      "db:migrate": "prisma migrate dev",
+      "db:seed": "tsx prisma/seed.ts"
+    },
+    "dependencies": {
+      "required": [
+        "next",
+        "react",
+        "typescript",
+        "@prisma/client",
+        "next-auth",
+        "stripe",
+        "tailwindcss"
+      ],
+      "dev": [
+        "jest",
+        "playwright",
+        "eslint",
+        "prettier",
+        "prisma"
+      ]
+    }
+  }
+}

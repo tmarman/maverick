@@ -395,7 +395,7 @@ function AccountsPageContent() {
                   <div className="flex items-center gap-2">
                     {currentOrg.integrations.github ? (
                       <>
-                        <Badge className="bg-green-100 text-green-800">Connected</Badge>
+                        <Badge className="bg-background-secondary text-text-primary border border-border-standard">Connected</Badge>
                         <Button variant="outline" size="sm">
                           <ExternalLink className="w-4 h-4 mr-2" />
                           Configure
@@ -426,7 +426,7 @@ function AccountsPageContent() {
                   <div className="flex items-center gap-2">
                     {currentOrg.integrations.square ? (
                       <>
-                        <Badge className="bg-green-100 text-green-800">Connected</Badge>
+                        <Badge className="bg-background-secondary text-text-primary border border-border-standard">Connected</Badge>
                         <Button variant="outline" size="sm">
                           <ExternalLink className="w-4 h-4 mr-2" />
                           Configure

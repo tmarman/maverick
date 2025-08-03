@@ -169,7 +169,7 @@ export class DatabaseService {
         projects: {
           include: {
             documents: true,
-            features: true
+            workItems: true
           }
         }
       }
@@ -192,7 +192,7 @@ export class DatabaseService {
       include: {
         business: true,
         documents: true,
-        features: true
+        workItems: true
       }
     })
   }
@@ -207,7 +207,7 @@ export class DatabaseService {
             createdBy: true
           }
         },
-        features: {
+        workItems: {
           include: {
             assignedTo: true
           }
@@ -251,20 +251,11 @@ export class DatabaseService {
 
   // Feature operations (removed duplicate - using more comprehensive version below)
 
-  async updateFeatureGitHubInfo(featureId: string, githubData: {
-    issueNumber?: number
-    prNumber?: number
-    branch?: string
-  }) {
-    return this.prisma.feature.update({
-      where: { id: featureId },
-      data: {
-        githubIssueNumber: githubData.issueNumber,
-        githubPRNumber: githubData.prNumber,
-        githubBranch: githubData.branch
-      }
-    })
+  /*
+  async updateFeatureGitHubInfo(featureId: string, githubData: any) {
+    throw new Error('updateFeatureGitHubInfo is deprecated - use WorkItem API instead')
   }
+  */
 
   // AI Agent operations
   async createAIAgent(data: CreateAIAgentData) {
@@ -329,7 +320,7 @@ export class DatabaseService {
         projects: {
           include: {
             documents: true,
-            features: true
+            workItems: true
           }
         }
       }
@@ -343,181 +334,36 @@ export class DatabaseService {
         totalProjects: business.projects.length,
         activeProjects: business.projects.filter(p => p.status === 'ACTIVE').length,
         totalDocuments: business.projects.reduce((sum, p) => sum + p.documents.length, 0),
-        totalFeatures: business.projects.reduce((sum, p) => sum + p.features.length, 0),
-        completedFeatures: business.projects.reduce((sum, p) => 
-          sum + p.features.filter(f => f.status === 'DONE').length, 0
+        totalWorkItems: business.projects.reduce((sum, p) => sum + p.workItems.length, 0),
+        completedWorkItems: business.projects.reduce((sum, p) => 
+          sum + p.workItems.filter(f => f.status === 'DONE').length, 0
         )
       }
     }
   }
 
-  // Feature operations (for cockpit) - Real Prisma implementation
-  async createFeature(data: {
-    id: string
-    title: string
-    description?: string
-    status: 'planned' | 'in_progress' | 'in_review' | 'done' | 'blocked'
-    priority: 'low' | 'medium' | 'high' | 'urgent'
-    functionalArea: 'Software' | 'Legal' | 'Operations' | 'Marketing'
-    userId: string
-    productId: string // This is actually projectId in our schema
-    estimatedEffort?: string
-    assignee?: string
-    chatHistory?: any[]
-    createdAt: Date
-    updatedAt: Date
-  }) {
-    try {
-      const feature = await this.prisma.feature.create({
-        data: {
-          id: data.id,
-          title: data.title,
-          description: data.description,
-          status: data.status.toUpperCase(),
-          priority: data.priority.toUpperCase(),
-          functionalArea: data.functionalArea.toUpperCase(),
-          projectId: data.productId, // Map productId to projectId
-          estimatedEffort: data.estimatedEffort,
-          assignedToId: data.assignee === 'Claude' ? null : data.assignee,
-          chatHistory: JSON.stringify(data.chatHistory || []),
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt
-        },
-        include: {
-          project: true,
-          assignedTo: true
-        }
-      })
-
-      return {
-        ...feature,
-        chatHistory: feature.chatHistory ? JSON.parse(feature.chatHistory) : [],
-        status: feature.status.toLowerCase(),
-        priority: feature.priority.toLowerCase(),
-        functionalArea: feature.functionalArea
-      }
-    } catch (error) {
-      console.error('Failed to create feature in database:', error)
-      // Fallback to in-memory feature
-      return {
-        ...data,
-        chatHistory: data.chatHistory || []
-      }
-    }
+  // Legacy feature operations - DEPRECATED - Use WorkItem instead
+  // TODO: Remove these methods after migrating to WorkItem
+  /*
+  async createFeature(data: any) {
+    throw new Error('createFeature is deprecated - use WorkItem API instead')
   }
+  */
 
+  /*
+  // Legacy feature methods - DEPRECATED - Use WorkItem API instead
   async getFeature(featureId: string, userEmail: string) {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { email: userEmail },
-        select: { id: true }
-      })
-      
-      if (!user) return null
-
-      const feature = await this.prisma.feature.findFirst({
-        where: {
-          id: featureId,
-          project: {
-            business: {
-              OR: [
-                { ownerId: user.id },
-                { members: { some: { userId: user.id } } }
-              ]
-            }
-          }
-        },
-        include: {
-          project: true,
-          assignedTo: true
-        }
-      })
-
-      if (!feature) return null
-
-      return {
-        ...feature,
-        chatHistory: feature.chatHistory ? JSON.parse(feature.chatHistory) : [],
-        status: feature.status.toLowerCase(),
-        priority: feature.priority.toLowerCase(),
-        functionalArea: feature.functionalArea
-      }
-    } catch (error) {
-      console.error('Failed to get feature from database:', error)
-      return null
-    }
+    throw new Error('getFeature is deprecated - use WorkItem API instead')
   }
 
-  async updateFeature(featureId: string, updates: {
-    chatHistory?: any[]
-    updatedAt?: Date
-    status?: string
-    [key: string]: any
-  }) {
-    try {
-      const updateData: any = {
-        updatedAt: updates.updatedAt || new Date()
-      }
-
-      if (updates.chatHistory) {
-        updateData.chatHistory = JSON.stringify(updates.chatHistory)
-      }
-
-      if (updates.status) {
-        updateData.status = updates.status.toUpperCase()
-      }
-
-      await this.prisma.feature.update({
-        where: { id: featureId },
-        data: updateData
-      })
-
-      return true
-    } catch (error) {
-      console.error('Failed to update feature in database:', error)
-      return false
-    }
+  async updateFeature(featureId: string, updates: any) {
+    throw new Error('updateFeature is deprecated - use WorkItem API instead')
   }
 
   async getFeaturesByProduct(productId: string, userEmail: string) {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { email: userEmail },
-        select: { id: true }
-      })
-      
-      if (!user) return []
-
-      const features = await this.prisma.feature.findMany({
-        where: {
-          projectId: productId, // Map productId to projectId
-          project: {
-            business: {
-              OR: [
-                { ownerId: user.id },
-                { members: { some: { userId: user.id } } }
-              ]
-            }
-          }
-        },
-        include: {
-          assignedTo: true
-        },
-        orderBy: { createdAt: 'desc' }
-      })
-
-      return features.map(feature => ({
-        ...feature,
-        chatHistory: feature.chatHistory ? JSON.parse(feature.chatHistory) : [],
-        status: feature.status.toLowerCase(),
-        priority: feature.priority.toLowerCase(),
-        functionalArea: feature.functionalArea
-      }))
-    } catch (error) {
-      console.error('Failed to get features from database:', error)
-      return []
-    }
+    throw new Error('getFeaturesByProduct is deprecated - use WorkItem API instead')
   }
+  */
 
   // Get user's accessible companies (businesses)
   async getUserCompanies(userEmail: string) {
@@ -529,7 +375,7 @@ export class DatabaseService {
             include: {
               projects: {
                 include: {
-                  features: {
+                  workItems: {
                     select: {
                       id: true,
                       status: true
@@ -546,7 +392,7 @@ export class DatabaseService {
                 include: {
                   projects: {
                     include: {
-                      features: {
+                      workItems: {
                         select: {
                           id: true,
                           status: true
@@ -581,9 +427,9 @@ export class DatabaseService {
           description: project.description,
           path: `/projects/${project.name}/`,
           submoduleUrl: null, // This will come from GitHub integration
-          features: project.features.map(feature => ({
-            id: feature.id,
-            status: feature.status.toLowerCase()
+          workItems: project.workItems.map(workItem => ({
+            id: workItem.id,
+            status: workItem.status.toLowerCase()
           }))
         }))
       }))

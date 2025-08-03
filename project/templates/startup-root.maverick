@@ -1,0 +1,120 @@
+{
+  "version": "1.0",
+  "scope": {
+    "type": "root",
+    "name": "Startup Company",
+    "description": "Complete startup infrastructure with legal, product, and marketing workspaces",
+    "owner": "founders",
+    "boundaries": {
+      "includes": ["./legal", "./products", "./marketing", "./operations"],
+      "excludes": ["./node_modules", "./.git", "./tmp"]
+    }
+  },
+  "instructions": {
+    "file": "./instructions.md",
+    "context": "Root company workspace for early-stage startup",
+    "inheritance": "merge"
+  },
+  "architecture": {
+    "type": "company",
+    "dependencies": [],
+    "interfaces": {
+      "exports": ["./shared", "./brand"],
+      "contracts": ["./legal/contracts/*.json"]
+    }
+  },
+  "team": {
+    "roles": {
+      "lead": "founder@company.com",
+      "members": ["cofounder@company.com"],
+      "stakeholders": ["investor@vc.com"]
+    },
+    "workflow": {
+      "template": "startup",
+      "cadence": "milestone"
+    }
+  },
+  "ai": {
+    "claude": {
+      "instructions": "./instructions.md",
+      "context_files": ["./README.md", "./legal/incorporation/business-plan.md"],
+      "preferences": {
+        "focus": "mvp_development",
+        "stage": "pre_seed"
+      }
+    },
+    "gemini": {
+      "instructions": "./.gemini/instructions",
+      "specialization": "business_strategy"
+    }
+  },
+  "templates": {
+    "workspace_type": "startup-root",
+    "created_from": "template://startup-root-v1",
+    "generates": ["legal", "product", "marketing", "operations"],
+    "template_metadata": {
+      "author": "maverick-team",
+      "version": "1.0.0",
+      "success_metrics": {
+        "companies_created": 0,
+        "funding_raised": "$0",
+        "time_to_incorporation": "7_days"
+      },
+      "industry": "general",
+      "stage": "pre_seed",
+      "complexity": "beginner"
+    }
+  },
+  "system_design": {
+    "relationships": {
+      "parent": null,
+      "children": ["./legal/.maverick", "./products/.maverick", "./marketing/.maverick"],
+      "peers": []
+    },
+    "data_flow": {
+      "inputs": [],
+      "outputs": [
+        {"to": "./legal", "type": "business_requirements"},
+        {"to": "./products", "type": "product_vision"},
+        {"to": "./marketing", "type": "brand_guidelines"}
+      ]
+    }
+  },
+  "automation": {
+    "setup_scripts": [
+      "scripts/setup-git-hooks.sh",
+      "scripts/create-basic-docs.sh"
+    ],
+    "integrations": {
+      "square": {
+        "auto_setup": true,
+        "services": ["payments", "business_account"]
+      },
+      "github": {
+        "auto_setup": true,
+        "features": ["issues", "projects", "actions"]
+      }
+    }
+  },
+  "structure": {
+    "required_folders": [
+      "legal",
+      "products", 
+      "marketing",
+      "operations",
+      "shared",
+      "brand"
+    ],
+    "optional_folders": [
+      "research",
+      "partnerships",
+      "investors"
+    ],
+    "generated_files": [
+      "README.md",
+      "instructions.md",
+      ".gitignore",
+      ".github/workflows/ci.yml"
+    ]
+  }
+}

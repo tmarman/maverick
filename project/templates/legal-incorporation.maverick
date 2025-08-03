@@ -1,0 +1,180 @@
+{
+  "version": "1.0",
+  "scope": {
+    "type": "legal", 
+    "name": "Legal & Incorporation",
+    "description": "Delaware C-Corp incorporation and legal compliance workspace",
+    "owner": "legal-team",
+    "boundaries": {
+      "includes": ["./incorporation", "./contracts", "./compliance", "./ip"],
+      "excludes": ["./tmp", "./drafts"]
+    }
+  },
+  "instructions": {
+    "file": "./instructions.md",
+    "context": "Legal workspace for incorporation and compliance management",
+    "inheritance": "merge"
+  },
+  "architecture": {
+    "type": "workflow",
+    "dependencies": [
+      {
+        "path": "../shared",
+        "type": "internal"
+      }
+    ],
+    "interfaces": {
+      "exports": ["./templates", "./compliance-requirements"],
+      "contracts": ["./contracts/*.json"]
+    }
+  },
+  "team": {
+    "roles": {
+      "lead": "legal@company.com",
+      "members": ["founder@company.com"],
+      "stakeholders": ["accountant@company.com", "lawyer@lawfirm.com"]
+    },
+    "workflow": {
+      "template": "legal",
+      "cadence": "milestone"
+    }
+  },
+  "ai": {
+    "claude": {
+      "instructions": "./instructions.md",
+      "context_files": ["./incorporation/bylaws.md", "./compliance/requirements.md"],
+      "preferences": {
+        "specialization": "corporate_law",
+        "jurisdiction": "delaware",
+        "entity_type": "c_corp"
+      }
+    },
+    "gemini": {
+      "instructions": "./.gemini/instructions",
+      "specialization": "legal_document_generation"
+    }
+  },
+  "templates": {
+    "workspace_type": "legal-incorporation",
+    "created_from": "template://legal-incorporation-v1",
+    "generates": ["contract", "filing", "compliance-check"],
+    "template_metadata": {
+      "author": "maverick-legal",
+      "version": "1.0.0",
+      "success_metrics": {
+        "companies_incorporated": 0,
+        "avg_incorporation_time": "7_days",
+        "compliance_score": "95%"
+      },
+      "jurisdiction": "delaware",
+      "entity_types": ["c_corp", "llc"],
+      "complexity": "intermediate"
+    }
+  },
+  "system_design": {
+    "relationships": {
+      "parent": "../.maverick",
+      "children": [],
+      "peers": ["../products/.maverick", "../marketing/.maverick"]
+    },
+    "data_flow": {
+      "inputs": [
+        {"from": "../", "type": "business_requirements"},
+        {"from": "../products", "type": "product_specifications"}
+      ],
+      "outputs": [
+        {"to": "../operations", "type": "legal_entities"},
+        {"to": "../products", "type": "compliance_requirements"}
+      ]
+    }
+  },
+  "automation": {
+    "workflows": [
+      {
+        "name": "incorporation",
+        "trigger": "manual",
+        "steps": [
+          "generate_articles_of_incorporation",
+          "file_with_delaware",
+          "obtain_ein",
+          "setup_corporate_bank_account",
+          "generate_bylaws",
+          "issue_founder_stock"
+        ]
+      },
+      {
+        "name": "compliance_check",
+        "trigger": "monthly",
+        "steps": [
+          "review_corporate_resolutions",
+          "check_annual_report_due",
+          "validate_stock_cap_table",
+          "review_contract_renewals"
+        ]
+      }
+    ],
+    "integrations": {
+      "delaware_division_corporations": {
+        "auto_filing": true,
+        "services": ["incorporation", "annual_reports"]
+      },
+      "irs": {
+        "auto_filing": false,
+        "services": ["ein_application"]
+      },
+      "square": {
+        "business_verification": true,
+        "services": ["business_account_setup"]
+      }
+    }
+  },
+  "structure": {
+    "required_folders": [
+      "incorporation",
+      "contracts",
+      "compliance",
+      "ip"
+    ],
+    "optional_folders": [
+      "litigation",
+      "employment",
+      "regulatory"
+    ],
+    "generated_files": [
+      "incorporation/articles-of-incorporation.md",
+      "incorporation/bylaws.md",
+      "incorporation/stockholder-agreement.md",
+      "contracts/template-service-agreement.md",
+      "compliance/annual-checklist.md",
+      "ip/trademark-applications.md"
+    ]
+  },
+  "legal_specifics": {
+    "entity_type": "c_corp",
+    "jurisdiction": "delaware",
+    "stock_structure": {
+      "common_shares": 10000000,
+      "preferred_shares": 3000000,
+      "option_pool": 1500000
+    },
+    "required_documents": [
+      "articles_of_incorporation",
+      "bylaws", 
+      "stockholder_agreement",
+      "board_resolutions",
+      "stock_certificates"
+    ],
+    "compliance_calendar": [
+      {
+        "task": "annual_report",
+        "frequency": "yearly",
+        "due_date": "march_1"
+      },
+      {
+        "task": "board_meeting",
+        "frequency": "quarterly",
+        "notes": "document_resolutions"
+      }
+    ]
+  }
+}
