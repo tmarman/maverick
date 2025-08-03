@@ -102,7 +102,7 @@ export function DevelopmentChat({ project, workItem, className }: DevelopmentCha
       role: 'user',
       content: inputText.trim(),
       timestamp: new Date(),
-      messageType: activeThread,
+      messageType: activeThread === 'implementation' ? 'code' : activeThread,
       workItemId: workItem?.id
     }
 
@@ -147,7 +147,7 @@ export function DevelopmentChat({ project, workItem, className }: DevelopmentCha
           role: 'assistant',
           content: data.response || "I understand. Let me help you with that.",
           timestamp: new Date(),
-          messageType: activeThread,
+          messageType: activeThread === 'implementation' ? 'code' : activeThread,
           claudeSessionId: data.sessionId,
           codeGenerated: data.codeGenerated || false,
           filesModified: data.filesModified || []
@@ -172,7 +172,7 @@ export function DevelopmentChat({ project, workItem, className }: DevelopmentCha
         role: 'assistant',
         content: "I'm having trouble with that request. Could you try rephrasing or breaking it down into smaller steps?",
         timestamp: new Date(),
-        messageType: activeThread
+        messageType: activeThread === 'implementation' ? 'code' : activeThread
       }
       setMessages(prev => [...prev, errorMessage])
     } finally {
@@ -308,20 +308,20 @@ export function DevelopmentChat({ project, workItem, className }: DevelopmentCha
                   
                   {/* Message metadata */}
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge className={getMessageTypeColor(message.messageType)} size="sm">
+                    <Badge className={getMessageTypeColor(message.messageType)}>
                       {getThreadIcon(message.messageType)}
                       {message.messageType}
                     </Badge>
                     
                     {message.codeGenerated && (
-                      <Badge variant="secondary" size="sm">
+                      <Badge variant="secondary">
                         <FileCode className="w-3 h-3 mr-1" />
                         Code Generated
                       </Badge>
                     )}
                     
                     {message.filesModified && message.filesModified.length > 0 && (
-                      <Badge variant="outline" size="sm">
+                      <Badge variant="outline">
                         {message.filesModified.length} files
                       </Badge>
                     )}

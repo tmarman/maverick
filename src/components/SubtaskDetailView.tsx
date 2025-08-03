@@ -30,13 +30,20 @@ interface WorkItem {
   status: 'PLANNED' | 'IN_PROGRESS' | 'IN_REVIEW' | 'TESTING' | 'DONE' | 'CANCELLED' | 'BLOCKED'
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'CRITICAL'
   functionalArea: 'SOFTWARE' | 'LEGAL' | 'OPERATIONS' | 'MARKETING'
+  parentId?: string
+  orderIndex: number
+  depth: number
   worktreeName?: string
-  worktreeStatus?: string
+  worktreePath?: string
+  worktreeStatus?: 'PENDING' | 'ACTIVE' | 'STALE' | 'MERGED' | 'REMOVED'
+  githubBranch?: string
   estimatedEffort?: string
+  assignedToId?: string
   createdAt: string
   updatedAt: string
+  children?: WorkItem[]
   markdownContent?: string
-  projectName: string
+  projectName?: string
 }
 
 interface SubtaskDetailViewProps {
@@ -245,14 +252,14 @@ export function SubtaskDetailView({
                 {parentWorkItem.description || 'This subtask is part of the work item above.'}
               </p>
               <div className="flex items-center gap-2 mt-2">
-                <Badge variant="outline" size="sm">
+                <Badge variant="outline">
                   {parentWorkItem.type}
                 </Badge>
-                <Badge variant="outline" size="sm">
+                <Badge variant="outline">
                   {parentWorkItem.priority}
                 </Badge>
                 {parentWorkItem.estimatedEffort && (
-                  <Badge variant="outline" size="sm">
+                  <Badge variant="outline">
                     {parentWorkItem.estimatedEffort}
                   </Badge>
                 )}

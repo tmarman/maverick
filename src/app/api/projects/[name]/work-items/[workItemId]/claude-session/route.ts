@@ -291,5 +291,5 @@ function extractFilesFromResponse(response: string): string[] {
     }
   })
   
-  return [...new Set(files)] // Remove duplicates
+  return Array.from(new Set(files)) // Remove duplicates
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
+
 import puppeteer from 'puppeteer'
 
 interface ExportRequest {
@@ -10,11 +11,12 @@ interface ExportRequest {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { format = 'pdf', quality = 90 }: ExportRequest = await request.json()
-    const presentationId = params.id
+    const { id: presentationId } = await params
+
 
     // Read the presentation HTML
     const presentationPath = join(process.cwd(), 'public', 'presentations', presentationId, 'index.html')
@@ -35,9 +37,9 @@ export async function POST(
     await page.setContent(html, { waitUntil: 'networkidle0' })
     
     // Wait for reveal.js to initialize
-    await page.waitForFunction(() => window.Reveal && window.Reveal.isReady())
+    await page.waitForFunction(() => (window as any).Reveal && (window as any).Reveal.isReady())
     
-    let buffer: Buffer
+    let buffer: Uint8Array
 
     if (format === 'pdf') {
       // Generate PDF with all slides

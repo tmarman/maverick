@@ -71,6 +71,7 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
   const [viewMode, setViewMode] = useState<'board' | 'detail' | 'subtask'>('board')
   const [selectedSubtask, setSelectedSubtask] = useState<any>(null)
   const [parentWorkItem, setParentWorkItem] = useState<WorkItem | null>(null)
+  const [showCompleted, setShowCompleted] = useState(false)
 
   useEffect(() => {
     loadWorkItems()

@@ -464,10 +464,9 @@ Try saying something like:
                     </Button>
                   </div>
                   {selectedTask.description && (
-                    <div className="text-blue-600 text-xs max-h-20 overflow-y-auto">
+                    <div className="text-blue-600 text-xs max-h-20 overflow-y-auto prose prose-xs prose-blue max-w-none">
                       <ReactMarkdown 
                         remarkPlugins={[remarkGfm]}
-                        className="prose prose-xs prose-blue max-w-none"
                         components={{
                           p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
                           ul: ({ children }) => <ul className="list-disc ml-4 mb-1">{children}</ul>,
@@ -560,14 +559,14 @@ Try saying something like:
                           )}
                           
                           <div className="flex items-center gap-1 mt-2 flex-wrap">
-                            <Badge className={getStatusColor(task.status)} size="sm">
+                            <Badge className={getStatusColor(task.status)}>
                               {task.status.replace('_', ' ')}
                             </Badge>
-                            <Badge className={getPriorityColor(task.priority)} size="sm">
+                            <Badge className={getPriorityColor(task.priority)}>
                               {task.priority}
                             </Badge>
                             {task.duration && (
-                              <Badge variant="outline" size="sm">
+                              <Badge variant="outline">
                                 {task.duration}
                               </Badge>
                             )}

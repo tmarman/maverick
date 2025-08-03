@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { name: string } }
+  { params }: { params: Promise<{ name: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -32,7 +32,7 @@ export async function POST(
       )
     }
 
-    const projectName = params.name
+    const { name: projectName } = await params
 
     // TODO: Implement actual team invitation logic
     // For now, we'll just simulate success

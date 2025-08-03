@@ -61,11 +61,11 @@ export async function POST(
     const workItems = await loadProjectWorkItems(projectName)
     
     // Generate insights with custom parameters
+    const projectDescription = body.projectDescription || `Project: ${projectName} - AI-powered business platform`
     const insights = await generateProjectInsights(
       projectName, 
       workItems, 
-      body.projectDescription,
-      body.businessGoals
+      projectDescription
     )
     
     // Optionally save insights to project folder

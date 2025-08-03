@@ -83,7 +83,7 @@ async function smartCreateHandler(
   // Handle chat mode differently
   if (body.chatMode) {
     logInfo('Processing in chat mode', projectContext)
-    return await handleChatMode(projectName, body, session, resolvedParams, projectContext)
+    return await handleChatMode(projectName, body, session, resolvedParams, projectContext.requestId || 'default')
   }
 
   logInfo('Loading existing work items for context', projectContext)
@@ -981,6 +981,6 @@ ${mentionedUsers && mentionedUsers.length > 0 ? `- Mentioned users: ${mentionedU
 export const POST = withErrorHandling(smartCreateHandler, (request, { params }) => ({
   endpoint: '/api/projects/[name]/work-items/smart-create',
   method: 'POST',
-  projectId: params?.name
+  projectId: 'dynamic' // Will be resolved in handler
 }))
 

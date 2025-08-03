@@ -8,7 +8,7 @@ interface UserMention {
   length: number
 }
 
-interface UserProfile {
+export interface UserProfile {
   username: string
   display: string
   email?: string

@@ -199,7 +199,7 @@ export function createErrorResponse(
   includeStack = false
 ): NextResponse {
   let statusCode = 500
-  let errorCode = ErrorCodes.INTERNAL_SERVER_ERROR
+  let errorCode: string = ErrorCodes.INTERNAL_SERVER_ERROR
   let message = 'An unexpected error occurred'
   
   if (error instanceof MaverickError) {
@@ -352,7 +352,7 @@ export async function withRetry<T>(
       lastError = error
       
       if (attempt === maxRetries) {
-        logError(error, { ...context, metadata: { finalAttempt: true, totalAttempts: maxRetries } })
+        logError(error, context)
         throw error
       }
       

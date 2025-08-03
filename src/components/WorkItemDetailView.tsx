@@ -30,13 +30,20 @@ interface WorkItem {
   status: 'PLANNED' | 'IN_PROGRESS' | 'IN_REVIEW' | 'TESTING' | 'DONE' | 'CANCELLED' | 'BLOCKED'
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'CRITICAL'
   functionalArea: 'SOFTWARE' | 'LEGAL' | 'OPERATIONS' | 'MARKETING'
+  parentId?: string
+  orderIndex: number
+  depth: number
   worktreeName?: string
-  worktreeStatus?: string
+  worktreePath?: string
+  worktreeStatus?: 'PENDING' | 'ACTIVE' | 'STALE' | 'MERGED' | 'REMOVED'
+  githubBranch?: string
   estimatedEffort?: string
+  assignedToId?: string
   createdAt: string
   updatedAt: string
+  children?: WorkItem[]
   markdownContent?: string
-  projectName: string
+  projectName?: string
 }
 
 interface SubTask {
@@ -362,7 +369,7 @@ This feature involves ${workItem.type.toLowerCase()} development focusing on ${w
       {/* Header */}
       <div className="border-b border-border-standard p-6">
         <div className="flex items-center gap-4 mb-4">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+          <Button variant="ghost"  onClick={onBack}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Board
           </Button>
@@ -465,10 +472,10 @@ This feature involves ${workItem.type.toLowerCase()} development focusing on ${w
                             {task.title}
                           </button>
                           <div className="flex items-center gap-2 ml-4">
-                            <Badge className={getPriorityColor(task.priority)} size="sm">
+                            <Badge className={getPriorityColor(task.priority)} >
                               {task.priority}
                             </Badge>
-                            <Badge variant="outline" size="sm">
+                            <Badge variant="outline" >
                               {task.duration}
                             </Badge>
                           </div>
@@ -481,7 +488,7 @@ This feature involves ${workItem.type.toLowerCase()} development focusing on ${w
                         )}
                         
                         <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="secondary" size="sm">
+                          <Badge variant="secondary" >
                             {task.category}
                           </Badge>
                         </div>
@@ -520,8 +527,8 @@ This feature involves ${workItem.type.toLowerCase()} development focusing on ${w
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-medium">{opportunity.title}</h3>
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary" size="sm">{opportunity.impact} Impact</Badge>
-                        <Badge variant="outline" size="sm">{opportunity.effort} Effort</Badge>
+                        <Badge variant="secondary" >{opportunity.impact} Impact</Badge>
+                        <Badge variant="outline" >{opportunity.effort} Effort</Badge>
                       </div>
                     </div>
                     <p className="text-sm text-text-secondary mb-2">{opportunity.description}</p>
@@ -545,10 +552,10 @@ This feature involves ${workItem.type.toLowerCase()} development focusing on ${w
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-medium">{risk.title}</h3>
                       <div className="flex items-center gap-2">
-                        <Badge className="bg-orange-100 text-orange-800" size="sm">
+                        <Badge className="bg-orange-100 text-orange-800" >
                           {risk.severity} Severity
                         </Badge>
-                        <Badge variant="outline" size="sm">{risk.probability} Probability</Badge>
+                        <Badge variant="outline" >{risk.probability} Probability</Badge>
                       </div>
                     </div>
                     <p className="text-sm text-text-secondary mb-2">{risk.description}</p>
