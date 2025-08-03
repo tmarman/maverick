@@ -15,8 +15,16 @@ echo "=== Checking node_modules setup ==="
 if [ -L "node_modules" ]; then
     echo "node_modules is a symlink pointing to: $(readlink node_modules)"
     ls -la /node_modules/.bin/next 2>/dev/null || echo "next not found in /node_modules/.bin/"
+elif [ -d "node_modules" ]; then
+    echo "node_modules directory exists from deployment package"
+    echo "Checking for next binary:"
+    ls -la ./node_modules/.bin/next 2>/dev/null || echo "next not found in ./node_modules/.bin/"
+    if [ ! -f "./node_modules/.bin/next" ]; then
+        echo "Next binary not found, attempting to install missing dependencies..."
+        npm install --production --prefer-offline --no-audit --no-fund --timeout=300000 || echo "Install failed, continuing with available dependencies"
+    fi
 else
-    echo "node_modules is not a symlink, installing dependencies..."
+    echo "node_modules not found, installing dependencies..."
     npm install --production --prefer-offline --no-audit --no-fund --timeout=300000
 fi
 

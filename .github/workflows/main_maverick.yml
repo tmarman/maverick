@@ -46,9 +46,8 @@ jobs:
 
       - name: Prepare deployment package
         run: |
-          # Remove node_modules to save space and avoid conflicts
-          rm -rf node_modules
-          # Create a clean deployment package
+          # Keep node_modules for Azure deployment to avoid permission issues
+          echo "Keeping node_modules in deployment package"
           echo "Final package contents:"
           ls -la
 
