@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "NODE_ENV=production node server.js",
     "start:next": "next start",
+    "postinstall": "npm run build",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "jest",
