@@ -11,32 +11,33 @@ echo "PORT: $PORT"
 echo "NEXTAUTH_URL: $NEXTAUTH_URL"
 echo "DATABASE_URL: ${DATABASE_URL:0:20}..." # Only show first 20 chars for security
 
+echo "=== Checking node_modules setup ==="
+if [ -L "node_modules" ]; then
+    echo "node_modules is a symlink pointing to: $(readlink node_modules)"
+    ls -la /node_modules/.bin/next 2>/dev/null || echo "next not found in /node_modules/.bin/"
+else
+    echo "node_modules is not a symlink, installing dependencies..."
+    npm install --production --prefer-offline --no-audit --no-fund --timeout=300000
+fi
+
+echo "=== Setting up production environment ==="
+export NODE_ENV=production
+# Check both possible paths for node_modules
+if [ -d "/node_modules/.bin" ]; then
+    export PATH="/node_modules/.bin:$PATH"
+    echo "Using global node_modules: /node_modules/.bin"
+else
+    export PATH="./node_modules/.bin:$PATH" 
+    echo "Using local node_modules: ./node_modules/.bin"
+fi
+echo "PATH: $PATH"
+
 echo "=== Checking for .next directory ==="
 if [ ! -d ".next" ]; then
     echo "ERROR: .next directory not found!"
     echo "Contents of current directory:"
     ls -la
     
-    echo "=== Checking node_modules setup ==="
-    if [ -L "node_modules" ]; then
-        echo "node_modules is a symlink pointing to: $(readlink node_modules)"
-        ls -la /node_modules/.bin/next 2>/dev/null || echo "next not found in /node_modules/.bin/"
-    else
-        echo "node_modules is not a symlink, installing dependencies..."
-        npm install --production --prefer-offline --no-audit --no-fund --timeout=300000
-    fi
-    
-    echo "=== Setting up build environment ==="
-    export NODE_ENV=production
-    # Check both possible paths for node_modules
-    if [ -d "/node_modules/.bin" ]; then
-        export PATH="/node_modules/.bin:$PATH"
-        echo "Using global node_modules: /node_modules/.bin"
-    else
-        export PATH="./node_modules/.bin:$PATH" 
-        echo "Using local node_modules: ./node_modules/.bin"
-    fi
-    echo "PATH: $PATH"
     echo "Checking for next binary:"
     which next || echo "next not found in PATH"
     ls -la /node_modules/.bin/next 2>/dev/null || ls -la ./node_modules/.bin/next 2>/dev/null || echo "next binary not found in either location"
