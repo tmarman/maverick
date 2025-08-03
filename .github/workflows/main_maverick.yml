@@ -46,8 +46,8 @@ jobs:
 
       - name: Prepare deployment package
         run: |
-          # Keep node_modules for Azure deployment to avoid permission issues
-          echo "Keeping node_modules in deployment package"
+          # Remove node_modules to avoid permission issues in Azure
+          echo "Preparing clean deployment package"
           echo "Final package contents:"
           ls -la
 
