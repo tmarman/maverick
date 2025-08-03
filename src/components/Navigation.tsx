@@ -39,12 +39,6 @@ export function Navigation() {
                 About
               </Link>
               <Link 
-                href="/app" 
-                className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
-              >
-                App
-              </Link>
-              <Link 
                 href="/pricing" 
                 className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
               >
@@ -73,13 +67,13 @@ export function Navigation() {
             ) : (
               <>
                 <span className="text-text-secondary text-sm">
-                  Hi, {session?.user?.name || session?.user?.email}
+                  Hi, {session?.user?.name?.split(' ')[0] || session?.user?.email}
                 </span>
                 <Link 
                   href="/app"
                   className="bg-accent-primary hover:bg-accent-hover text-text-inverse px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
-                  🚀 Launch Cockpit
+                  🚀 Cockpit
                 </Link>
               </>
             )}
@@ -113,12 +107,6 @@ export function Navigation() {
                 About
               </Link>
               <Link 
-                href="/app" 
-                className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
-              >
-                App
-              </Link>
-              <Link 
                 href="/pricing" 
                 className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
               >
@@ -143,13 +131,13 @@ export function Navigation() {
                 ) : (
                   <>
                     <div className="text-text-secondary px-3 py-2 text-base">
-                      Hi, {session?.user?.name || session?.user?.email}
+                      Hi, {session?.user?.name?.split(' ')[0] || session?.user?.email}
                     </div>
                     <Link 
                       href="/app"
                       className="bg-accent-primary hover:bg-accent-hover text-text-inverse block px-3 py-2 rounded-lg text-base font-medium transition-colors mt-2"
                     >
-                      🚀 Launch Cockpit
+                      🚀 Cockpit
                     </Link>
                   </>
                 )}
