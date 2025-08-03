@@ -48,16 +48,11 @@ jobs:
 
       - name: Prepare Azure deployment package
         run: |
-          echo "Preparing standalone deployment package for Azure"
-          # Copy standalone server files to root
-          cp -r .next/standalone/* .
-          # Copy static assets
-          mkdir -p .next/static
-          cp -r .next/static .next/
-          # Copy public assets
-          cp -r public .
-          echo "Azure deployment package contents:"
+          echo "Preparing deployment package for Azure"
+          echo "Root directory contents:"
           ls -la
+          echo "Checking .next/standalone structure:"
+          find .next/standalone -type f | head -10 || echo "No standalone files found"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -105,5 +100,5 @@ jobs:
           app-name: 'maverick'
           slot-name: 'Production'
           package: .
-          startup-command: 'node server.js'
+          startup-command: 'node .next/standalone/server.js'
           
