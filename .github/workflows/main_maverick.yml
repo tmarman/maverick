@@ -60,7 +60,6 @@ jobs:
           name: node-app
           path: |
             .
-            !node_modules
             !coverage
             !.git
 
@@ -100,5 +99,5 @@ jobs:
           app-name: 'maverick'
           slot-name: 'Production'
           package: .
-          startup-command: 'node .next/standalone/server.js'
+          startup-command: 'npm start'
           
