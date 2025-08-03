@@ -33,34 +33,22 @@ export function Navigation() {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               <Link 
+                href="/about" 
+                className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
+              >
+                About
+              </Link>
+              <Link 
                 href="/app" 
                 className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
               >
                 App
               </Link>
               <Link 
-                href="/app/repositories" 
-                className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Import
-              </Link>
-              <Link 
                 href="/pricing" 
                 className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
               >
                 Pricing
-              </Link>
-              <Link 
-                href="/examples" 
-                className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Examples
-              </Link>
-              <Link 
-                href="/ai-config" 
-                className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
-              >
-                AI Config
               </Link>
             </div>
           </div>
@@ -119,34 +107,22 @@ export function Navigation() {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border-subtle mt-4">
               <Link 
+                href="/about" 
+                className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
+              >
+                About
+              </Link>
+              <Link 
                 href="/app" 
                 className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
               >
-                Cockpit
-              </Link>
-              <Link 
-                href="/app/import/github" 
-                className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
-              >
-                Import
+                App
               </Link>
               <Link 
                 href="/pricing" 
                 className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
               >
                 Pricing
-              </Link>
-              <Link 
-                href="/examples" 
-                className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
-              >
-                Examples
-              </Link>
-              <Link 
-                href="/ai-config" 
-                className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
-              >
-                AI Config
               </Link>
               <div className="pt-4 border-t border-border-subtle mt-4">
                 {!isLoggedIn ? (

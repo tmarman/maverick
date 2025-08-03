@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import CockpitShell from '@/components/CockpitShell'
-import { ProjectSidebar } from '@/components/ProjectSidebar'
+import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -171,7 +171,7 @@ export default function TeamPage() {
 
   if (loading) {
     return (
-      <CockpitShell sidebarContent={project ? <ProjectSidebar project={project} currentPage="team" /> : undefined}>
+      <CockpitShell sidebarContent={project ? <ProjectTreeSidebar project={project} currentPage="team" /> : undefined}>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
@@ -191,7 +191,7 @@ export default function TeamPage() {
   }
 
   return (
-    <CockpitShell sidebarContent={<ProjectSidebar project={project} currentPage="team" />}>
+    <CockpitShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="team" />}>
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import CockpitShell from '@/components/CockpitShell'
 import { SimpleWorkItemCanvas } from '@/components/SimpleWorkItemCanvas'
-import { ProjectSidebar } from '@/components/ProjectSidebar'
+import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 
 interface Project {
   id: string
@@ -74,7 +74,7 @@ export default function ProjectTasksPage() {
 
 
   return (
-    <CockpitShell sidebarContent={<ProjectSidebar project={project} currentPage="tasks" />}>
+    <CockpitShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="tasks" />}>
       <div className="h-full p-6">
         <SimpleWorkItemCanvas project={project} className="h-full" />
       </div>

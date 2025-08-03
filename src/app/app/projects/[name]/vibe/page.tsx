@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import CockpitShell from '@/components/CockpitShell'
-import { ProjectSidebar } from '@/components/ProjectSidebar'
+import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 import { VibeChat } from '@/components/VibeChat'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -79,7 +79,7 @@ export default function VibePage() {
   }
 
   return (
-    <CockpitShell sidebarContent={<ProjectSidebar project={project} currentPage="vibe" />}>
+    <CockpitShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="vibe" />}>
       <div className="h-full flex flex-col">
         {/* Header */}
         <div className="border-b border-gray-200 bg-white px-6 py-4 flex-shrink-0">

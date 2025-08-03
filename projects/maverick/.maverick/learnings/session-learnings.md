@@ -124,3 +124,69 @@ Each entry includes:
 **Action Items**: Create tree-based sidebar that mirrors actual .maverick folder structure
 **Related Features**: sidebar-navigation, file-structure, tree-view
 **Design Philosophy**: UI should reflect actual file/folder organization for intuitive navigation
+
+## 2025-08-03 - Azure Deployment Strategy
+**ID**: learning_1722686860_efg678hij
+**Type**: decision
+**Category**: infrastructure
+**Impact**: high
+**Context**: Production deployment strategy selection
+**Description**: and why are we not deploying to azure? - User pointed out Azure makes more sense since we already use Azure Email Service
+**Action Items**: Prioritize Azure Container Apps or Azure App Service for deployment over Railway/Render
+**Related Features**: production-deployment, azure-integration, infrastructure
+**Strategic Reasoning**: Leverage existing Azure services integration for unified platform
+
+## 2025-08-03 - Web-Based Claude Code Terminal Vision
+**ID**: learning_1722686865_hij901klm
+**Type**: requirement
+**Category**: ai-integration
+**Impact**: critical
+**Context**: Building Crystal.app-like functionality in browser
+**Description**: Yes, let's focus on that. I want this to be a web-based Crystal.app basically! - User wants multi-session Claude Code management in browser
+**Action Items**: Build web terminal component with multi-session management, real-time file sync, and /repos/tim/maverick workspace pattern
+**Related Features**: claude-terminal-manager, multi-session-management, web-ide
+**Platform Vision**: Transform Maverick into first browser-based AI development platform with full git integration
+
+## 2025-08-03 - Marketing Site Cleanup
+**ID**: learning_1722686870_klm234nop
+**Type**: feedback
+**Category**: user-experience
+**Impact**: medium
+**Context**: Marketing site navigation simplification
+**Description**: On the marketing site (i.e., outside of /app) we're going to remove the links to Import, and to Examples,. but not the underlying pages for now ok? Same with AI Config
+**Action Items**: Remove Import, Examples, and AI Config links from marketing navigation while preserving pages
+**Related Features**: marketing-navigation, site-structure
+**UX Philosophy**: Simplify marketing site to focus on core value proposition
+
+## 2025-08-03 - About Page Requirement
+**ID**: learning_1722686875_nop567qrs
+**Type**: requirement
+**Category**: marketing
+**Impact**: medium
+**Context**: Marketing site content gaps
+**Description**: Maybe we need an /about page though in there, we have pricing but no details on what we do
+**Action Items**: Create comprehensive About page explaining Maverick's business formation and AI development platform
+**Related Features**: about-page, marketing-content, value-proposition
+**Content Strategy**: Need clear explanation of what Maverick does for visitor understanding
+
+## 2025-08-03 - Documentation Links Broken
+**ID**: learning_1722686880_qrs890tuv
+**Type**: bug-report
+**Category**: documentation
+**Impact**: medium
+**Context**: Docs navigation and user experience
+**Description**: Many of the docs links are broken, e.g., http://localhost:5001/docs/square-apps
+**Action Items**: Fix broken documentation links and create missing doc pages
+**Related Features**: documentation, square-integration, user-guides
+**Quality Issue**: Broken links hurt user experience and platform credibility
+
+## 2025-08-03 - Continuous Learning Capture Requirement
+**ID**: learning_1722686885_tuv123wxy
+**Type**: requirement
+**Category**: self-improvement
+**Impact**: high
+**Context**: Systematic improvement and dogfooding
+**Description**: and make sure this is always captured and updated in .maverick - User wants all learnings continuously captured in workspace
+**Action Items**: Ensure all feedback and insights are systematically captured in .maverick/learnings/
+**Related Features**: learning-capture, dogfooding-system, continuous-improvement
+**Meta-Learning**: The act of capturing learnings is itself a critical learning that must be preserved

@@ -26,7 +26,27 @@ Need immediate production deployment to flywithmaverick.com so you can share dem
 
 ## ⚡ FASTEST DEPLOYMENT OPTIONS
 
-### Option 1: Railway (RECOMMENDED - 5 minutes)
+### Option 1: Azure Container Apps (RECOMMENDED - 10 minutes)
+```bash
+# Install Azure CLI
+az login
+
+# Create resource group and container app
+az containerapp up \
+  --name maverick-prod \
+  --resource-group maverick-rg \
+  --location eastus \
+  --environment maverick-env \
+  --source .
+```
+
+### Option 2: Azure App Service (15 minutes)
+- Perfect for Node.js apps with custom servers
+- Integrated with existing Azure email services
+- Built-in SSL and custom domain support
+- Easy GitHub Actions deployment
+
+### Option 3: Railway (20 minutes)
 ```bash
 # Install Railway CLI
 npm install -g @railway/cli
@@ -37,15 +57,11 @@ railway init
 railway up
 ```
 
-### Option 2: Render (10 minutes)
+### Option 4: Render (25 minutes)
 1. Connect GitHub repo to Render
 2. Configure build/start commands
 3. Set environment variables
 4. Deploy automatically
-
-### Option 3: Vercel (Custom Server Issues)
-- Vercel doesn't support our custom Node.js server well
-- Would need significant refactoring
 
 ## 🔧 IMMEDIATE DEPLOYMENT STEPS
 
