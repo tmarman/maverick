@@ -1,6 +1,5 @@
 import { promises as fs } from 'fs'
 import path from 'path'
-import { glob } from 'glob'
 
 export interface FileInfo {
   relativePath: string
@@ -115,15 +114,7 @@ export class RepositoryScanner {
   }
 
   private async getAllFiles(): Promise<FileInfo[]> {
-    const pattern = path.join(this.projectRoot, '**/*')
-    const ignorePatterns = this.ignoredPatterns.map(p => path.join(this.projectRoot, p))
-    
-    const filePaths = await glob(pattern, {
-      ignore: ignorePatterns,
-      nodir: true,
-      absolute: true
-    })
-
+    const filePaths = await this.scanDirectory(this.projectRoot)
     const files: FileInfo[] = []
     
     for (const filePath of filePaths) {
@@ -530,5 +521,41 @@ export class RepositoryScanner {
     }
 
     return Array.from(frameworks)
+  }
+
+  private async scanDirectory(dir: string): Promise<string[]> {
+    const files: string[] = []
+    
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true })
+      
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name)
+        
+        // Check if path should be ignored
+        const relativePath = path.relative(this.projectRoot, fullPath)
+        if (this.ignoredPatterns.some(pattern => {
+          // Convert glob patterns to simple checks
+          if (pattern.includes('*')) {
+            const regex = new RegExp(pattern.replace(/\*/g, '.*'))
+            return regex.test(relativePath) || regex.test(entry.name)
+          }
+          return relativePath.includes(pattern) || entry.name.includes(pattern)
+        })) {
+          continue
+        }
+        
+        if (entry.isDirectory()) {
+          const subFiles = await this.scanDirectory(fullPath)
+          files.push(...subFiles)
+        } else {
+          files.push(fullPath)
+        }
+      }
+    } catch (error) {
+      console.warn(`Error reading directory ${dir}:`, error)
+    }
+    
+    return files
   }
 }
