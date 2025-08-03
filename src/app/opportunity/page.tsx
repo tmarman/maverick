@@ -81,9 +81,6 @@ export default function OpportunityPage() {
                 src="/design/square-logo.png" 
                 alt="Square" 
                 className="h-8 mr-4"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none'
-                }}
               />
               <span className="text-2xl">✕</span>
               <img 
