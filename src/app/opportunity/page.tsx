@@ -6,28 +6,28 @@ export default function OpportunityPage() {
     <div className="min-h-screen bg-background-primary">
       <Navigation />
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
             The AI-Native Business Formation
-            <span className="text-accent-primary"> Opportunity</span>
+            <span className="text-yellow-300"> Opportunity</span>
           </h1>
-          <p className="text-xl text-text-secondary mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
             Maverick represents a unique opportunity to transform how businesses are formed and operated, 
             combining AI automation with Square's proven business infrastructure to capture a $50B+ market.
           </p>
           <div className="grid md:grid-cols-3 gap-8 mt-12">
             <div className="text-center">
-              <div className="text-3xl font-bold text-accent-primary">$50B+</div>
-              <div className="text-text-secondary">Total Addressable Market</div>
+              <div className="text-3xl font-bold text-yellow-300">$50B+</div>
+              <div className="text-blue-100">Total Addressable Market</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-accent-primary">2M+</div>
-              <div className="text-text-secondary">New Businesses Annually</div>
+              <div className="text-3xl font-bold text-yellow-300">2M+</div>
+              <div className="text-blue-100">New Businesses Annually</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-accent-primary">90%</div>
-              <div className="text-text-secondary">Cost Reduction Potential</div>
+              <div className="text-3xl font-bold text-yellow-300">90%</div>
+              <div className="text-blue-100">Cost Reduction Potential</div>
             </div>
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function OpportunityPage() {
                 <span className="text-2xl">🤖</span>
               </div>
               <h3 className="text-lg font-semibold text-text-primary mb-2">AI-First Architecture</h3>
-              <p className="text-text-secondary text-sm">Proprietary LLM optimization reduces costs by 90% while maintaining enterprise quality</p>
+              <p className="text-text-secondary text-sm">Built-in MCP server with Ollama/OpenAI compatibility. Multi-provider AI reduces costs by 90% while maintaining enterprise quality</p>
             </div>
             <div className="bg-background-primary p-6 rounded-xl border border-border-subtle text-center">
               <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -261,8 +261,8 @@ export default function OpportunityPage() {
             <div className="bg-background-primary p-6 rounded-xl border border-border-subtle text-center">
               <div className="text-3xl font-bold text-accent-primary mb-2">AI-Native Platform</div>
               <p className="text-text-secondary">
-                Built from ground up with Claude Code integration, demonstrating 
-                the future of AI-assisted business development
+                Built-in MCP server with Claude Code integration, plus Ollama and OpenAI provider compatibility 
+                for flexible, cost-effective AI deployment across any infrastructure
               </p>
             </div>
             <div className="bg-background-primary p-6 rounded-xl border border-border-subtle text-center">
