@@ -14,19 +14,23 @@ import {
   PlayCircle,
   GitBranch,
   MoreHorizontal,
-  ArrowRight
+  ArrowRight,
+  ChevronDown
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { WorkItemDetailSidebar } from '@/components/WorkItemDetailSidebar'
 import { WorkItemDetailView } from '@/components/WorkItemDetailView'
 import { SubtaskDetailView } from '@/components/SubtaskDetailView'
+import { TaskDetailsSidebar } from '@/components/TaskDetailsSidebar'
+import { TaskFullDetailView } from '@/components/TaskFullDetailView'
+import { HierarchicalTodo, hierarchicalTodoClientService } from '@/lib/hierarchical-todos-client'
 
 interface WorkItem {
   id: string
   title: string
   description?: string
   type: 'FEATURE' | 'BUG' | 'EPIC' | 'STORY' | 'TASK' | 'SUBTASK'
-  status: 'PLANNED' | 'IN_PROGRESS' | 'IN_REVIEW' | 'TESTING' | 'DONE' | 'CANCELLED' | 'BLOCKED' | 'DEFERRED'
+  status: 'PENDING' | 'PLANNED' | 'IN_PROGRESS' | 'IN_REVIEW' | 'TESTING' | 'DONE' | 'CANCELLED' | 'BLOCKED' | 'DEFERRED'
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'CRITICAL'
   functionalArea: 'SOFTWARE' | 'LEGAL' | 'OPERATIONS' | 'MARKETING'
   parentId?: string
@@ -68,10 +72,12 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
   const [creating, setCreating] = useState(false)
   const [selectedWorkItem, setSelectedWorkItem] = useState<WorkItem | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [viewMode, setViewMode] = useState<'board' | 'detail' | 'subtask'>('board')
+  const [viewMode, setViewMode] = useState<'board' | 'detail' | 'subtask' | 'task-full-detail'>('board')
   const [selectedSubtask, setSelectedSubtask] = useState<any>(null)
   const [parentWorkItem, setParentWorkItem] = useState<WorkItem | null>(null)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [selectedHierarchicalTodo, setSelectedHierarchicalTodo] = useState<HierarchicalTodo | null>(null)
+  const [hierarchicalSidebarOpen, setHierarchicalSidebarOpen] = useState(false)
 
   useEffect(() => {
     loadWorkItems()
@@ -85,6 +91,12 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
           handleBackToWorkItem()
         } else if (viewMode === 'detail') {
           handleBackToBoard()
+        } else if (viewMode === 'task-full-detail') {
+          setViewMode('board')
+          setSelectedHierarchicalTodo(null)
+        } else if (hierarchicalSidebarOpen) {
+          setHierarchicalSidebarOpen(false)
+          setSelectedHierarchicalTodo(null)
         } else if (sidebarOpen) {
           setSidebarOpen(false)
           setSelectedWorkItem(null)
@@ -94,7 +106,59 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [viewMode, sidebarOpen])
+  }, [viewMode, sidebarOpen, hierarchicalSidebarOpen])
+
+  // Helper function to convert WorkItem to HierarchicalTodo
+  const workItemToHierarchicalTodo = (workItem: WorkItem): HierarchicalTodo => {
+    return {
+      id: workItem.id,
+      title: workItem.title,
+      description: workItem.description,
+      type: workItem.type as HierarchicalTodo['type'],
+      status: (workItem.status === 'PENDING' ? 'PENDING' : 
+               workItem.status === 'PLANNED' ? 'PLANNED' :
+               workItem.status === 'IN_PROGRESS' ? 'IN_PROGRESS' :
+               workItem.status === 'IN_REVIEW' ? 'IN_REVIEW' :
+               workItem.status === 'DONE' ? 'DONE' :
+               workItem.status === 'DEFERRED' ? 'DEFERRED' : 'PLANNED') as HierarchicalTodo['status'],
+      priority: workItem.priority as HierarchicalTodo['priority'],
+      functionalArea: workItem.functionalArea as HierarchicalTodo['functionalArea'],
+      parentId: workItem.parentId,
+      depth: workItem.depth,
+      orderIndex: workItem.orderIndex,
+      estimatedEffort: workItem.estimatedEffort,
+      assignedTo: workItem.assignedToId,
+      createdAt: workItem.createdAt,
+      updatedAt: workItem.updatedAt,
+      projectName: workItem.projectName || project.name
+    }
+  }
+
+  // Helper function to convert HierarchicalTodo back to WorkItem
+  const hierarchicalTodoToWorkItem = (todo: HierarchicalTodo): WorkItem => {
+    return {
+      id: todo.id,
+      title: todo.title,
+      description: todo.description,
+      type: todo.type as WorkItem['type'],
+      status: (todo.status === 'PENDING' ? 'PENDING' :
+               todo.status === 'PLANNED' ? 'PLANNED' :
+               todo.status === 'IN_PROGRESS' ? 'IN_PROGRESS' :
+               todo.status === 'IN_REVIEW' ? 'IN_REVIEW' :
+               todo.status === 'DONE' ? 'DONE' :
+               todo.status === 'DEFERRED' ? 'DEFERRED' : 'PLANNED') as WorkItem['status'],
+      priority: todo.priority as WorkItem['priority'],
+      functionalArea: todo.functionalArea as WorkItem['functionalArea'],
+      parentId: todo.parentId,
+      orderIndex: todo.orderIndex,
+      depth: todo.depth,
+      estimatedEffort: todo.estimatedEffort,
+      assignedToId: todo.assignedTo,
+      createdAt: todo.createdAt,
+      updatedAt: todo.updatedAt,
+      projectName: todo.projectName
+    }
+  }
 
   const loadWorkItems = async () => {
     try {
@@ -197,27 +261,58 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
         return 'bg-background-secondary text-text-primary'
       case 'DEFERRED':
         return 'bg-orange-50 text-orange-700'
+      case 'PENDING':
+        return 'bg-blue-50 text-blue-700 border-blue-200'
       default:
         return 'bg-background-tertiary text-text-muted'
     }
   }
 
-  // Group work items by lifecycle stages for better organization
-  const stageGroups = {
-    'Plan': workItems.filter(item => 
-      item.status === 'PLANNED' || 
-      (item.type === 'EPIC' && item.status !== 'DONE' && item.status !== 'DEFERRED')
-    ),
-    'Execute': workItems.filter(item => 
-      item.status === 'IN_PROGRESS' || 
-      (item.type === 'FEATURE' && item.status !== 'DONE' && item.status !== 'PLANNED' && item.status !== 'DEFERRED')
-    ),
-    'Review': workItems.filter(item => 
-      item.status === 'IN_REVIEW' || item.status === 'TESTING'
-    ),
-    'Complete': workItems.filter(item => item.status === 'DONE'),
-    'Deferred': workItems.filter(item => item.status === 'DEFERRED')
-  }
+  // Filter to only show top-level tasks (no valid parentId)
+  const topLevelTasks = workItems.filter(item => {
+    const hasParent = item.parentId && item.parentId !== 'null' && item.parentId !== 'undefined' && item.parentId.trim() !== ''
+    return !hasParent
+  })
+
+  // Group work items by status for list view
+  const statusGroups = [
+    {
+      title: '🤖 AI Enhancing',
+      key: 'enhancing',
+      items: topLevelTasks.filter(item => item.status === 'PENDING'),
+      color: 'blue'
+    },
+    {
+      title: '📋 To Do',
+      key: 'planned',
+      items: topLevelTasks.filter(item => item.status === 'PLANNED'),
+      color: 'gray'
+    },
+    {
+      title: '🚀 In Progress',
+      key: 'progress',
+      items: topLevelTasks.filter(item => item.status === 'IN_PROGRESS'),
+      color: 'orange'
+    },
+    {
+      title: '👀 In Review',
+      key: 'review',
+      items: topLevelTasks.filter(item => item.status === 'IN_REVIEW' || item.status === 'TESTING'),
+      color: 'purple'
+    },
+    {
+      title: '✅ Completed',
+      key: 'done',
+      items: topLevelTasks.filter(item => item.status === 'DONE'),
+      color: 'green'
+    },
+    {
+      title: '⏸️ Deferred',
+      key: 'deferred',
+      items: topLevelTasks.filter(item => item.status === 'DEFERRED'),
+      color: 'yellow'
+    }
+  ].filter(group => group.items.length > 0) // Only show groups with items
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -227,13 +322,14 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
   }
 
   const handleWorkItemClick = (workItem: WorkItem) => {
-    // Add projectName to the work item for the sidebar
-    const workItemWithProject = {
-      ...workItem,
-      projectName: project.name
-    }
-    setSelectedWorkItem(workItemWithProject)
-    setSidebarOpen(true)
+    // Use hierarchical sidebar for better subtask management
+    const hierarchicalTodo = workItemToHierarchicalTodo(workItem)
+    setSelectedHierarchicalTodo(hierarchicalTodo)
+    setHierarchicalSidebarOpen(true)
+    
+    // Close other sidebars
+    setSidebarOpen(false)
+    setSelectedWorkItem(null)
   }
 
   const handleViewFullPlan = (workItem: WorkItem) => {
@@ -268,6 +364,59 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
         item.id === updatedWorkItem.id ? updatedWorkItem : item
       )
     )
+  }
+
+  const handleHierarchicalTodoUpdate = (updatedTodo: HierarchicalTodo) => {
+    // Convert back to WorkItem and update the list
+    const updatedWorkItem = hierarchicalTodoToWorkItem(updatedTodo)
+    handleWorkItemUpdate(updatedWorkItem)
+    
+    // Update the selected todo as well
+    setSelectedHierarchicalTodo(updatedTodo)
+  }
+
+  const handleHierarchicalTodoClose = () => {
+    setHierarchicalSidebarOpen(false)
+    setSelectedHierarchicalTodo(null)
+  }
+
+  const handleNavigateToTask = async (taskId: string) => {
+    try {
+      // Find the task in the current workItems list first
+      let targetTask = workItems.find(item => item.id === taskId)
+      
+      if (!targetTask) {
+        // If not found, fetch it from hierarchical todos
+        const hierarchicalTodo = await hierarchicalTodoClientService.getTodo(project.name.toLowerCase(), taskId)
+        if (hierarchicalTodo) {
+          targetTask = hierarchicalTodoToWorkItem(hierarchicalTodo)
+        }
+      }
+      
+      if (targetTask) {
+        const hierarchicalTodo = workItemToHierarchicalTodo(targetTask)
+        setSelectedHierarchicalTodo(hierarchicalTodo)
+        // Keep sidebar open for navigation flow
+      }
+    } catch (error) {
+      console.error('Failed to navigate to task:', error)
+      toast({
+        title: 'Navigation failed',
+        description: 'Could not load the selected task',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const handleSubtaskCreate = (subtask: HierarchicalTodo) => {
+    // When a subtask is created, reload the work items to include it
+    loadWorkItems()
+  }
+
+  const handleViewFullDetails = (todo: HierarchicalTodo) => {
+    setSelectedHierarchicalTodo(todo)
+    setViewMode('task-full-detail')
+    setHierarchicalSidebarOpen(false)
   }
 
   if (loading) {
@@ -314,21 +463,36 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
     )
   }
 
+  if (viewMode === 'task-full-detail' && selectedHierarchicalTodo) {
+    return (
+      <TaskFullDetailView
+        todo={selectedHierarchicalTodo}
+        projectName={project.name.toLowerCase()}
+        onBack={() => {
+          setViewMode('board')
+          setSelectedHierarchicalTodo(null)
+        }}
+        onUpdate={handleHierarchicalTodoUpdate}
+        className={className}
+      />
+    )
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Project Canvas</span>
           <div className="flex items-center gap-2">
-            <Badge variant="secondary">{workItems.length} items</Badge>
-            {stageGroups['Complete'].length > 0 && (
+            <Badge variant="secondary">{topLevelTasks.length} top-level items</Badge>
+            {(statusGroups.find(g => g.key === 'done')?.items.length || 0) > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowCompleted(!showCompleted)}
                 className="text-xs"
               >
-                {showCompleted ? 'Hide' : 'Show'} Completed ({stageGroups['Complete'].length})
+                {showCompleted ? 'Hide' : 'Show'} Completed ({statusGroups.find(g => g.key === 'done')?.items.length || 0})
               </Button>
             )}
           </div>
@@ -346,16 +510,17 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
               value={newItemText}
               onChange={(e) => setNewItemText(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 text-base py-3 px-4 border-2 focus:border-blue-500 transition-colors"
+              className="flex-1 text-base py-3 px-4 border-2 focus:border-blue-500 transition-all duration-200 focus:shadow-lg focus:scale-[1.01]"
             />
             <Button 
               onClick={createWorkItem} 
               disabled={creating || !newItemText.trim()}
+              className="transition-all duration-150 hover:scale-105 active:scale-95"
             >
               {creating ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
               ) : (
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4 transition-transform duration-150 group-hover:rotate-90" />
               )}
             </Button>
           </div>
@@ -365,76 +530,141 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
           </p>
         </div>
 
-        {/* Stage-based Board */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 h-96">
-          {Object.entries(stageGroups).map(([stage, items]) => (
-            <div key={stage} className="space-y-3 h-full flex flex-col">
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <h3 className="font-medium text-sm text-text-primary">
-                  {stage}
-                </h3>
-                <Badge variant="outline" className="text-xs">
-                  {items.length}
-                </Badge>
+        {/* Asana-Style Table View */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          {/* Table Header */}
+          <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
+            <div className="grid grid-cols-8 gap-4 items-center text-sm font-medium text-gray-600">
+              <div className="col-span-1">
+                <input type="checkbox" className="w-4 h-4 rounded border-gray-300" />
               </div>
-              
-              <div className="space-y-2 overflow-y-auto flex-1 pr-1">
-                {items.map((item) => (
+              <div className="col-span-5">Task name</div>
+              <div className="col-span-1">Priority</div>
+              <div className="col-span-1">Effort</div>
+            </div>
+          </div>
+
+          {/* Table Body */}
+          <div className="divide-y divide-gray-100">
+            {statusGroups.map((group) => (
+              <div key={group.key}>
+                {/* Section Header */}
+                {group.items.length > 0 && (
+                  <div className="bg-gray-25 px-4 py-2 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm font-medium text-gray-700">{group.title}</span>
+                      <span className="text-xs text-gray-500">({group.items.length})</span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Section Items */}
+                {group.items.map((item, index) => (
                   <div
                     key={item.id}
-                    className={`p-3 rounded-lg border hover:shadow-sm transition-shadow cursor-pointer ${
-                      item.status === 'DEFERRED' 
-                        ? 'bg-orange-50 border-orange-200' 
-                        : 'bg-background-secondary'
-                    }`}
+                    className={`grid grid-cols-8 gap-4 items-center px-4 py-3 hover:bg-gray-50 cursor-pointer group transition-all duration-150 ease-out hover:shadow-sm hover:scale-[1.01] ${
+                      index % 2 === 0 ? 'bg-white' : 'bg-gray-25'
+                    } ${item.status === 'DONE' ? 'opacity-60' : ''}`}
                     onClick={() => handleWorkItemClick(item)}
                   >
-                    <div className="flex items-start gap-2 mb-2">
-                      {getTypeIcon(item.type)}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm text-text-primary truncate">
-                          {item.title}
-                        </h4>
+                    {/* Checkbox */}
+                    <div className="col-span-1 flex items-center">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-gray-300"
+                        checked={item.status === 'DONE'}
+                        onChange={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    
+                    {/* Task Name */}
+                    <div className="col-span-5 flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        {item.status === 'PENDING' ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                        ) : (
+                          <div className="w-4 h-4 flex items-center justify-center">
+                            {getTypeIcon(item.type)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-medium truncate ${
+                            item.status === 'DONE' ? 'line-through text-gray-500' : 'text-gray-900'
+                          }`}>
+                            {item.title}
+                          </span>
+                          {item.status === 'PENDING' && (
+                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                              🤖 Enhancing
+                            </span>
+                          )}
+                        </div>
                         {item.description && (
-                          <p className="text-xs text-text-muted line-clamp-2 mt-1">
+                          <p className="text-xs text-gray-500 truncate mt-0.5">
                             {item.description}
                           </p>
                         )}
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        {item.worktreeName && (
-                          <div className="flex items-center gap-1 text-text-muted">
-                            <GitBranch className="w-3 h-3" />
-                            <span className="truncate max-w-20">{item.worktreeName}</span>
-                          </div>
-                        )}
-                        {item.functionalArea !== 'SOFTWARE' && (
-                          <Badge variant="outline" className="text-xs">
-                            {item.functionalArea}
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <button className="p-1 hover:bg-background-tertiary rounded">
-                        <MoreHorizontal className="w-3 h-3 text-text-muted" />
-                      </button>
+                    {/* Priority */}
+                    <div className="col-span-1">
+                      {item.priority === 'HIGH' && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200 transition-all duration-150 hover:bg-orange-200">
+                          High
+                        </span>
+                      )}
+                      {item.priority === 'URGENT' && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-200 text-orange-900 border border-orange-300 transition-all duration-150 hover:bg-orange-300">
+                          Urgent
+                        </span>
+                      )}
+                      {item.priority === 'MEDIUM' && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200 transition-all duration-150 hover:bg-gray-100">
+                          Med
+                        </span>
+                      )}
+                      {item.priority === 'LOW' && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200 transition-all duration-150 hover:bg-gray-100">
+                          Low
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Effort */}
+                    <div className="col-span-1 flex items-center gap-1">
+                      {item.estimatedEffort && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 transition-all duration-150 hover:bg-blue-100 hover:scale-105">
+                          {item.estimatedEffort}
+                        </span>
+                      )}
+                      {item.functionalArea !== 'SOFTWARE' && (
+                        <span className="inline-flex items-center px-1 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200 text-[10px]">
+                          {item.functionalArea.slice(0,3)}
+                        </span>
+                      )}
+                      {item.worktreeName && (
+                        <span className="inline-flex items-center px-1 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+                          <GitBranch className="w-2 h-2" />
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
-                
-                {items.length === 0 && (
-                  <div className="p-4 border-2 border-dashed border-border-subtle rounded-lg text-center">
-                    <p className="text-xs text-text-muted">
-                      {stage === 'Plan' ? 'Add items above' : `No ${stage.toLowerCase()} items`}
-                    </p>
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          
+          {/* Add Task Row */}
+          <div className="px-4 py-3 border-t border-gray-200 bg-gray-25">
+            <button type="button" className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Add task...
+            </button>
+          </div>
         </div>
 
         {workItems.length === 0 && (
@@ -462,6 +692,26 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
         onUpdate={handleWorkItemUpdate}
         onViewFullPlan={handleViewFullPlan}
       />
+
+      {/* Hierarchical Task Details Sidebar */}
+      {hierarchicalSidebarOpen && selectedHierarchicalTodo && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-25 z-40 animate-in fade-in duration-200"
+            onClick={handleHierarchicalTodoClose}
+          />
+          <TaskDetailsSidebar
+            todo={selectedHierarchicalTodo}
+            projectName={project.name.toLowerCase()}
+            onClose={handleHierarchicalTodoClose}
+            onUpdate={handleHierarchicalTodoUpdate}
+            onSubtaskCreate={handleSubtaskCreate}
+            onViewFullDetails={handleViewFullDetails}
+            onNavigateToTask={handleNavigateToTask}
+          />
+        </>
+      )}
     </Card>
   )
 }

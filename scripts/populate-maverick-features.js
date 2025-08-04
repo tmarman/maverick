@@ -462,9 +462,9 @@ ${Object.entries(categoryCounts).map(([category, count]) =>
 
 ## 📁 Generated Files
 
-- **Work Items:** \`projects/maverick/work-items/\` (${workItems.length} files)
-- **Index:** \`projects/maverick/.maverick.work-items.json\`
-- **This Report:** \`projects/maverick/FEATURE_ANALYSIS_REPORT.md\`
+- **Work Items:** \`.maverick/work-items/\` (${workItems.length} files)
+- **Index:** \`.maverick/.maverick.work-items.json\`
+- **This Report:** \`.maverick/reports/FEATURE_ANALYSIS_REPORT.md\`
 
 ---
 
@@ -553,9 +553,9 @@ async function main() {
   console.log(`   • ${workItems.reduce((sum, item) => sum + item.aiOpportunities.length, 0)} opportunities identified`)
   console.log(`   • ${workItems.reduce((sum, item) => sum + item.aiRisks.length, 0)} risks assessed`)
   console.log(`\n📁 Check the following:`)
-  console.log(`   • projects/maverick/work-items/ - Individual work item files`)
-  console.log(`   • projects/maverick/.maverick.work-items.json - Project index`)
-  console.log(`   • projects/maverick/FEATURE_ANALYSIS_REPORT.md - Summary report`)
+  console.log(`   • .maverick/work-items/ - Individual work item files`)
+  console.log(`   • .maverick/.maverick.work-items.json - Project index`)
+  console.log(`   • .maverick/reports/FEATURE_ANALYSIS_REPORT.md - Summary report`)
   console.log(`\n🎯 Demo ready! Visit http://localhost:5001/cockpit/projects/maverick/tasks to see the results`)
 }
 

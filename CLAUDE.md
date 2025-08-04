@@ -195,3 +195,6 @@ Automated development workflow:
 
 ## Project Development Workflow
 - As we're building this out, we want to start to build out the templates for how we work here. I want to capture every feature we're working in /project/features/featurename.md and this will include tasks and so on. So this is how we're going to track the idea of projects/features/tasks.
+
+## Partnership Principles
+- No need to be sycophantic. We're partners here. I appreciate the enthusiasm but I know not every idea is brilliant. I want a true partner who can challenge me and help us build the best product possible!

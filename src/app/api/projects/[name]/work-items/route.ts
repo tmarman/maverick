@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { projectContextService } from '@/lib/project-context-service'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
@@ -21,8 +22,8 @@ export async function GET(
     // TODO: Verify user has access to this project
     // For now, simple email-based access check
     
-    // Load work items from markdown files
-    const workItems = await loadWorkItemsFromMarkdown(projectName)
+    // Load work items from current project context (active worktree)
+    const workItems = await projectContextService.loadWorkItems(projectName)
 
     return NextResponse.json({ workItems })
   } catch (error) {
@@ -35,7 +36,7 @@ export async function GET(
 }
 
 async function loadWorkItemsFromMarkdown(projectName: string) {
-  const workItemsDir = path.join(process.cwd(), 'projects', projectName, 'work-items')
+  const workItemsDir = path.join(process.cwd(), '.maverick', 'work-items')
   
   try {
     // Create directory if it doesn't exist
@@ -126,6 +127,13 @@ function parseWorkItemMarkdown(content: string, filename: string) {
         } else if (line.startsWith('githubBranch:')) {
           const value = line.substring(13).trim()
           workItem.githubBranch = value === 'null' ? null : value
+        } else if (line.startsWith('parentId:')) {
+          const value = line.substring(9).trim()
+          workItem.parentId = (value === 'null' || value === '' || value === 'undefined') ? null : value
+        } else if (line.startsWith('depth:')) {
+          workItem.depth = parseInt(line.substring(6).trim()) || 0
+        } else if (line.startsWith('orderIndex:')) {
+          workItem.orderIndex = parseInt(line.substring(11).trim()) || 0
         }
       }
     }
@@ -162,8 +170,13 @@ function parseWorkItemMarkdown(content: string, filename: string) {
     workItem.status = workItem.status || 'PLANNED'
     workItem.priority = workItem.priority || 'MEDIUM'
     workItem.functionalArea = workItem.functionalArea || 'SOFTWARE'
-    workItem.orderIndex = Date.now()
-    workItem.depth = 0
+    workItem.orderIndex = workItem.orderIndex || Date.now()
+    workItem.depth = workItem.depth || 0
+    
+    // Ensure parentId is properly null for top-level tasks
+    if (workItem.parentId === undefined) {
+      workItem.parentId = null
+    }
     
     // Use current time if dates not found
     const now = new Date().toISOString()

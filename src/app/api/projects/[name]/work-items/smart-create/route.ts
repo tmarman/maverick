@@ -96,89 +96,49 @@ async function smartCreateHandler(
   )
   logInfo(`Loaded ${existingWorkItems.length} existing work items`, projectContext)
   
-  logInfo('Starting AI analysis', projectContext)
-  // Use enhanced AI to analyze the description and create comprehensive plan
-  const aiAnalysis = await withRetry(
-    () => analyzeWorkItemWithAI(
-      body.description,
-      `Project: ${projectName}`,
-      existingWorkItems.slice(0, 5) // Provide context of recent work items
-    ),
-    2,
-    2000,
-    projectContext
-  )
+  logInfo('Creating immediate work item with PENDING status', projectContext)
   
-  logInfo('AI analysis completed', projectContext, {
-    title: aiAnalysis.title,
-    type: aiAnalysis.type,
-    priority: aiAnalysis.priority,
-    tasksCount: aiAnalysis.tasks?.length || 0,
-    opportunitiesCount: aiAnalysis.opportunities?.length || 0,
-    risksCount: aiAnalysis.risks?.length || 0
-  })
-
-  logInfo('Generating work item ID and metadata', projectContext)
-  // Generate work item with unique ID
+  // IMMEDIATE CREATION STRATEGY: Create work item first, enhance later
   const workItemId = randomUUID()
   const timestamp = new Date().toISOString()
   logInfo('Work item ID generated', projectContext, { workItemId })
-    
-    // Generate worktree name for features and bugs
-    let worktreeName = undefined
-    let githubBranch = undefined
-    if (aiAnalysis.type === 'FEATURE' || aiAnalysis.type === 'BUG') {
-      const sanitizedTitle = aiAnalysis.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .substring(0, 50)
-      
-      const prefix = aiAnalysis.type.toLowerCase()
-      worktreeName = `${prefix}/${sanitizedTitle}`
-      githubBranch = worktreeName
-      logInfo('Generated worktree name', projectContext, { worktreeName })
-    }
+  
+  // Basic analysis for immediate creation
+  const basicAnalysis = basicWorkItemAnalysis(body.description)
+  
+  // Create the work item object with basic data + PENDING status
+  const workItem = {
+    id: workItemId,
+    title: basicAnalysis.title,
+    description: body.description,
+    type: basicAnalysis.type,
+    status: 'PENDING', // Special status for AI enhancement
+    priority: basicAnalysis.priority,
+    functionalArea: basicAnalysis.functionalArea,
+    parentId: null,
+    orderIndex: Date.now(),
+    depth: 0,
+    worktreeName: null, // Will be set during enhancement
+    githubBranch: null,
+    worktreeStatus: null,
+    estimatedEffort: basicAnalysis.estimatedEffort,
+    projectName,
+    assignedToId: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    aiEnhanced: false, // Flag to track enhancement status
+    originalRequest: body.description
+  }
 
-    // Create the work item object with AI analysis data
-    const workItem = {
-      id: workItemId,
-      title: aiAnalysis.title,
-      description: aiAnalysis.description,
-      type: aiAnalysis.type,
-      status: 'PLANNED',
-      priority: aiAnalysis.priority,
-      functionalArea: aiAnalysis.functionalArea,
-      parentId: null,
-      orderIndex: Date.now(),
-      depth: 0,
-      worktreeName,
-      githubBranch,
-      worktreeStatus: worktreeName ? 'PENDING' : null,
-      estimatedEffort: aiAnalysis.estimatedEffort,
-      projectName,
-      assignedToId: null,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      // Store AI analysis data
-      aiTasks: aiAnalysis.tasks,
-      aiOpportunities: aiAnalysis.opportunities,
-      aiRisks: aiAnalysis.risks,
-      acceptanceCriteria: aiAnalysis.acceptance_criteria,
-      technicalConsiderations: aiAnalysis.technical_considerations,
-      businessImpact: aiAnalysis.business_impact
-    }
-
-  logInfo('Generating markdown content', projectContext)
-  // Generate enhanced markdown content with structured AI data
-  const markdownContent = await generateStructuredWorkItemMarkdown(aiAnalysis, workItem, body.description)
-  logInfo('Markdown content generated', projectContext, {
+  logInfo('Generating basic markdown content', projectContext)
+  // Generate basic markdown content for immediate save
+  const markdownContent = generatePendingWorkItemMarkdown(workItem, body.description)
+  logInfo('Basic markdown content generated', projectContext, {
     length: markdownContent.length,
     preview: markdownContent.slice(0, 200) + '...'
   })
   
-  logInfo('Saving work item to file system', projectContext)
+  logInfo('Saving work item to file system immediately', projectContext)
   // Save work item as markdown file with retry
   await withRetry(
     () => saveWorkItemToMarkdown(projectName, workItemId, markdownContent),
@@ -188,56 +148,434 @@ async function smartCreateHandler(
   )
   logInfo('Work item saved successfully', projectContext)
 
-    // TODO: Create worktree if needed (when we have repository integration)
-    let worktreeCreated = false
-
-    let message = `Created ${aiAnalysis.type.toLowerCase()}: ${aiAnalysis.title}`
-    if (worktreeCreated) {
-      message += ` (with worktree: ${worktreeName})`
-    }
+  // ASYNC ENHANCEMENT: Start AI enhancement in background (non-blocking)
+  logInfo('Starting async AI enhancement', projectContext)
+  enhanceWorkItemAsynchronously(projectName, workItemId, body.description, existingWorkItems, projectContext)
+    .catch(error => {
+      logError(new Error(`Async AI enhancement failed: ${error.message}`), projectContext)
+    })
 
   const duration = Date.now() - startTime
-  logInfo('Smart Create completed successfully', projectContext, {
+  logInfo('Smart Create completed successfully (immediate)', projectContext, {
     duration: `${duration}ms`,
     workItemId,
     projectName,
-    type: aiAnalysis.type,
-    priority: aiAnalysis.priority
+    type: basicAnalysis.type,
+    priority: basicAnalysis.priority,
+    enhanced: false
   })
   
   return NextResponse.json({ 
     workItem: { ...workItem, markdownContent },
-    aiAnalysis, // Return the full structured AI analysis
-    structuredData: {
-      tasks: aiAnalysis.tasks,
-      opportunities: aiAnalysis.opportunities,
-      risks: aiAnalysis.risks,
-      acceptanceCriteria: aiAnalysis.acceptance_criteria,
-      technicalConsiderations: aiAnalysis.technical_considerations,
-      businessImpact: aiAnalysis.business_impact
-    },
-    worktreeCreated,
-    message
+    message: `Created work item: ${basicAnalysis.title} (enhancing with AI...)`,
+    immediate: true,
+    enhancing: true
   })
 }
 
-async function saveWorkItemToMarkdown(projectName: string, workItemId: string, markdownContent: string) {
-  const workItemsDir = path.join(process.cwd(), 'projects', projectName, 'work-items')
-  const filePath = path.join(workItemsDir, `${workItemId}.md`)
+// Basic analysis function for immediate work item creation
+function basicWorkItemAnalysis(description: string) {
+  const desc = description.toLowerCase().trim()
   
-  // Ensure directory exists
-  await fs.mkdir(workItemsDir, { recursive: true })
+  // Basic type detection
+  let type: 'FEATURE' | 'BUG' | 'EPIC' | 'STORY' | 'TASK' | 'SUBTASK' = 'TASK'
+  if (desc.includes('bug') || desc.includes('fix') || desc.includes('error') || desc.includes('broken')) {
+    type = 'BUG'
+  } else if (desc.includes('add') || desc.includes('new') || desc.includes('create') || desc.includes('implement') || desc.includes('build')) {
+    type = 'FEATURE'
+  } else if (desc.includes('epic') || desc.includes('large') || desc.includes('major initiative')) {
+    type = 'EPIC'
+  }
   
-  // Write markdown file
-  await fs.writeFile(filePath, markdownContent, 'utf-8')
+  // Basic priority detection
+  let priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'CRITICAL' = 'MEDIUM'
+  if (desc.includes('urgent') || desc.includes('critical') || desc.includes('asap')) {
+    priority = 'URGENT'
+  } else if (desc.includes('important') || desc.includes('high priority') || desc.includes('soon')) {
+    priority = 'HIGH'
+  } else if (desc.includes('low priority') || desc.includes('when possible') || desc.includes('nice to have')) {
+    priority = 'LOW'
+  }
   
-  // Update index file for fast UI loading
-  await updateWorkItemsIndex(projectName)
+  // Basic functional area detection
+  let functionalArea: 'SOFTWARE' | 'LEGAL' | 'OPERATIONS' | 'MARKETING' = 'SOFTWARE'
+  if (desc.includes('legal') || desc.includes('compliance') || desc.includes('terms')) {
+    functionalArea = 'LEGAL'
+  } else if (desc.includes('marketing') || desc.includes('content') || desc.includes('campaign')) {
+    functionalArea = 'MARKETING'
+  } else if (desc.includes('operations') || desc.includes('process') || desc.includes('workflow')) {
+    functionalArea = 'OPERATIONS'
+  }
+  
+  // Basic effort estimation
+  let estimatedEffort = '1d'
+  if (desc.includes('quick') || desc.includes('simple') || desc.includes('small')) {
+    estimatedEffort = '4h'
+  } else if (desc.includes('complex') || desc.includes('major') || desc.includes('large')) {
+    estimatedEffort = '1w'
+  }
+  
+  // Generate basic title
+  let title = description.split('.')[0].trim()
+  if (title.length > 60) {
+    title = title.substring(0, 57) + '...'
+  }
+  title = title.charAt(0).toUpperCase() + title.slice(1)
+  
+  return { title, type, priority, functionalArea, estimatedEffort }
 }
 
-async function updateWorkItemsIndex(projectName: string) {
-  const workItemsDir = path.join(process.cwd(), 'projects', projectName, 'work-items')
-  const indexPath = path.join(process.cwd(), 'projects', projectName, '.maverick.work-items.json')
+// Generate pending work item markdown (before AI enhancement)
+function generatePendingWorkItemMarkdown(workItem: any, originalDescription: string): string {
+  const timestamp = new Date().toISOString()
+  const dateFormatted = new Date().toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+
+  return `---
+id: ${workItem.id}
+title: "${workItem.title}"
+type: ${workItem.type}
+status: PENDING
+priority: ${workItem.priority}
+functionalArea: ${workItem.functionalArea}
+estimatedEffort: "${workItem.estimatedEffort}"
+worktreeName: null
+githubBranch: null
+assignedTo: null
+createdAt: ${workItem.createdAt}
+updatedAt: ${workItem.updatedAt}
+aiEnhanced: false
+originalRequest: "${originalDescription}"
+---
+
+# ${workItem.title}
+
+## 📋 Description
+${workItem.description}
+
+> **Status: AI Enhancement in Progress** 🤖
+> 
+> This work item was created immediately and is being enhanced with AI analysis. 
+> The content above will be expanded with detailed tasks, acceptance criteria, 
+> and implementation guidance shortly.
+
+## 🏷️ Basic Classification
+- **Type:** ${workItem.type}
+- **Priority:** ${workItem.priority}
+- **Functional Area:** ${workItem.functionalArea}
+- **Estimated Effort:** ${workItem.estimatedEffort}
+
+## 🔄 Enhancement Progress
+- [x] Work item created
+- [ ] AI analysis complete
+- [ ] Tasks generated
+- [ ] Acceptance criteria defined
+- [ ] Implementation notes added
+
+---
+
+## Metadata
+- **Created:** ${dateFormatted}
+- **Last Updated:** ${dateFormatted}
+- **Project:** ${workItem.projectName}
+- **Generated by:** Maverick AI ✨ (Immediate Creation)
+
+> _This work item will be automatically enhanced with detailed planning and structured guidance._
+`
+}
+
+// Async enhancement function (runs in background)
+async function enhanceWorkItemAsynchronously(
+  projectName: string, 
+  workItemId: string, 
+  description: string, 
+  existingWorkItems: any[], 
+  context: any
+) {
+  try {
+    logInfo('Starting async AI enhancement', context, { workItemId })
+    
+    // Perform AI analysis (this can take time)
+    const aiAnalysis = await withRetry(
+      () => analyzeWorkItemWithAI(
+        description,
+        `Project: ${projectName}`,
+        existingWorkItems.slice(0, 5)
+      ),
+      2,
+      2000,
+      context
+    )
+    
+    logInfo('AI analysis completed for async enhancement', context, {
+      workItemId,
+      title: aiAnalysis.title,
+      tasksCount: aiAnalysis.tasks?.length || 0
+    })
+    
+    // Generate enhanced markdown content
+    const enhancedMarkdown = await generateEnhancedWorkItemMarkdown(aiAnalysis, workItemId, description, projectName)
+    
+logInfo('Enhanced markdown generated', context, { 
+      workItemId, 
+      length: enhancedMarkdown.length 
+    })
+    
+    // Update the work item file with enhanced content
+    await saveWorkItemToMarkdown(projectName, workItemId, enhancedMarkdown)
+    
+    logInfo('Work item enhanced successfully', context, { 
+      workItemId,
+      aiTitle: aiAnalysis.title,
+      tasksGenerated: aiAnalysis.tasks?.length || 0
+    })
+    
+  } catch (error) {
+    logError(new Error(`Failed to enhance work item asynchronously: ${error instanceof Error ? error.message : String(error)}`), context)
+    
+    // Create a fallback enhanced version if AI fails
+    await createFallbackEnhancement(projectName, workItemId, description, context)
+  }
+}
+
+// Fallback enhancement if AI fails
+async function createFallbackEnhancement(projectName: string, workItemId: string, description: string, context: any) {
+  try {
+    const basicAnalysis = basicWorkItemAnalysis(description)
+    const fallbackMarkdown = generateFallbackEnhancedMarkdown(workItemId, basicAnalysis, description, projectName)
+    
+    await saveWorkItemToMarkdown(projectName, workItemId, fallbackMarkdown)
+    
+    logInfo('Fallback enhancement completed', context, { workItemId })
+  } catch (error) {
+    logError(new Error(`Fallback enhancement failed for ${workItemId}: ${error}`), context)
+  }
+}
+
+// Generate enhanced markdown from AI analysis
+async function generateEnhancedWorkItemMarkdown(aiAnalysis: any, workItemId: string, originalDescription: string, projectName: string): Promise<string> {
+  const timestamp = new Date().toISOString()
+  const dateFormatted = new Date().toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+
+  // Generate worktree name if it's a feature or bug
+  let worktreeName = null
+  let githubBranch = null
+  if (aiAnalysis.type === 'FEATURE' || aiAnalysis.type === 'BUG') {
+    const sanitizedTitle = aiAnalysis.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .substring(0, 50)
+    
+    const prefix = aiAnalysis.type.toLowerCase()
+    worktreeName = `${prefix}/${sanitizedTitle}`
+    githubBranch = worktreeName
+  }
+
+  return `---
+id: ${workItemId}
+title: "${aiAnalysis.title}"
+type: ${aiAnalysis.type}
+status: PLANNED
+priority: ${aiAnalysis.priority}
+functionalArea: ${aiAnalysis.functionalArea}
+estimatedEffort: "${aiAnalysis.estimatedEffort}"
+worktreeName: ${worktreeName || 'null'}
+githubBranch: ${githubBranch || 'null'}
+assignedTo: null
+createdAt: ${timestamp}
+updatedAt: ${timestamp}
+aiEnhanced: true
+originalRequest: "${originalDescription}"
+businessImpact: "${aiAnalysis.business_impact}"
+---
+
+# ${aiAnalysis.title}
+
+## 📋 Description
+${aiAnalysis.description}
+
+**Original Request:** "${originalDescription}"
+
+## 🏷️ Classification
+- **Type:** ${aiAnalysis.type}
+- **Priority:** ${aiAnalysis.priority}
+- **Functional Area:** ${aiAnalysis.functionalArea}
+- **Estimated Effort:** ${aiAnalysis.estimatedEffort}
+- **Business Impact:** ${aiAnalysis.business_impact}
+
+${worktreeName ? `## 🌿 Development Branch
+- **Branch:** \`${worktreeName}\`
+- **Status:** Ready for creation` : ''}
+
+## ✅ AI-Generated Tasks
+
+${aiAnalysis.tasks.map((task: any, index: number) => `### ${index + 1}. ${task.title}
+**Priority:** ${task.priority} | **Duration:** ${task.estimatedDuration} | **Category:** ${task.category}
+
+${task.description}
+
+${task.acceptance_criteria && task.acceptance_criteria.length > 0 ? `**Acceptance Criteria:**
+${task.acceptance_criteria.map((criteria: string) => `- ${criteria}`).join('\n')}` : ''}
+
+${task.dependencies && task.dependencies.length > 0 ? `**Dependencies:** ${task.dependencies.join(', ')}` : ''}
+`).join('\n')}
+
+## 🚀 Identified Opportunities
+
+${aiAnalysis.opportunities.length > 0 ? aiAnalysis.opportunities.map((opp: any) => `### ${opp.title}
+**Type:** ${opp.type} | **Impact:** ${opp.impact} | **Effort:** ${opp.effort} | **Timeline:** ${opp.timeline}
+
+${opp.description}
+
+**Potential Value:** ${opp.potential_value}
+`).join('\n') : '_No specific opportunities identified._'}
+
+## ⚠️ Potential Risks
+
+${aiAnalysis.risks.length > 0 ? aiAnalysis.risks.map((risk: any) => `### ${risk.title}
+**Severity:** ${risk.severity} | **Probability:** ${risk.probability}
+
+${risk.description}
+
+**Impact Areas:** ${risk.impact_areas.join(', ')}
+
+**Mitigation Strategy:** ${risk.mitigation_strategy}
+`).join('\n') : '_No significant risks identified._'}
+
+## 🎯 Acceptance Criteria
+
+${aiAnalysis.acceptance_criteria.map((criteria: string) => `- [ ] ${criteria}`).join('\n')}
+
+## 🔧 Technical Considerations
+
+${aiAnalysis.technical_considerations.map((consideration: string) => `- ${consideration}`).join('\n')}
+
+## 📚 Resources & References
+- [ ] Add relevant documentation links
+- [ ] Include design mockups or wireframes  
+- [ ] List external dependencies
+- [ ] Note any architectural decisions
+
+## 💬 Discussion & Updates
+
+### ${dateFormatted}
+- ✅ Work item created immediately
+- ✅ AI analysis completed
+- ✅ Comprehensive planning added
+- Ready for development assignment
+
+---
+
+## Metadata
+- **Created:** ${dateFormatted}
+- **Last Updated:** ${dateFormatted}
+- **Project:** ${projectName}
+- **Generated by:** Maverick AI ✨ (Enhanced Analysis)
+
+> _This work item was created immediately for fast feedback, then enhanced with AI analysis for comprehensive planning._
+`
+}
+
+// Generate fallback enhanced markdown if AI fails
+function generateFallbackEnhancedMarkdown(workItemId: string, basicAnalysis: any, originalDescription: string, projectName: string): string {
+  const dateFormatted = new Date().toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+
+  return `---
+id: ${workItemId}
+title: "${basicAnalysis.title}"
+type: ${basicAnalysis.type}
+status: PLANNED
+priority: ${basicAnalysis.priority}
+functionalArea: ${basicAnalysis.functionalArea}
+estimatedEffort: "${basicAnalysis.estimatedEffort}"
+worktreeName: null
+githubBranch: null
+assignedTo: null
+createdAt: ${new Date().toISOString()}
+updatedAt: ${new Date().toISOString()}
+aiEnhanced: false
+originalRequest: "${originalDescription}"
+---
+
+# ${basicAnalysis.title}
+
+## 📋 Description
+${originalDescription}
+
+> **Note:** AI enhancement was not available, so this work item uses basic analysis. 
+> Please review and add detailed requirements as needed.
+
+## 🏷️ Classification
+- **Type:** ${basicAnalysis.type}
+- **Priority:** ${basicAnalysis.priority}
+- **Functional Area:** ${basicAnalysis.functionalArea}
+- **Estimated Effort:** ${basicAnalysis.estimatedEffort}
+
+## 🎯 Next Steps
+- [ ] Review and refine requirements
+- [ ] Break down into specific tasks
+- [ ] Define acceptance criteria
+- [ ] Assign to team member
+- [ ] Begin implementation
+
+## 💬 Discussion & Updates
+
+### ${dateFormatted}
+- Work item created with basic analysis
+- Ready for manual refinement and planning
+
+---
+
+## Metadata
+- **Created:** ${dateFormatted}
+- **Last Updated:** ${dateFormatted}
+- **Project:** ${projectName}
+- **Generated by:** Maverick AI ✨ (Basic Analysis)
+
+> _This work item was created immediately but AI enhancement failed. Please add detailed planning manually._
+`
+}
+
+async function saveWorkItemToMarkdown(projectName: string, workItemId: string, markdownContent: string) {
+  try {
+    // Use project context service to get the correct path
+    const { projectContextService } = require('@/lib/project-context-service')
+    const context = await projectContextService.loadWorkItems(projectName) // This ensures directory exists
+    const projectCtx = await projectContextService.getProjectContext(projectName)
+    
+    const filePath = path.join(projectCtx.workItemsPath, `${workItemId}.md`)
+    
+    // Write markdown file
+    await fs.writeFile(filePath, markdownContent, 'utf-8')
+    
+    // Update index file for fast UI loading
+    await updateWorkItemsIndex(projectName, projectCtx.workItemsPath)
+  } catch (error) {
+    // Fallback to old path structure for compatibility
+    const workItemsDir = path.join(process.cwd(), '.maverick', 'work-items')
+    const filePath = path.join(workItemsDir, `${workItemId}.md`)
+    
+    await fs.mkdir(workItemsDir, { recursive: true })
+    await fs.writeFile(filePath, markdownContent, 'utf-8')
+    await updateWorkItemsIndex(projectName, workItemsDir)
+  }
+}
+
+async function updateWorkItemsIndex(projectName: string, workItemsDir: string) {
+  const indexPath = path.join(path.dirname(workItemsDir), '.maverick.work-items.json')
   
   try {
     const files = await fs.readdir(workItemsDir)
@@ -260,25 +598,11 @@ async function updateWorkItemsIndex(projectName: string) {
 }
 
 async function loadExistingWorkItems(projectName: string) {
-  const workItemsDir = path.join(process.cwd(), 'projects', projectName, 'work-items')
-  
   try {
-    await fs.mkdir(workItemsDir, { recursive: true })
-    const files = await fs.readdir(workItemsDir)
-    const markdownFiles = files.filter(file => file.endsWith('.md'))
-    
-    const workItems = []
-    for (const file of markdownFiles.slice(0, 10)) { // Limit for performance
-      try {
-        const content = await fs.readFile(path.join(workItemsDir, file), 'utf-8')
-        const parsed = parseBasicWorkItemFromMarkdown(content, file)
-        if (parsed) workItems.push(parsed)
-      } catch (error) {
-        console.error(`Error reading work item ${file}:`, error)
-      }
-    }
-    
-    return workItems
+    // Use project context service to load work items from correct location
+    const { projectContextService } = require('@/lib/project-context-service')
+    const workItems = await projectContextService.loadWorkItems(projectName)
+    return workItems.slice(0, 10) // Limit for performance
   } catch (error) {
     console.error('Error loading existing work items:', error)
     return []

@@ -276,6 +276,69 @@ export default function Home() {
           </div>
         </section>
       </main>
+      
+      {/* Footer */}
+      <footer className="bg-background-secondary border-t border-border-subtle py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="col-span-1 md:col-span-2">
+              <h3 className="text-lg font-bold text-text-primary mb-4">Maverick</h3>
+              <p className="text-text-secondary text-sm mb-4">
+                The first platform where local development and business operations are the same system. 
+                Git-folder driven agent collaboration for any project.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="text-md font-semibold text-text-primary mb-3">Documentation</h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="/docs" className="text-text-secondary hover:text-accent-primary transition-colors">
+                    Getting Started
+                  </a>
+                </li>
+                <li>
+                  <a href="/docs/maverick-structure" className="text-text-secondary hover:text-accent-primary transition-colors">
+                    .maverick Structure
+                  </a>
+                </li>
+                <li>
+                  <a href="https://github.com/your-org/maverick" className="text-text-secondary hover:text-accent-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                    GitHub Repository
+                  </a>
+                </li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="text-md font-semibold text-text-primary mb-3">Resources</h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="/app" className="text-text-secondary hover:text-accent-primary transition-colors">
+                    Start Building
+                  </a>
+                </li>
+                <li>
+                  <a href="/examples" className="text-text-secondary hover:text-accent-primary transition-colors">
+                    Examples
+                  </a>
+                </li>
+                <li>
+                  <a href="/pricing" className="text-text-secondary hover:text-accent-primary transition-colors">
+                    Pricing
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-border-subtle mt-8 pt-8 text-center">
+            <p className="text-text-muted text-sm">
+              © 2025 Maverick. Built with Git-folder driven AI agents.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

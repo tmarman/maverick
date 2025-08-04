@@ -34,15 +34,31 @@ export interface WorktreeCommand {
   timeout?: number
 }
 
+export interface BranchValidation {
+  isValid: boolean
+  errors: string[]
+  suggestions: string[]
+  normalizedName?: string
+}
+
+export interface WorktreeInfo {
+  project: string
+  branch: string
+  path: string
+  isActive: boolean
+  lastModified: Date
+  status: 'clean' | 'modified' | 'staged' | 'untracked'
+}
+
 export class WorktreeManager {
   private sessions = new Map<string, WorktreeSession>()
   private baseRepoPath: string
   private worktreeRoot: string
 
   constructor(baseRepoPath?: string) {
-    // Use the dedicated agent workspace repository
-    this.baseRepoPath = baseRepoPath || path.join(process.cwd(), 'repositories', 'maverick-agent-workspace')
-    this.worktreeRoot = path.join(process.cwd(), 'repositories', 'worktrees')
+    // Use hierarchical structure: tmp/repos/
+    this.baseRepoPath = baseRepoPath || process.cwd()
+    this.worktreeRoot = path.join(process.cwd(), 'tmp', 'repos')
   }
 
   /**
@@ -56,6 +72,412 @@ export class WorktreeManager {
     await this.cleanupStaleWorktrees()
     
     console.log(`🌳 Worktree Manager initialized at ${this.worktreeRoot}`)
+  }
+
+  // === NEW HIERARCHICAL WORKTREE METHODS ===
+
+  /**
+   * Validate and normalize branch name according to our conventions
+   */
+  validateBranchName(branchName: string): BranchValidation {
+    const errors: string[] = []
+    const suggestions: string[] = []
+
+    // Valid prefixes
+    const validPrefixes = ['main', 'feat', 'fix', 'refactor', 'docs', 'test', 'chore']
+    
+    // Basic validation
+    if (!branchName || branchName.trim().length === 0) {
+      errors.push('Branch name cannot be empty')
+      return { isValid: false, errors, suggestions }
+    }
+
+    // Normalize: lowercase, replace spaces/underscores with hyphens
+    let normalized = branchName.toLowerCase()
+      .replace(/[\s_]+/g, '-')
+      .replace(/[^a-z0-9\-]/g, '')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-+/g, '-')
+
+    // Check prefix
+    const hasValidPrefix = validPrefixes.some(prefix => 
+      normalized === prefix || normalized.startsWith(prefix + '-')
+    )
+
+    if (!hasValidPrefix && normalized !== 'main') {
+      // Try to suggest a prefix
+      if (normalized.includes('bug') || normalized.includes('error') || normalized.includes('fix')) {
+        suggestions.push(`Consider: fix-${normalized}`)
+      } else if (normalized.includes('doc') || normalized.includes('readme')) {
+        suggestions.push(`Consider: docs-${normalized}`)
+      } else if (normalized.includes('test') || normalized.includes('spec')) {
+        suggestions.push(`Consider: test-${normalized}`)
+      } else {
+        suggestions.push(`Consider: feat-${normalized}`)
+      }
+      errors.push(`Branch name should start with one of: ${validPrefixes.join(', ')}`)
+    }
+
+    // Length validation (max 50 chars total)
+    if (normalized.length > 50) {
+      errors.push('Branch name too long (max 50 characters)')
+      suggestions.push('Try using fewer or shorter words')
+    }
+
+    // Word count (2-5 words including prefix)
+    const words = normalized.split('-')
+    if (words.length > 5) {
+      errors.push('Branch name too verbose (max 4 words after prefix)')
+      suggestions.push('Try to be more concise')
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      suggestions,
+      normalizedName: normalized
+    }
+  }
+
+  /**
+   * Get the project directory path
+   */
+  getProjectPath(project: string): string {
+    return path.join(this.worktreeRoot, project)
+  }
+
+  /**
+   * Get the worktree path for a specific branch
+   */
+  getWorktreePath(project: string, branch: string): string {
+    return path.join(this.getProjectPath(project), branch)
+  }
+
+  /**
+   * Check if a project exists (main repo at project/main/.git)
+   */
+  async projectExists(project: string): Promise<boolean> {
+    try {
+      const mainRepoPath = this.getWorktreePath(project, 'main')
+      const gitPath = path.join(mainRepoPath, '.git')
+      
+      // Check if main repo exists 
+      const stat = await fs.stat(gitPath)
+      if (!stat.isDirectory()) return false
+      
+      // Verify it's a valid git repository by checking for HEAD file
+      const headPath = path.join(gitPath, 'HEAD')
+      await fs.access(headPath)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * List all worktrees for a project
+   */
+  async listProjectWorktrees(project: string): Promise<WorktreeInfo[]> {
+    if (!await this.projectExists(project)) {
+      throw new Error(`Project ${project} does not exist`)
+    }
+
+    const mainRepoPath = this.getWorktreePath(project, 'main')
+    
+    try {
+      // Use git worktree list to get worktree info (run from main repo)
+      const output = await this.runGitCommand(['worktree', 'list', '--porcelain'], mainRepoPath)
+
+      const worktrees: WorktreeInfo[] = []
+      const lines = output.split('\n')
+      let currentWorktree: Partial<WorktreeInfo> = {}
+
+      for (const line of lines) {
+        if (line.startsWith('worktree ')) {
+          const worktreePath = line.substring(9)
+          const branch = path.basename(worktreePath)
+          currentWorktree = {
+            project,
+            branch,
+            path: worktreePath,
+            isActive: false
+          }
+        } else if (line.startsWith('branch ')) {
+          // Sometimes branch info is provided separately
+          if (currentWorktree.branch === undefined) {
+            currentWorktree.branch = line.substring(7)
+          }
+        } else if (line === '' && currentWorktree.path) {
+          // End of worktree info, add to list
+          try {
+            const stat = await fs.stat(currentWorktree.path!)
+            currentWorktree.lastModified = stat.mtime
+            currentWorktree.status = 'clean' // TODO: Get actual git status
+            worktrees.push(currentWorktree as WorktreeInfo)
+          } catch {
+            // Worktree path doesn't exist, skip
+          }
+          currentWorktree = {}
+        }
+      }
+
+      return worktrees
+    } catch (error) {
+      throw new Error(`Failed to list worktrees: ${error}`)
+    }
+  }
+
+  /**
+   * Create a new hierarchical worktree
+   */
+  async createHierarchicalWorktree(project: string, branch: string, baseBranch: string = 'main'): Promise<string> {
+    const validation = this.validateBranchName(branch)
+    if (!validation.isValid) {
+      throw new Error(`Invalid branch name: ${validation.errors.join(', ')}`)
+    }
+
+    const normalizedBranch = validation.normalizedName!
+    const mainRepoPath = this.getWorktreePath(project, 'main')
+    const worktreePath = this.getWorktreePath(project, normalizedBranch)
+
+    // For main branch, we don't create a worktree, it IS the main repo
+    if (normalizedBranch === 'main') {
+      return mainRepoPath
+    }
+
+    // Ensure project exists
+    if (!await this.projectExists(project)) {
+      throw new Error(`Project ${project} does not exist. Clone it first.`)
+    }
+
+    // Check if worktree already exists
+    try {
+      await fs.access(worktreePath)
+      throw new Error(`Worktree ${normalizedBranch} already exists`)
+    } catch {
+      // Good, it doesn't exist
+    }
+
+    try {
+      // Create the worktree using git worktree add (run from main repo)
+      await this.runGitCommand(['worktree', 'add', worktreePath, baseBranch], mainRepoPath)
+
+      // Initialize .maverick structure if it doesn't exist
+      const maverickPath = path.join(worktreePath, '.maverick')
+      try {
+        await fs.access(maverickPath)
+      } catch {
+        // .maverick doesn't exist, create basic structure
+        await fs.mkdir(path.join(maverickPath, 'work-items'), { recursive: true })
+        await fs.mkdir(path.join(maverickPath, 'ai-logs'), { recursive: true })
+        await fs.mkdir(path.join(maverickPath, 'agents'), { recursive: true })
+        
+        // Create basic project.json
+        const projectConfig = {
+          version: "1.0",
+          scope: {
+            type: "feature",
+            name: `${project} - ${normalizedBranch}`,
+            description: `Feature branch for ${normalizedBranch}`,
+            branch: normalizedBranch,
+            baseBranch: baseBranch
+          },
+          createdAt: new Date().toISOString()
+        }
+        
+        await fs.writeFile(
+          path.join(maverickPath, 'project.json'),
+          JSON.stringify(projectConfig, null, 2)
+        )
+      }
+
+      console.log(`🌳 Created worktree: ${worktreePath}`)
+      return worktreePath
+    } catch (error) {
+      throw new Error(`Failed to create worktree: ${error}`)
+    }
+  }
+
+  /**
+   * Remove a hierarchical worktree
+   */
+  async removeHierarchicalWorktree(project: string, branch: string, force: boolean = false): Promise<void> {
+    const bareRepoPath = path.join(this.getProjectPath(project), '.git')
+    const worktreePath = this.getWorktreePath(project, branch)
+    
+    if (!await this.projectExists(project)) {
+      throw new Error(`Project ${project} does not exist`)
+    }
+
+    try {
+      const forceFlag = force ? '--force' : ''
+      await this.runGitCommand(['worktree', 'remove', forceFlag, worktreePath].filter(Boolean), bareRepoPath)
+      console.log(`🧹 Removed worktree: ${project}/${branch}`)
+    } catch (error) {
+      throw new Error(`Failed to remove worktree: ${error}`)
+    }
+  }
+
+  /**
+   * Clone a repository and set up hierarchical structure
+   * Structure: /tmp/repos/project/main/ (main repo) + /tmp/repos/project/feature-branches/ (worktrees)
+   */
+  async cloneProjectHierarchical(repoUrl: string, project: string): Promise<string> {
+    const mainRepoPath = this.getWorktreePath(project, 'main')
+    
+    // Ensure base directory exists
+    await fs.mkdir(this.worktreeRoot, { recursive: true })
+    
+    // Check if project already exists
+    if (await this.projectExists(project)) {
+      console.log(`📁 Project ${project} already exists, skipping clone`)
+      return mainRepoPath
+    }
+
+    try {
+      // Clone directly to main directory
+      await execAsync(`git clone ${repoUrl} ${mainRepoPath}`)
+      
+      console.log(`📂 Cloned project to main: ${mainRepoPath}`)
+      
+      return mainRepoPath
+    } catch (error) {
+      throw new Error(`Failed to clone project: ${error}`)
+    }
+  }
+
+  /**
+   * Activate a branch by creating a worktree for active development
+   * Branches without worktrees exist as inactive branch references only
+   */
+  async activateBranch(project: string, branch: string, baseBranch: string = 'main'): Promise<string> {
+    const bareRepoPath = path.join(this.getProjectPath(project), '.git')
+    const worktreePath = this.getWorktreePath(project, branch)
+
+    if (!await this.projectExists(project)) {
+      throw new Error(`Project ${project} does not exist`)
+    }
+
+    // Check if worktree already exists (branch already active)
+    try {
+      await fs.access(worktreePath)
+      console.log(`🌳 Branch ${branch} is already active`)
+      return worktreePath
+    } catch {
+      // Good, doesn't exist - we can create it
+    }
+
+    try {
+      // Check if branch exists as a reference
+      const branchExists = await this.branchExists(project, branch)
+      
+      if (branchExists) {
+        // Create worktree from existing branch
+        await this.runGitCommand(['worktree', 'add', worktreePath, branch], bareRepoPath)
+        console.log(`🌳 Activated existing branch: ${branch}`)
+      } else {
+        // Create new branch with worktree
+        await this.runGitCommand(['worktree', 'add', '-b', branch, worktreePath, baseBranch], bareRepoPath)
+        console.log(`🌳 Created and activated new branch: ${branch}`)
+      }
+
+      return worktreePath
+    } catch (error) {
+      throw new Error(`Failed to activate branch ${branch}: ${error}`)
+    }
+  }
+
+  /**
+   * Deactivate a branch by removing its worktree (keeping the branch reference)
+   * This saves disk space while preserving the branch for future reactivation
+   */
+  async deactivateBranch(project: string, branch: string, force: boolean = false): Promise<void> {
+    if (branch === 'main') {
+      throw new Error('Cannot deactivate main branch')
+    }
+
+    const bareRepoPath = path.join(this.getProjectPath(project), '.git')
+    const worktreePath = this.getWorktreePath(project, branch)
+
+    if (!await this.projectExists(project)) {
+      throw new Error(`Project ${project} does not exist`)
+    }
+
+    try {
+      // Check if worktree exists
+      await fs.access(worktreePath)
+      
+      // Remove worktree but keep branch reference
+      const forceFlag = force ? '--force' : ''
+      await this.runGitCommand(['worktree', 'remove', forceFlag, worktreePath].filter(Boolean), bareRepoPath)
+      
+      console.log(`💤 Deactivated branch: ${branch} (branch reference preserved)`)
+    } catch (error) {
+      if (error.message && error.message.includes('no such file')) {
+        console.log(`⚠️  Branch ${branch} is already inactive`)
+        return
+      }
+      throw new Error(`Failed to deactivate branch ${branch}: ${error}`)
+    }
+  }
+
+  /**
+   * Check if a branch exists as a git reference
+   */
+  async branchExists(project: string, branch: string): Promise<boolean> {
+    const bareRepoPath = path.join(this.getProjectPath(project), '.git')
+    
+    try {
+      await this.runGitCommand(['show-ref', '--verify', '--quiet', `refs/heads/${branch}`], bareRepoPath)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * Get all branches (active and inactive)
+   */
+  async getAllBranches(project: string): Promise<{
+    active: Array<{ branch: string; path: string; lastModified: Date }>
+    inactive: Array<{ branch: string; lastCommit: string; lastCommitDate: Date }>
+  }> {
+    if (!await this.projectExists(project)) {
+      throw new Error(`Project ${project} does not exist`)
+    }
+
+    const bareRepoPath = path.join(this.getProjectPath(project), '.git')
+    
+    try {
+      // Get all worktrees (active branches)
+      const activeWorktrees = await this.listProjectWorktrees(project)
+      const active = activeWorktrees.map(wt => ({
+        branch: wt.branch,
+        path: wt.path,
+        lastModified: wt.lastModified
+      }))
+
+      // Get all branch references
+      const branchOutput = await this.runGitCommand(['branch', '-r', '--format=%(refname:short)|%(objectname:short)|%(committerdate:iso)'], bareRepoPath)
+      const allBranches = branchOutput.split('\n')
+        .filter(line => line.trim())
+        .map(line => {
+          const [ref, commit, date] = line.split('|')
+          return {
+            branch: ref.replace('origin/', ''),
+            lastCommit: commit,
+            lastCommitDate: new Date(date)
+          }
+        })
+
+      // Find inactive branches (have reference but no worktree)
+      const activeBranchNames = new Set(active.map(a => a.branch))
+      const inactive = allBranches.filter(branch => !activeBranchNames.has(branch.branch))
+
+      return { active, inactive }
+    } catch (error) {
+      throw new Error(`Failed to get branch information: ${error}`)
+    }
   }
 
   /**
