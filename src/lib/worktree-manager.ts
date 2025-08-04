@@ -244,7 +244,7 @@ export class WorktreeManager {
         .filter(line => line.trim())
 
       return {
-        filesChanged: [...new Set([...filesChanged, ...uncommittedChanges])],
+        filesChanged: Array.from(new Set([...filesChanged, ...uncommittedChanges])),
         uncommittedChanges,
         branch: session.branch,
         commits: parseInt(commitCount.trim()) || 0
@@ -379,7 +379,7 @@ export class WorktreeManager {
   private async cleanupStaleWorktrees(): Promise<void> {
     try {
       // List all worktrees
-      const { stdout } = await this.runGitCommand(['worktree', 'list', '--porcelain'])
+      const stdout = await this.runGitCommand(['worktree', 'list', '--porcelain'])
       
       // Parse worktree list and remove any in our agent directory
       const lines = stdout.split('\n')

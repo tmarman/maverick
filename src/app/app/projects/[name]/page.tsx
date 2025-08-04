@@ -609,7 +609,7 @@ export default function ProjectDetailPage() {
                       <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                       <span className="text-sm">Blocked</span>
                     </div>
-                    <span className="font-semibold text-red-600">{projectSummary.workItemStats.blocked}</span>
+                    <span className="font-semibold text-red-600">{projectSummary?.workItemStats.blocked || 0}</span>
                   </div>
                 )}
                 {(projectSummary?.workItemStats.deferred || 0) > 0 && (
@@ -618,7 +618,7 @@ export default function ProjectDetailPage() {
                       <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
                       <span className="text-sm">Deferred</span>
                     </div>
-                    <span className="font-semibold text-orange-600">{projectSummary.workItemStats.deferred}</span>
+                    <span className="font-semibold text-orange-600">{projectSummary?.workItemStats.deferred || 0}</span>
                   </div>
                 )}
               </CardContent>

@@ -120,7 +120,7 @@ export class ClaudeTerminalManager {
       })
 
       // Start Claude Code in interactive mode
-      const process = spawn('claude', [], {
+      const claudeProcess = spawn('claude', [], {
         cwd: session.workingDirectory,
         stdio: ['pipe', 'pipe', 'pipe'],
         env: {
@@ -134,11 +134,11 @@ export class ClaudeTerminalManager {
         shell: false
       })
 
-      session.process = process
+      session.process = claudeProcess
       session.lastActivity = new Date()
 
       // Handle process output
-      process.stdout?.on('data', (data) => {
+      claudeProcess.stdout?.on('data', (data) => {
         const output = data.toString()
         this.addMessage(sessionId, {
           type: 'output',
@@ -149,7 +149,7 @@ export class ClaudeTerminalManager {
         session.lastActivity = new Date()
       })
 
-      process.stderr?.on('data', (data) => {
+      claudeProcess.stderr?.on('data', (data) => {
         const error = data.toString()
         this.addMessage(sessionId, {
           type: 'error',
@@ -160,7 +160,7 @@ export class ClaudeTerminalManager {
         session.lastActivity = new Date()
       })
 
-      process.on('close', (code) => {
+      claudeProcess.on('close', (code) => {
         console.log(`🏁 Claude process closed for session ${sessionId} with code ${code}`)
         this.addMessage(sessionId, {
           type: 'system',
@@ -172,7 +172,7 @@ export class ClaudeTerminalManager {
         session.isActive = false
       })
 
-      process.on('error', (error) => {
+      claudeProcess.on('error', (error) => {
         console.error(`💥 Claude process error for session ${sessionId}:`, error)
         this.addMessage(sessionId, {
           type: 'error',
@@ -363,7 +363,7 @@ export class ClaudeTerminalManager {
     const now = new Date()
     const inactiveThreshold = 30 * 60 * 1000 // 30 minutes
 
-    for (const [sessionId, session] of this.sessions.entries()) {
+    for (const [sessionId, session] of Array.from(this.sessions.entries())) {
       const inactiveTime = now.getTime() - session.lastActivity.getTime()
       if (inactiveTime > inactiveThreshold) {
         console.log(`🧹 Cleaning up inactive session ${sessionId}`)

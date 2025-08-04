@@ -188,13 +188,13 @@ export default function Home() {
                 Feature-Driven Development
               </h2>
               <p className="text-xl text-blue-100 max-w-4xl mx-auto">
-                Stop thinking in code. Start thinking in customer value. Every feature maps to business outcomes.
+                You don't need to know code. You need to know what you want to build as a product. Every feature maps to business outcomes.
               </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="text-left">
-                <h3 className="text-2xl font-bold text-white mb-6">Think Like a Founder, Not a Developer</h3>
+                <h3 className="text-2xl font-bold text-white mb-6">Think Like a Founder, Build Like a Pro</h3>
                 <div className="space-y-6">
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
@@ -202,7 +202,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h4 className="text-lg font-semibold text-white mb-2">Customer Problems First</h4>
-                      <p className="text-blue-100 text-sm">Start with "customers need to login securely" not "implement OAuth2 authentication"</p>
+                      <p className="text-blue-100 text-sm">Start with "customers need to login securely" — we'll handle the technical implementation</p>
                     </div>
                   </div>
                   
@@ -243,12 +243,12 @@ export default function Home() {
                 
                 <div className="space-y-6">
                   <div className="border-l-4 border-red-400 pl-4">
-                    <h5 className="font-semibold text-red-700 mb-1">❌ Traditional Development</h5>
+                    <h5 className="font-semibold text-red-700 mb-1">❌ Technical Approach</h5>
                     <p className="text-sm text-gray-600">"Build user authentication system with JWT tokens, password hashing, and session management"</p>
                   </div>
                   
                   <div className="border-l-4 border-green-400 pl-4">
-                    <h5 className="font-semibold text-green-700 mb-1">✅ Feature-Driven Development</h5>
+                    <h5 className="font-semibold text-green-700 mb-1">✅ Product-Driven Approach</h5>
                     <p className="text-sm text-gray-600">"Let customers create accounts and login securely so they can save their preferences and access premium features"</p>
                   </div>
                 </div>

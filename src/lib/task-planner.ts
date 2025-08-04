@@ -1,4 +1,4 @@
-import { aiProvider } from '@/lib/ai-provider'
+import { multiAIProvider } from '@/lib/ai-provider'
 
 export interface TaskStep {
   id: number
@@ -51,11 +51,11 @@ export class TaskPlanner {
     try {
       console.log(`🧠 Planning task: ${requirement}`)
       
-      const response = await aiProvider.execute(planningPrompt, 'claude-code', {
+      const response = await multiAIProvider.generateResponse(planningPrompt, '', {
+        provider: 'claude-code',
         model: 'claude-3-5-sonnet-20241022',
-        maxTokens: 4000,
-        temperature: 0.1 // Low temperature for consistent planning
-      }, userId)
+        userId
+      })
 
       const plan = this.parsePlanResponse(response, requirement)
       
@@ -144,11 +144,11 @@ Respond with the refined plan in the same JSON format.
 `
 
     try {
-      const response = await aiProvider.execute(refinementPrompt, 'claude-code', {
+      const response = await multiAIProvider.generateResponse(refinementPrompt, '', {
+        provider: 'claude-code',
         model: 'claude-3-5-sonnet-20241022',
-        maxTokens: 4000,
-        temperature: 0.1
-      }, userId)
+        userId
+      })
 
       return this.parsePlanResponse(response, originalPlan.description)
       
