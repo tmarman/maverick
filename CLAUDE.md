@@ -56,6 +56,16 @@ Root level: Only package.json, README.md, CLAUDE.md, and essential config files
 - `npm run lint` - Run ESLint checks
 - `npm run type-check` - Run TypeScript type checking
 
+### **CRITICAL**: Always Test Production Builds
+- **ALWAYS run `npm run build` before completing any feature** to catch TypeScript compilation errors
+- Development mode is more lenient - production builds catch type mismatches, interface conflicts, and iteration issues
+- Common issues to watch for:
+  - Next.js 15 route parameter types (use `Promise<{ param: string }>`)
+  - WorkItem interface consistency across components
+  - Variable naming conflicts with Node.js globals
+  - TypeScript iteration issues with Map/Set (use `Array.from()`)
+- If build fails, fix ALL compilation errors before committing
+
 ### Database Operations
 - `npm run db:generate` - Generate Prisma client
 - `npm run db:push` - Push schema changes to database
