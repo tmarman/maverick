@@ -59,6 +59,7 @@ model User {
   sessions         Session[]
   squareConnection SquareConnection?
   githubConnection GitHubConnection?
+  claudeConnection ClaudeConnection?
   ownedBusinesses  Business[]        @relation("BusinessOwner")
   businessMemberships BusinessMember[]
   chatSessions     ChatSession[]
@@ -109,6 +110,24 @@ model GitHubConnection {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("github_connections")
+}
+
+model ClaudeConnection {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  claudeUserId     String?   // Claude user ID from OAuth
+  email            String?   // Email associated with Claude account
+  subscriptionType String?   // free, pro, max
+  accessToken      String    // Long-lived OAuth token
+  refreshToken     String?   // Refresh token if available
+  expiresAt        DateTime? // Token expiration if applicable
+  scopes           String?   @db.Text // JSON string of granted scopes
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("claude_connections")
 }
 
 model Business {

@@ -6,6 +6,16 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 import { generateAIResponse } from '@/lib/ai-provider'
 
+async function getUserIdFromSession(): Promise<string | undefined> {
+  try {
+    const session = await getServerSession(authOptions)
+    return session?.user?.id
+  } catch (error) {
+    console.error('Failed to get user ID from session:', error)
+    return undefined
+  }
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
@@ -123,7 +133,16 @@ Guidelines:
 Return only valid JSON, no markdown.`
 
   try {
-    const result = await generateAIResponse(prompt, 'Project management and task generation', 'auto')
+    // Get user ID from session for Claude API integration
+    const userId = await getUserIdFromSession()
+    const result = await generateAIResponse(
+      prompt, 
+      'Project management and task generation', 
+      'auto', 
+      undefined, // projectId
+      undefined, // model
+      userId
+    )
     
     if (result) {
       try {

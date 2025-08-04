@@ -1,115 +1,186 @@
 {
-  "count": 12,
-  "lastUpdated": "2025-08-03T04:59:00.237Z",
-  "populated_features": true,
+  "count": 36,
+  "lastUpdated": "2025-08-04T04:30:37.015Z",
   "items": [
-    {
-      "id": "cf82afb4-1be0-4a6d-9361-8c6a8a97d641",
-      "filename": "cf82afb4-1be0-4a6d-9361-8c6a8a97d641.md",
-      "path": "work-items/cf82afb4-1be0-4a6d-9361-8c6a8a97d641.md",
-      "title": "Project Canvas & Work Item Management",
-      "category": "Project Management",
-      "status": "ACTIVE",
-      "priority": "HIGH"
-    },
-    {
-      "id": "9614b896-534f-40ec-9189-e23e2ebac5eb",
-      "filename": "9614b896-534f-40ec-9189-e23e2ebac5eb.md",
-      "path": "work-items/9614b896-534f-40ec-9189-e23e2ebac5eb.md",
-      "title": "AI-Powered Work Item Analysis",
-      "category": "AI & Automation",
-      "status": "ACTIVE",
-      "priority": "HIGH"
-    },
-    {
-      "id": "7120213f-5f50-4fea-a930-662aa7cb884b",
-      "filename": "7120213f-5f50-4fea-a930-662aa7cb884b.md",
-      "path": "work-items/7120213f-5f50-4fea-a930-662aa7cb884b.md",
-      "title": "GitHub Repository Integration",
-      "category": "Version Control",
-      "status": "ACTIVE",
-      "priority": "HIGH"
-    },
     {
       "id": "1b52ef05-c425-4d0d-b027-bfbaf3159aa3",
       "filename": "1b52ef05-c425-4d0d-b027-bfbaf3159aa3.md",
-      "path": "work-items/1b52ef05-c425-4d0d-b027-bfbaf3159aa3.md",
-      "title": "Project-Based Navigation & Routing",
-      "category": "UI/UX",
-      "status": "ACTIVE",
-      "priority": "HIGH"
+      "path": "work-items/1b52ef05-c425-4d0d-b027-bfbaf3159aa3.md"
     },
     {
-      "id": "7e9801e6-ade5-44ad-be9f-bdc88d3c1605",
-      "filename": "7e9801e6-ade5-44ad-be9f-bdc88d3c1605.md",
-      "path": "work-items/7e9801e6-ade5-44ad-be9f-bdc88d3c1605.md",
-      "title": "Markdown-Based Work Item Storage",
-      "category": "Data Architecture",
-      "status": "ACTIVE",
-      "priority": "HIGH"
-    },
-    {
-      "id": "aa199fdd-6c0f-4a41-a944-32a3e6e0b3f9",
-      "filename": "aa199fdd-6c0f-4a41-a944-32a3e6e0b3f9.md",
-      "path": "work-items/aa199fdd-6c0f-4a41-a944-32a3e6e0b3f9.md",
-      "title": "Claude Code Terminal Integration",
-      "category": "AI & Development",
-      "status": "ACTIVE",
-      "priority": "HIGH"
-    },
-    {
-      "id": "9223a697-6360-4a12-b369-865cd41239cf",
-      "filename": "9223a697-6360-4a12-b369-865cd41239cf.md",
-      "path": "work-items/9223a697-6360-4a12-b369-865cd41239cf.md",
-      "title": "Business Formation Workflow",
-      "category": "Business Formation",
-      "status": "ACTIVE",
-      "priority": "HIGH"
-    },
-    {
-      "id": "759a9763-a6ef-4301-bba3-8587d5313057",
-      "filename": "759a9763-a6ef-4301-bba3-8587d5313057.md",
-      "path": "work-items/759a9763-a6ef-4301-bba3-8587d5313057.md",
-      "title": "Document Canvas & Collaboration",
-      "category": "Collaboration",
-      "status": "ACTIVE",
-      "priority": "HIGH"
+      "id": "42f63293-8fdb-4f6d-8f16-d9ed6557ddf8",
+      "filename": "42f63293-8fdb-4f6d-8f16-d9ed6557ddf8.md",
+      "path": "work-items/42f63293-8fdb-4f6d-8f16-d9ed6557ddf8.md"
     },
     {
       "id": "4a5eb82c-fb49-4d38-b444-0f905d503311",
       "filename": "4a5eb82c-fb49-4d38-b444-0f905d503311.md",
-      "path": "work-items/4a5eb82c-fb49-4d38-b444-0f905d503311.md",
-      "title": "Multi-AI Provider System",
-      "category": "AI & Automation",
-      "status": "ACTIVE",
-      "priority": "HIGH"
+      "path": "work-items/4a5eb82c-fb49-4d38-b444-0f905d503311.md"
+    },
+    {
+      "id": "7120213f-5f50-4fea-a930-662aa7cb884b",
+      "filename": "7120213f-5f50-4fea-a930-662aa7cb884b.md",
+      "path": "work-items/7120213f-5f50-4fea-a930-662aa7cb884b.md"
+    },
+    {
+      "id": "759a9763-a6ef-4301-bba3-8587d5313057",
+      "filename": "759a9763-a6ef-4301-bba3-8587d5313057.md",
+      "path": "work-items/759a9763-a6ef-4301-bba3-8587d5313057.md"
+    },
+    {
+      "id": "7e9801e6-ade5-44ad-be9f-bdc88d3c1605",
+      "filename": "7e9801e6-ade5-44ad-be9f-bdc88d3c1605.md",
+      "path": "work-items/7e9801e6-ade5-44ad-be9f-bdc88d3c1605.md"
+    },
+    {
+      "id": "9223a697-6360-4a12-b369-865cd41239cf",
+      "filename": "9223a697-6360-4a12-b369-865cd41239cf.md",
+      "path": "work-items/9223a697-6360-4a12-b369-865cd41239cf.md"
+    },
+    {
+      "id": "9614b896-534f-40ec-9189-e23e2ebac5eb",
+      "filename": "9614b896-534f-40ec-9189-e23e2ebac5eb.md",
+      "path": "work-items/9614b896-534f-40ec-9189-e23e2ebac5eb.md"
+    },
+    {
+      "id": "9d99bcd5-5a77-4c75-a6f2-abfe8b3b1bc9",
+      "filename": "9d99bcd5-5a77-4c75-a6f2-abfe8b3b1bc9.md",
+      "path": "work-items/9d99bcd5-5a77-4c75-a6f2-abfe8b3b1bc9.md"
+    },
+    {
+      "id": "a0802a7c-02c3-4196-9155-2bde731a2148",
+      "filename": "a0802a7c-02c3-4196-9155-2bde731a2148.md",
+      "path": "work-items/a0802a7c-02c3-4196-9155-2bde731a2148.md"
+    },
+    {
+      "id": "a12e76b5-e077-43ca-8fd9-92f6b532c56c",
+      "filename": "a12e76b5-e077-43ca-8fd9-92f6b532c56c.md",
+      "path": "work-items/a12e76b5-e077-43ca-8fd9-92f6b532c56c.md"
+    },
+    {
+      "id": "aa199fdd-6c0f-4a41-a944-32a3e6e0b3f9",
+      "filename": "aa199fdd-6c0f-4a41-a944-32a3e6e0b3f9.md",
+      "path": "work-items/aa199fdd-6c0f-4a41-a944-32a3e6e0b3f9.md"
+    },
+    {
+      "id": "automatic-dogfooding-system-l5m6n7o8-p9q0-1234-rstu-567890123456",
+      "filename": "automatic-dogfooding-system-l5m6n7o8-p9q0-1234-rstu-567890123456.md",
+      "path": "work-items/automatic-dogfooding-system-l5m6n7o8-p9q0-1234-rstu-567890123456.md"
+    },
+    {
+      "id": "automatic-feature-extraction-b2c3d4e5-f6g7-8901-bcde-f23456789012",
+      "filename": "automatic-feature-extraction-b2c3d4e5-f6g7-8901-bcde-f23456789012.md",
+      "path": "work-items/automatic-feature-extraction-b2c3d4e5-f6g7-8901-bcde-f23456789012.md"
     },
     {
       "id": "b83facd1-8a4c-4306-aa32-74bb77c59492",
       "filename": "b83facd1-8a4c-4306-aa32-74bb77c59492.md",
-      "path": "work-items/b83facd1-8a4c-4306-aa32-74bb77c59492.md",
-      "title": "Presentation Generator",
-      "category": "Content Generation",
-      "status": "ACTIVE",
-      "priority": "HIGH"
+      "path": "work-items/b83facd1-8a4c-4306-aa32-74bb77c59492.md"
     },
     {
-      "id": "e53bc171-d675-47fa-ae65-ccc0fc2a0d1c",
-      "filename": "e53bc171-d675-47fa-ae65-ccc0fc2a0d1c.md",
-      "path": "work-items/e53bc171-d675-47fa-ae65-ccc0fc2a0d1c.md",
-      "title": "Authentication & Session Management",
-      "category": "Authentication",
-      "status": "ACTIVE",
-      "priority": "HIGH"
+      "id": "background-feature-analysis-ui-c3d4e5f6-g7h8-9012-cdef-345678901234",
+      "filename": "background-feature-analysis-ui-c3d4e5f6-g7h8-9012-cdef-345678901234.md",
+      "path": "work-items/background-feature-analysis-ui-c3d4e5f6-g7h8-9012-cdef-345678901234.md"
+    },
+    {
+      "id": "board-communications-platform-h1i2j3k4-l5m6-7890-nopq-123456789012",
+      "filename": "board-communications-platform-h1i2j3k4-l5m6-7890-nopq-123456789012.md",
+      "path": "work-items/board-communications-platform-h1i2j3k4-l5m6-7890-nopq-123456789012.md"
+    },
+    {
+      "id": "cap-table-management-platform-i2j3k4l5-m6n7-8901-opqr-234567890123",
+      "filename": "cap-table-management-platform-i2j3k4l5-m6n7-8901-opqr-234567890123.md",
+      "path": "work-items/cap-table-management-platform-i2j3k4l5-m6n7-8901-opqr-234567890123.md"
+    },
+    {
+      "id": "cf82afb4-1be0-4a6d-9361-8c6a8a97d641",
+      "filename": "cf82afb4-1be0-4a6d-9361-8c6a8a97d641.md",
+      "path": "work-items/cf82afb4-1be0-4a6d-9361-8c6a8a97d641.md"
     },
     {
       "id": "d5c25fd0-d668-4185-a60a-017b24ca1788",
       "filename": "d5c25fd0-d668-4185-a60a-017b24ca1788.md",
-      "path": "work-items/d5c25fd0-d668-4185-a60a-017b24ca1788.md",
-      "title": "Project Insights & Analytics",
-      "category": "Analytics & Insights",
-      "status": "ACTIVE",
-      "priority": "HIGH"
+      "path": "work-items/d5c25fd0-d668-4185-a60a-017b24ca1788.md"
+    },
+    {
+      "id": "d93bf268-edcf-40e6-8d42-08cd3b9d7e34",
+      "filename": "d93bf268-edcf-40e6-8d42-08cd3b9d7e34.md",
+      "path": "work-items/d93bf268-edcf-40e6-8d42-08cd3b9d7e34.md"
+    },
+    {
+      "id": "dark-mode-toggle-feature-${Date.now().toString().slice(-6)}",
+      "filename": "dark-mode-toggle-feature-${Date.now().toString().slice(-6)}.md",
+      "path": "work-items/dark-mode-toggle-feature-${Date.now().toString().slice(-6)}.md"
+    },
+    {
+      "id": "debug-import-functionality-m6n7o8p9-q0r1-2345-stuv-678901234567",
+      "filename": "debug-import-functionality-m6n7o8p9-q0r1-2345-stuv-678901234567.md",
+      "path": "work-items/debug-import-functionality-m6n7o8p9-q0r1-2345-stuv-678901234567.md"
+    },
+    {
+      "id": "domain-deployment-setup-o8p9q0r1-s2t3-4567-uvwx-890123456789",
+      "filename": "domain-deployment-setup-o8p9q0r1-s2t3-4567-uvwx-890123456789.md",
+      "path": "work-items/domain-deployment-setup-o8p9q0r1-s2t3-4567-uvwx-890123456789.md"
+    },
+    {
+      "id": "e53bc171-d675-47fa-ae65-ccc0fc2a0d1c",
+      "filename": "e53bc171-d675-47fa-ae65-ccc0fc2a0d1c.md",
+      "path": "work-items/e53bc171-d675-47fa-ae65-ccc0fc2a0d1c.md"
+    },
+    {
+      "id": "executive-project-overview-g0h1i2j3-k4l5-6789-mnop-012345678901",
+      "filename": "executive-project-overview-g0h1i2j3-k4l5-6789-mnop-012345678901.md",
+      "path": "work-items/executive-project-overview-g0h1i2j3-k4l5-6789-mnop-012345678901.md"
+    },
+    {
+      "id": "feature-status-tracking-system",
+      "filename": "feature-status-tracking-system.md",
+      "path": "work-items/feature-status-tracking-system.md"
+    },
+    {
+      "id": "fix-team-page-404-k4l5m6n7-o8p9-0123-qrst-456789012345",
+      "filename": "fix-team-page-404-k4l5m6n7-o8p9-0123-qrst-456789012345.md",
+      "path": "work-items/fix-team-page-404-k4l5m6n7-o8p9-0123-qrst-456789012345.md"
+    },
+    {
+      "id": "idea-icebox-management-j3k4l5m6-n7o8-9012-pqrs-345678901234",
+      "filename": "idea-icebox-management-j3k4l5m6-n7o8-9012-pqrs-345678901234.md",
+      "path": "work-items/idea-icebox-management-j3k4l5m6-n7o8-9012-pqrs-345678901234.md"
+    },
+    {
+      "id": "mcp-server-integration-f9g0h1i2-j3k4-5678-lmno-901234567890",
+      "filename": "mcp-server-integration-f9g0h1i2-j3k4-5678-lmno-901234567890.md",
+      "path": "work-items/mcp-server-integration-f9g0h1i2-j3k4-5678-lmno-901234567890.md"
+    },
+    {
+      "id": "self-dogfooding-workflow-d4e5f6g7-h8i9-0123-defg-456789012345",
+      "filename": "self-dogfooding-workflow-d4e5f6g7-h8i9-0123-defg-456789012345.md",
+      "path": "work-items/self-dogfooding-workflow-d4e5f6g7-h8i9-0123-defg-456789012345.md"
+    },
+    {
+      "id": "sidebar-windows-explorer-style-n7o8p9q0-r1s2-3456-tuvw-789012345678",
+      "filename": "sidebar-windows-explorer-style-n7o8p9q0-r1s2-3456-tuvw-789012345678.md",
+      "path": "work-items/sidebar-windows-explorer-style-n7o8p9q0-r1s2-3456-tuvw-789012345678.md"
+    },
+    {
+      "id": "urgent-production-deployment-p9q0r1s2-t3u4-5678-vwxy-901234567890",
+      "filename": "urgent-production-deployment-p9q0r1s2-t3u4-5678-vwxy-901234567890.md",
+      "path": "work-items/urgent-production-deployment-p9q0r1s2-t3u4-5678-vwxy-901234567890.md"
+    },
+    {
+      "id": "vibe-chat-feature-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "filename": "vibe-chat-feature-a1b2c3d4-e5f6-7890-abcd-ef1234567890.md",
+      "path": "work-items/vibe-chat-feature-a1b2c3d4-e5f6-7890-abcd-ef1234567890.md"
+    },
+    {
+      "id": "vibe-chat-markdown-formatting",
+      "filename": "vibe-chat-markdown-formatting.md",
+      "path": "work-items/vibe-chat-markdown-formatting.md"
+    },
+    {
+      "id": "workspace-team-management-overhaul",
+      "filename": "workspace-team-management-overhaul.md",
+      "path": "work-items/workspace-team-management-overhaul.md"
     }
   ]
 }

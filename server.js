@@ -883,6 +883,9 @@ This directory contains ${dir} for the project.
 
 const sessionManager = new ClaudeCodeSessionManager()
 
+// Import Claude Terminal Manager
+const { claudeTerminalManager } = require('./src/lib/claude-terminal-manager.js')
+
 app.prepare().then(async () => {
   // Fire off a non-blocking database warmup call  
   console.log('🔥 Starting database warmup in background...')
@@ -896,6 +899,7 @@ app.prepare().then(async () => {
       console.log('✅ Database warmed up successfully')
     } catch (error) {
       console.log('⚠️  Database warmup failed:', error.message.substring(0, 100))
+      console.log('📝 This is normal if database is not accessible - app will still work')
     }
   }, 1000) // Wait 1 second for server to be ready
   const server = createServer(async (req, res) => {
@@ -924,6 +928,16 @@ app.prepare().then(async () => {
   const wss = new WebSocketServer({ 
     server,
     path: '/api/claude-code/ws'
+  })
+
+  // Set up WebSocket server for Claude Terminal streaming
+  const claudeTerminalWss = new WebSocketServer({
+    server,
+    path: '/ws/claude-terminal'
+  })
+
+  claudeTerminalWss.on('error', (error) => {
+    console.error('💥 Claude Terminal WebSocket Server Error:', error)
   })
 
   wss.on('connection', (ws, request) => {
@@ -1051,10 +1065,205 @@ app.prepare().then(async () => {
     }))
   })
 
+  // Claude Terminal WebSocket handler
+  claudeTerminalWss.on('connection', async (ws, request) => {
+    console.log('🔗 Claude Terminal WebSocket connection attempt received');
+    
+    // Send immediate response to test basic connection
+    ws.send(JSON.stringify({
+      type: 'connected',
+      message: 'Claude Terminal WebSocket connected',
+      timestamp: new Date().toISOString()
+    }))
+    
+    try {
+      const url = new URL(request.url, `http://${request.headers.host}`)
+      const userId = url.searchParams.get('userId')
+      const projectId = url.searchParams.get('projectId')
+      
+      console.log('📋 Connection params:', { userId, projectId });
+
+    // Log WebSocket connection
+    const wsClientIP = request.headers['x-forwarded-for'] || 
+                       request.headers['x-real-ip'] || 
+                       request.connection.remoteAddress || 
+                       request.socket.remoteAddress ||
+                       (request.connection.socket ? request.connection.socket.remoteAddress : null)
+
+    console.log(`[${new Date().toISOString()}] Claude Terminal WebSocket connection - User: ${userId}, Project: ${projectId} - Client IP: ${wsClientIP}`)
+
+    if (!userId) {
+      ws.close(1008, 'Missing userId parameter')
+      return
+    }
+
+    let sessionId = null
+
+    try {
+      // Create a new terminal session
+      sessionId = await claudeTerminalManager.createSession(userId, projectId)
+      console.log(`🔧 Created Claude terminal session: ${sessionId}`)
+
+      // Send initial connection confirmation
+      ws.send(JSON.stringify({
+        type: 'connected',
+        sessionId,
+        timestamp: new Date().toISOString()
+      }))
+
+      // Start Claude Code process
+      const processStarted = await claudeTerminalManager.startClaudeProcess(sessionId)
+      if (!processStarted) {
+        ws.send(JSON.stringify({
+          type: 'error',
+          data: 'Failed to start Claude Code process',
+          timestamp: new Date().toISOString()
+        }))
+        return
+      }
+
+    } catch (error) {
+      console.error('Error setting up Claude terminal session:', error)
+      ws.send(JSON.stringify({
+        type: 'error',
+        data: `Setup error: ${error.message}`,
+        timestamp: new Date().toISOString()
+      }))
+      ws.close(1011, 'Internal server error')
+      return
+    }
+
+    // Handle incoming WebSocket messages
+    ws.on('message', async (data) => {
+      try {
+        const message = JSON.parse(data.toString())
+        
+        switch (message.type) {
+          case 'input':
+            if (sessionId && message.data) {
+              const success = await claudeTerminalManager.sendInput(sessionId, message.data)
+              if (!success) {
+                ws.send(JSON.stringify({
+                  type: 'error',
+                  data: 'Failed to send input to Claude process',
+                  timestamp: new Date().toISOString()
+                }))
+              }
+            }
+            break
+            
+          case 'get_history':
+            if (sessionId) {
+              const history = claudeTerminalManager.getSessionHistory(sessionId)
+              ws.send(JSON.stringify({
+                type: 'history',
+                data: history,
+                timestamp: new Date().toISOString()
+              }))
+            }
+            break
+            
+          case 'ping':
+            ws.send(JSON.stringify({ 
+              type: 'pong',
+              timestamp: new Date().toISOString()
+            }))
+            break
+            
+          default:
+            ws.send(JSON.stringify({
+              type: 'error',
+              data: `Unknown message type: ${message.type}`,
+              timestamp: new Date().toISOString()
+            }))
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error)
+        ws.send(JSON.stringify({
+          type: 'error',
+          data: `Message processing error: ${error.message}`,
+          timestamp: new Date().toISOString()
+        }))
+      }
+    })
+
+    // Set up message forwarding from terminal manager to WebSocket
+    if (sessionId && claudeTerminalManager) {
+      // Subscribe to terminal messages
+      const messageHandler = (message) => {
+        if (ws.readyState === ws.OPEN) {
+          ws.send(JSON.stringify({
+            type: message.type,
+            data: message.data,
+            timestamp: message.timestamp.toISOString(),
+            sessionId: message.sessionId
+          }))
+        }
+      }
+
+      // If the terminal manager supports event subscription, use it
+      if (typeof claudeTerminalManager.subscribe === 'function') {
+        claudeTerminalManager.subscribe(sessionId, messageHandler)
+        
+        // Clean up subscription when WebSocket closes
+        ws.on('close', () => {
+          if (typeof claudeTerminalManager.unsubscribe === 'function') {
+            claudeTerminalManager.unsubscribe(sessionId, messageHandler)
+          }
+        })
+      } else {
+        // Fallback to periodic checking for now
+        const messagePoller = setInterval(() => {
+          if (ws.readyState === ws.OPEN && sessionId) {
+            const history = claudeTerminalManager.getSessionHistory(sessionId)
+            const recentMessages = history.slice(-5) // Last 5 messages
+            
+            // Send any messages that haven't been sent yet
+            recentMessages.forEach(message => {
+              if (!message.sent) {
+                messageHandler(message)
+                message.sent = true // Mark as sent
+              }
+            })
+          } else {
+            clearInterval(messagePoller)
+          }
+        }, 500) // Check every 500ms for better performance
+
+        // Clean up poller when WebSocket closes
+        ws.on('close', () => {
+          clearInterval(messagePoller)
+        })
+      }
+    }
+
+    // Handle WebSocket close
+    ws.on('close', async () => {
+      console.log(`🛑 Claude Terminal WebSocket closed: ${sessionId}`)
+      if (sessionId && claudeTerminalManager) {
+        // Keep session alive for potential reconnection
+        // It will be cleaned up by the terminal manager's cleanup process
+      }
+    })
+
+    ws.on('error', (error) => {
+      console.error('Claude Terminal WebSocket error:', error)
+      if (sessionId && claudeTerminalManager) {
+        claudeTerminalManager.closeSession(sessionId)
+      }
+    })
+    
+    } catch (error) {
+      console.error('💥 Error in Claude Terminal WebSocket handler:', error)
+      ws.close(1011, `Server error: ${error.message}`)
+    }
+  })
+
   server.listen(port, (err) => {
     if (err) throw err
     console.log(`> Ready on http://${hostname}:${port}`)
     console.log(`> Claude Code WebSocket available at ws://${hostname}:${port}/api/claude-code/ws`)
+    console.log(`> Claude Terminal WebSocket available at ws://${hostname}:${port}/ws/claude-terminal`)
     
     // Get external IP to help debug VPN issues
     const https = require('https')

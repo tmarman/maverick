@@ -40,7 +40,7 @@ interface TaskItem {
   title: string
   description?: string
   type: 'FEATURE' | 'BUG' | 'TASK' | 'SUBTASK'
-  status: 'PLANNED' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE' | 'BLOCKED'
+  status: 'PLANNED' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE' | 'BLOCKED' | 'DEFERRED'
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
   category: string
   duration?: string
@@ -68,7 +68,7 @@ export function VibeChat({ project, className }: VibeChatProps) {
   const [tasks, setTasks] = useState<TaskItem[]>([])
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [taskFilter, setTaskFilter] = useState<'all' | 'in_progress' | 'needs_action' | 'planned'>('all')
+  const [taskFilter, setTaskFilter] = useState<'all' | 'in_progress' | 'needs_action' | 'planned' | 'deferred'>('all')
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -200,7 +200,7 @@ Try saying something like:
             title: item.title,
             description: item.description,
             type: item.type,
-            status: 'PLANNED',
+            status: item.status || 'PLANNED',
             priority: item.priority || 'MEDIUM',
             category: item.category || 'General',
             duration: item.estimatedEffort,
@@ -267,6 +267,8 @@ Try saying something like:
         return <CheckCircle className="w-4 h-4 text-green-500" />
       case 'BLOCKED':
         return <AlertTriangle className="w-4 h-4 text-red-500" />
+      case 'DEFERRED':
+        return <ArrowRight className="w-4 h-4 text-orange-500" />
       default:
         return <Clock className="w-4 h-4 text-gray-500" />
     }
@@ -284,6 +286,8 @@ Try saying something like:
         return 'bg-green-100 text-green-800'
       case 'BLOCKED':
         return 'bg-red-100 text-red-800'
+      case 'DEFERRED':
+        return 'bg-orange-100 text-orange-800'
       default:
         return 'bg-gray-100 text-gray-800'
     }
@@ -327,6 +331,8 @@ Try saying something like:
         return task.needsAction || task.status === 'PLANNED' || task.status === 'BLOCKED'
       case 'planned':
         return task.status === 'PLANNED'
+      case 'deferred':
+        return task.status === 'DEFERRED'
       default:
         return true
     }
@@ -522,6 +528,14 @@ Try saying something like:
                 className="text-xs"
               >
                 Needs Action
+              </Button>
+              <Button
+                variant={taskFilter === 'deferred' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setTaskFilter('deferred')}
+                className="text-xs"
+              >
+                Deferred
               </Button>
             </div>
           </CardHeader>

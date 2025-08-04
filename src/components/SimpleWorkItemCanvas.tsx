@@ -26,7 +26,7 @@ interface WorkItem {
   title: string
   description?: string
   type: 'FEATURE' | 'BUG' | 'EPIC' | 'STORY' | 'TASK' | 'SUBTASK'
-  status: 'PLANNED' | 'IN_PROGRESS' | 'IN_REVIEW' | 'TESTING' | 'DONE' | 'CANCELLED' | 'BLOCKED'
+  status: 'PLANNED' | 'IN_PROGRESS' | 'IN_REVIEW' | 'TESTING' | 'DONE' | 'CANCELLED' | 'BLOCKED' | 'DEFERRED'
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'CRITICAL'
   functionalArea: 'SOFTWARE' | 'LEGAL' | 'OPERATIONS' | 'MARKETING'
   parentId?: string
@@ -180,6 +180,8 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
         return <PlayCircle className="w-4 h-4 text-blue-500" />
       case 'DONE':
         return <CheckCircle className="w-4 h-4 text-green-500" />
+      case 'DEFERRED':
+        return <ArrowRight className="w-4 h-4 text-orange-500" />
       default:
         return <Clock className="w-4 h-4 text-gray-500" />
     }
@@ -193,6 +195,8 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
         return 'bg-background-tertiary text-text-primary'
       case 'DONE':
         return 'bg-background-secondary text-text-primary'
+      case 'DEFERRED':
+        return 'bg-orange-50 text-orange-700'
       default:
         return 'bg-background-tertiary text-text-muted'
     }
@@ -202,16 +206,17 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
   const stageGroups = {
     'Plan': workItems.filter(item => 
       item.status === 'PLANNED' || 
-      (item.type === 'EPIC' && item.status !== 'DONE')
+      (item.type === 'EPIC' && item.status !== 'DONE' && item.status !== 'DEFERRED')
     ),
     'Execute': workItems.filter(item => 
       item.status === 'IN_PROGRESS' || 
-      (item.type === 'FEATURE' && item.status !== 'DONE' && item.status !== 'PLANNED')
+      (item.type === 'FEATURE' && item.status !== 'DONE' && item.status !== 'PLANNED' && item.status !== 'DEFERRED')
     ),
     'Review': workItems.filter(item => 
       item.status === 'IN_REVIEW' || item.status === 'TESTING'
     ),
-    'Complete': workItems.filter(item => item.status === 'DONE')
+    'Complete': workItems.filter(item => item.status === 'DONE'),
+    'Deferred': workItems.filter(item => item.status === 'DEFERRED')
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -337,11 +342,11 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
               type="text"
               autoComplete="off"
               data-form-type="other"
-              placeholder="Type what you want to work on... (e.g., 'Fix the login bug', 'Add payment integration', 'Improve dashboard performance')"
+              placeholder="What needs to be done? (e.g., 'Fix login bug', 'Add payment system', 'User can edit profile')..."
               value={newItemText}
               onChange={(e) => setNewItemText(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1"
+              className="flex-1 text-base py-3 px-4 border-2 focus:border-blue-500 transition-colors"
             />
             <Button 
               onClick={createWorkItem} 
@@ -354,13 +359,14 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
               )}
             </Button>
           </div>
-          <p className="text-xs text-text-muted">
-            💡 Just describe what you want to accomplish - I'll organize it automatically
+          <p className="text-sm text-text-muted flex items-center gap-2">
+            <Zap className="w-4 h-4" />
+            <span>Smart capture: Just describe what you want to accomplish</span>
           </p>
         </div>
 
         {/* Stage-based Board */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-96">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 h-96">
           {Object.entries(stageGroups).map(([stage, items]) => (
             <div key={stage} className="space-y-3 h-full flex flex-col">
               <div className="flex items-center gap-2 flex-shrink-0">
@@ -376,7 +382,11 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
                 {items.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3 bg-background-secondary rounded-lg border hover:shadow-sm transition-shadow cursor-pointer"
+                    className={`p-3 rounded-lg border hover:shadow-sm transition-shadow cursor-pointer ${
+                      item.status === 'DEFERRED' 
+                        ? 'bg-orange-50 border-orange-200' 
+                        : 'bg-background-secondary'
+                    }`}
                     onClick={() => handleWorkItemClick(item)}
                   >
                     <div className="flex items-start gap-2 mb-2">

@@ -43,3 +43,6 @@ next-env.d.ts
 # project feedback
 /project/feedback/*
 !/project/feedback/.gitkeep
+
+# repositories and worktrees for AI agents
+/repositories/

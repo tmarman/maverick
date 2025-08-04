@@ -10,7 +10,10 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { GitHubLogoIcon } from '@radix-ui/react-icons'
-import { Square, User, Building, CreditCard, Settings, Plus, ExternalLink } from 'lucide-react'
+import { Square, User, Building, CreditCard, Settings, Plus, ExternalLink, Bot, Eye, EyeOff, Trash2 } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface Organization {
   id: string
@@ -26,7 +29,254 @@ interface Organization {
   integrations: {
     github: boolean
     square: boolean
+    claude: boolean
   }
+}
+
+interface ClaudeApiSettingsProps {
+  connection: any
+  onConnectionChange: () => void
+}
+
+function ClaudeApiSettings({ connection, onConnectionChange }: ClaudeApiSettingsProps) {
+  const [apiKey, setApiKey] = useState('')
+  const [email, setEmail] = useState('')
+  const [subscriptionType, setSubscriptionType] = useState<'free' | 'pro' | 'max'>('free')
+  const [showApiKey, setShowApiKey] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (connection?.connected) {
+      setEmail(connection.email || '')
+      setSubscriptionType(connection.subscriptionType || 'free')
+    }
+  }, [connection])
+
+  const handleConnect = async () => {
+    if (!apiKey.trim()) {
+      setError('API key is required')
+      return
+    }
+
+    if (!apiKey.startsWith('sk-')) {
+      setError('API key must start with sk-')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const response = await fetch('/api/integrations/claude', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiKey,
+          email: email || undefined,
+          subscriptionType
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccess('Claude API connected successfully!')
+        setApiKey('')
+        onConnectionChange()
+        setTimeout(() => setSuccess(null), 5000)
+      } else {
+        setError(data.error || 'Failed to connect Claude API')
+      }
+    } catch (error) {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDisconnect = async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const response = await fetch('/api/integrations/claude', {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        setSuccess('Claude API disconnected successfully!')
+        setApiKey('')
+        setEmail('')
+        setSubscriptionType('free')
+        onConnectionChange()
+        setTimeout(() => setSuccess(null), 5000)
+      } else {
+        setError('Failed to disconnect Claude API')
+      }
+    } catch (error) {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Bot className="w-5 h-5" />
+          Claude API Configuration
+        </CardTitle>
+        <CardDescription>
+          Connect your Claude API key to unlock enhanced AI capabilities and faster responses
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Status */}
+        {connection?.connected ? (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="font-medium text-green-800">Claude API Connected</span>
+              </div>
+              <Badge className="bg-green-100 text-green-800">
+                {connection.subscriptionType || 'API'} Access
+              </Badge>
+            </div>
+            <p className="text-sm text-green-700 mt-2">
+              Connected on {new Date(connection.createdAt).toLocaleDateString()}
+              {connection.email && ` • ${connection.email}`}
+            </p>
+          </div>
+        ) : (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span className="font-medium text-blue-800">Claude API Not Connected</span>
+            </div>
+            <p className="text-sm text-blue-700 mt-2">
+              Connect your Claude API key to enable direct API access, faster responses, and enhanced AI capabilities
+            </p>
+          </div>
+        )}
+
+        {/* Success/Error Messages */}
+        {success && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <div className="flex items-center gap-2">
+              <div className="text-green-600">✅</div>
+              <span className="text-green-800 font-medium">{success}</span>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="flex items-center gap-2">
+              <div className="text-red-600">❌</div>
+              <span className="text-red-800 font-medium">{error}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Configuration Form */}
+        {!connection?.connected && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="claude-api-key">Claude API Key *</Label>
+              <div className="relative">
+                <Input
+                  id="claude-api-key"
+                  type={showApiKey ? "text" : "password"}
+                  placeholder="sk-..."
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  disabled={loading}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                >
+                  {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </div>
+              <p className="text-sm text-gray-500">
+                Get your API key from the <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Anthropic Console</a>
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="claude-email">Email (Optional)</Label>
+              <Input
+                id="claude-email"
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="claude-subscription">Subscription Type</Label>
+              <Select value={subscriptionType} onValueChange={(value: 'free' | 'pro' | 'max') => setSubscriptionType(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free</SelectItem>
+                  <SelectItem value="pro">Pro</SelectItem>
+                  <SelectItem value="max">Max</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button onClick={handleConnect} disabled={loading || !apiKey.trim()}>
+              {loading ? 'Testing Connection...' : 'Connect Claude API'}
+            </Button>
+          </div>
+        )}
+
+        {/* Connected Actions */}
+        {connection?.connected && (
+          <div className="flex gap-3">
+            <Button variant="outline" disabled={loading}>
+              <Settings className="w-4 h-4 mr-2" />
+              Test Connection
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleDisconnect}
+              disabled={loading}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Disconnect
+            </Button>
+          </div>
+        )}
+
+        {/* Benefits */}
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+          <h4 className="font-medium text-purple-900 mb-2">🚀 Benefits of Claude API Integration</h4>
+          <ul className="text-sm text-purple-800 space-y-1">
+            <li>• <strong>Faster Responses:</strong> Direct API access eliminates CLI overhead</li>
+            <li>• <strong>Better Rate Limits:</strong> Higher throughput for development workflows</li>
+            <li>• <strong>Custom Models:</strong> Access to latest Claude models and features</li>
+            <li>• <strong>Enhanced Features:</strong> Streaming responses, conversation history, and more</li>
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
 function SettingsPageContent() {
@@ -38,9 +288,11 @@ function SettingsPageContent() {
   const [activeTab, setActiveTab] = useState('overview')
   const [connectionSuccess, setConnectionSuccess] = useState<string | null>(null)
   const [connectionError, setConnectionError] = useState<string | null>(null)
+  const [claudeConnection, setClaudeConnection] = useState<any>(null)
 
   useEffect(() => {
     loadOrganizations()
+    loadClaudeConnection()
     
     // Check URL parameters for tab, connection status, and errors  
     const tab = searchParams.get('tab')
@@ -64,6 +316,18 @@ function SettingsPageContent() {
     }
   }, [searchParams])
 
+  const loadClaudeConnection = async () => {
+    try {
+      const response = await fetch('/api/integrations/claude')
+      if (response.ok) {
+        const data = await response.json()
+        setClaudeConnection(data)
+      }
+    } catch (error) {
+      console.error('Failed to load Claude connection:', error)
+    }
+  }
+
   const loadOrganizations = async () => {
     try {
       // TODO: Replace with actual API call
@@ -80,7 +344,8 @@ function SettingsPageContent() {
           },
           integrations: {
             github: session?.user?.githubConnected || searchParams.get('connected') === 'github',
-            square: session?.user?.squareConnected || searchParams.get('connected') === 'square'
+            square: session?.user?.squareConnected || searchParams.get('connected') === 'square',
+            claude: claudeConnection?.connected || false
           }
         }
       ]
@@ -197,6 +462,7 @@ function SettingsPageContent() {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
+            <TabsTrigger value="claude">Claude API</TabsTrigger>
             <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
@@ -326,6 +592,37 @@ function SettingsPageContent() {
                   </div>
                 </div>
 
+                {/* Claude Integration */}
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Bot className="w-8 h-8" />
+                    <div>
+                      <h3 className="font-medium">Claude API</h3>
+                      <p className="text-sm text-gray-500">
+                        {currentOrg.integrations.claude
+                          ? `Connected - ${claudeConnection?.subscriptionType || 'API'} access enabled`
+                          : 'Connect your Claude API key for enhanced AI capabilities'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {currentOrg.integrations.claude ? (
+                      <>
+                        <Badge className="bg-background-secondary text-text-primary border border-border-standard">Connected</Badge>
+                        <Button variant="outline" size="sm" onClick={() => setActiveTab('claude')}>
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Configure
+                        </Button>
+                      </>
+                    ) : (
+                      <Button onClick={() => setActiveTab('claude')}>
+                        <Bot className="w-4 h-4 mr-2" />
+                        Connect Claude
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
                 <Separator />
 
                 <div className="text-sm text-gray-500">
@@ -333,6 +630,7 @@ function SettingsPageContent() {
                   <ul className="space-y-1">
                     <li>• <strong>GitHub:</strong> Import existing projects, deploy generated code, sync features</li>
                     <li>• <strong>Square:</strong> Process payments, manage business formation, handle billing</li>
+                    <li>• <strong>Claude:</strong> Direct API access for enhanced AI development, faster responses, custom models</li>
                   </ul>
                 </div>
 
@@ -361,6 +659,14 @@ function SettingsPageContent() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Claude API Tab */}
+          <TabsContent value="claude" className="space-y-6">
+            <ClaudeApiSettings 
+              connection={claudeConnection}
+              onConnectionChange={loadClaudeConnection}
+            />
           </TabsContent>
 
           {/* Billing Tab */}

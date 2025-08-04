@@ -1,21 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
 import { 
-  Folder, 
-  FolderOpen,
-  File,
   ArrowLeft,
   CheckSquare,
   FileText,
   Users,
   BarChart,
   Brain,
-  Lightbulb,
   MapPin,
   BookOpen,
-  Settings
+  Home,
+  Bot
 } from 'lucide-react'
 
 interface Project {
@@ -26,14 +22,12 @@ interface Project {
   status: string
 }
 
-interface TreeNode {
+interface NavItem {
   name: string
-  type: 'folder' | 'file'
   path: string
-  icon?: React.ComponentType<any>
-  children?: TreeNode[]
-  href?: string
-  expanded?: boolean
+  icon: React.ComponentType<any>
+  href: string
+  description?: string
 }
 
 interface ProjectTreeSidebarProps {
@@ -42,191 +36,72 @@ interface ProjectTreeSidebarProps {
 }
 
 export function ProjectTreeSidebar({ project, currentPage }: ProjectTreeSidebarProps) {
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
-    new Set([
-      'project-root', 
-      '.maverick', 
-      'work-items'
-    ])
-  )
-
-  // Build tree structure that mirrors .maverick filesystem
-  const projectTree: TreeNode = {
-    name: project.name,
-    type: 'folder',
-    path: 'project-root',
-    icon: Folder,
-    expanded: true,
-    children: [
-      {
-        name: 'Overview',
-        type: 'file',
-        path: 'overview',
-        icon: FileText,
-        href: `/app/projects/${project.name}`
-      },
-      {
-        name: 'work-items',
-        type: 'folder',
-        path: 'work-items',
-        icon: Folder,
-        children: [
-          {
-            name: 'Tasks',
-            type: 'file',
-            path: 'tasks',
-            icon: CheckSquare,
-            href: `/app/projects/${project.name}/tasks`
-          },
-          {
-            name: 'Vibe Chat',
-            type: 'file',
-            path: 'vibe',
-            icon: Brain,
-            href: `/app/projects/${project.name}/vibe`
-          }
-        ]
-      },
-      {
-        name: '.maverick',
-        type: 'folder',
-        path: '.maverick',
-        icon: Folder,
-        children: [
-          {
-            name: 'learnings',
-            type: 'folder',
-            path: 'learnings',
-            icon: Folder,
-            children: [
-              {
-                name: 'session-learnings.md',
-                type: 'file',
-                path: 'learnings/session',
-                icon: BookOpen,
-                href: `/app/projects/${project.name}/learnings`
-              }
-            ]
-          },
-          {
-            name: 'roadmap',
-            type: 'folder',
-            path: 'roadmap',
-            icon: Folder,
-            children: [
-              {
-                name: 'strategic-roadmap.md',
-                type: 'file',
-                path: 'roadmap/strategic',
-                icon: MapPin,
-                href: `/app/projects/${project.name}/roadmap`
-              }
-            ]
-          }
-        ]
-      },
-      {
-        name: 'team',
-        type: 'folder',
-        path: 'team',
-        icon: Users,
-        children: [
-          {
-            name: 'Team Members',
-            type: 'file',
-            path: 'team/members',
-            icon: Users,
-            href: `/app/projects/${project.name}/team`
-          }
-        ]
-      },
-      {
-        name: 'analytics',
-        type: 'folder', 
-        path: 'analytics',
-        icon: BarChart,
-        children: [
-          {
-            name: 'Project Analytics',
-            type: 'file',
-            path: 'analytics/overview',
-            icon: BarChart,
-            href: `/app/projects/${project.name}/analytics`
-          }
-        ]
-      }
-    ]
-  }
-
-  const toggleExpanded = (path: string) => {
-    const newExpanded = new Set(expandedNodes)
-    if (expandedNodes.has(path)) {
-      newExpanded.delete(path)
-    } else {
-      newExpanded.add(path)
+  
+  // Simple navigation items - no complex tree structure
+  const navItems: NavItem[] = [
+    {
+      name: 'Overview',
+      path: 'overview',
+      icon: Home,
+      href: `/app/projects/${project.name}`,
+      description: 'Project summary and status'
+    },
+    {
+      name: 'Tasks',
+      path: 'tasks',
+      icon: CheckSquare,
+      href: `/app/projects/${project.name}/tasks`,
+      description: 'Asana-style task management'
+    },
+    {
+      name: 'Vibe Chat',
+      path: 'vibe',
+      icon: Brain,
+      href: `/app/projects/${project.name}/vibe`,
+      description: 'AI chat with task creation'
+    },
+    {
+      name: 'AI Agents',
+      path: 'agents',
+      icon: Bot,
+      href: `/app/projects/${project.name}/agents`,
+      description: 'Autonomous development agents'
+    },
+    {
+      name: 'Team',
+      path: 'team',
+      icon: Users,
+      href: `/app/projects/${project.name}/team`,
+      description: 'Team members and roles'
+    },
+    {
+      name: 'Analytics',
+      path: 'analytics',
+      icon: BarChart,
+      href: `/app/projects/${project.name}/analytics`,
+      description: 'Project metrics and insights'
+    },
+    {
+      name: 'Roadmap',
+      path: 'roadmap',
+      icon: MapPin,
+      href: `/app/projects/${project.name}/roadmap`,
+      description: 'Strategic planning and milestones'
+    },
+    {
+      name: 'Learnings',
+      path: 'learnings',
+      icon: BookOpen,
+      href: `/app/projects/${project.name}/learnings`,
+      description: 'Session notes and insights'
     }
-    setExpandedNodes(newExpanded)
-  }
+  ]
 
-  const renderTreeNode = (node: TreeNode, depth: number = 0): React.ReactNode => {
-    const isExpanded = expandedNodes.has(node.path)
-    const hasChildren = node.children && node.children.length > 0
-    const isActive = currentPage === node.path || node.href?.includes(currentPage)
-    
-    const Icon = node.icon || (node.type === 'folder' ? Folder : File)
-    const FolderIcon = node.type === 'folder' ? (isExpanded ? FolderOpen : Folder) : File
-
-    return (
-      <div key={node.path}>
-        <div
-          className={`flex items-center py-1 px-2 hover:bg-gray-100 cursor-pointer text-sm ${
-            isActive ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-500' : 'text-gray-700'
-          }`}
-          style={{ paddingLeft: `${depth * 16 + 8}px` }}
-          onClick={() => {
-            if (hasChildren) {
-              toggleExpanded(node.path)
-            }
-          }}
-        >
-          <div className="flex items-center flex-1">
-            {hasChildren && (
-              <div className="w-4 h-4 mr-1 flex items-center justify-center">
-                {isExpanded ? (
-                  <div className="w-2 h-2 border-l border-b border-gray-400 transform rotate-45 -translate-y-0.5"></div>
-                ) : (
-                  <div className="w-2 h-2 border-l border-b border-gray-400 transform -rotate-45 translate-x-0.5"></div>
-                )}
-              </div>
-            )}
-            
-            <FolderIcon className={`w-4 h-4 mr-2 ${
-              node.type === 'folder' ? 'text-blue-600' : 'text-gray-500'
-            }`} />
-            
-            {node.href ? (
-              <Link href={node.href} className="flex-1 hover:underline">
-                {node.name}
-              </Link>
-            ) : (
-              <span className="flex-1">{node.name}</span>
-            )}
-          </div>
-        </div>
-
-        {hasChildren && isExpanded && (
-          <div>
-            {node.children?.map(child => renderTreeNode(child, depth + 1))}
-          </div>
-        )}
-      </div>
-    )
-  }
 
   return (
-    <nav className="flex-1 px-2 py-4">
+    <nav className="flex-1 px-4 py-6">
       {/* Back to Projects */}
-      <div className="mb-4 px-2">
+      <div className="mb-6">
         <Link
           href="/app"
           className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
@@ -236,19 +111,43 @@ export function ProjectTreeSidebar({ project, currentPage }: ProjectTreeSidebarP
         </Link>
       </div>
 
-      {/* Project Tree */}
-      <div className="border-l-2 border-gray-200 ml-2">
-        {renderTreeNode(projectTree)}
+      {/* Project Title */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 truncate">{project.name}</h2>
+        {project.description && (
+          <p className="text-sm text-gray-600 mt-1 line-clamp-2">{project.description}</p>
+        )}
       </div>
 
-      {/* Project Info Footer */}
-      {project.description && (
-        <div className="mt-6 px-2">
-          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-            {project.description}
-          </div>
-        </div>
-      )}
+      {/* Simple Navigation */}
+      <div className="space-y-1">
+        {navItems.map((item) => {
+          const isActive = currentPage === item.path || item.href.includes(currentPage)
+          const Icon = item.icon
+          
+          return (
+            <Link
+              key={item.path}
+              href={item.href}
+              className={`flex items-center px-3 py-2 rounded-lg text-sm transition-colors ${
+                isActive 
+                  ? 'bg-blue-500 text-white shadow-sm' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <Icon className={`w-4 h-4 mr-3 ${
+                isActive ? 'text-white' : 'text-gray-500'
+              }`} />
+              <div className="flex-1">
+                <div className="font-medium">{item.name}</div>
+                {!isActive && (
+                  <div className="text-xs text-gray-500 mt-0.5">{item.description}</div>
+                )}
+              </div>
+            </Link>
+          )
+        })}
+      </div>
     </nav>
   )
 }

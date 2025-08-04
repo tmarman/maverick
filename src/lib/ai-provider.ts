@@ -1,6 +1,7 @@
 import { spawn } from 'child_process'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { claudeService } from './claude-service'
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
@@ -8,13 +9,14 @@ interface ChatMessage {
   timestamp: Date
 }
 
-export type AIProvider = 'claude-code' | 'gemini' | 'auto'
+export type AIProvider = 'claude-code' | 'claude-api' | 'gemini' | 'auto'
 
 export interface AIProviderConfig {
   provider: AIProvider
   model?: string
   workingDirectory?: string
   additionalArgs?: string[]
+  userId?: string // For Claude API key lookups
 }
 
 export class MultiAIProvider {
@@ -81,7 +83,7 @@ export class MultiAIProvider {
     })
 
     // Choose provider automatically if needed
-    const provider = config.provider === 'auto' ? await this.selectBestProvider() : config.provider
+    const provider = config.provider === 'auto' ? await this.selectBestProvider(config.userId) : config.provider
     console.log(`🤖 [${requestId}] Selected provider:`, provider)
 
     try {
@@ -90,6 +92,10 @@ export class MultiAIProvider {
         case 'claude-code':
           console.log(`🔮 [${requestId}] Executing Claude Code...`)
           result = await this.executeClaudeCode(fullPrompt, workDir, config.additionalArgs)
+          break
+        case 'claude-api':
+          console.log(`🔑 [${requestId}] Executing Claude API...`)
+          result = await this.executeClaudeAPI(fullPrompt, config.model, config.userId)
           break
         case 'gemini':
           console.log(`💎 [${requestId}] Executing Gemini...`)
@@ -178,7 +184,7 @@ export class MultiAIProvider {
     })
 
     // Choose provider automatically if needed
-    const provider = config.provider === 'auto' ? await this.selectBestProvider() : config.provider
+    const provider = config.provider === 'auto' ? await this.selectBestProvider(config.userId) : config.provider
     console.log(`🤖 [${chatId}] Chat provider selected:`, provider)
 
     try {
@@ -187,6 +193,10 @@ export class MultiAIProvider {
         case 'claude-code':
           console.log(`🔮 [${chatId}] Executing Claude Code for chat...`)
           result = await this.executeClaudeCode(fullPrompt, workDir, config.additionalArgs)
+          break
+        case 'claude-api':
+          console.log(`🔑 [${chatId}] Executing Claude API for chat...`)
+          result = await this.executeClaudeAPI(fullPrompt, config.model, config.userId)
           break
         case 'gemini':
           console.log(`💎 [${chatId}] Executing Gemini for chat...`)
@@ -254,6 +264,66 @@ export class MultiAIProvider {
     }
     
     return this.executeCommand('gemini', args, workingDir)
+  }
+
+  /**
+   * Execute Claude API call directly
+   */
+  private async executeClaudeAPI(prompt: string, model?: string, userId?: string): Promise<string> {
+    if (!userId) {
+      throw new Error('User ID required for Claude API calls')
+    }
+
+    const apiKey = await claudeService.getApiKey(userId)
+    if (!apiKey) {
+      throw new Error('No Claude API key found for user. Please connect your Claude API key in settings.')
+    }
+
+    const requestModel = model || 'claude-3-haiku-20240307' // Default to Haiku for speed
+    
+    console.log('🔑 Claude API Request:', {
+      model: requestModel,
+      promptLength: prompt.length,
+      hasApiKey: !!apiKey
+    })
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: requestModel,
+        max_tokens: 4000,
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ]
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Claude API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      })
+      throw new Error(`Claude API request failed: ${response.status} ${response.statusText} - ${errorText}`)
+    }
+
+    const data = await response.json()
+    
+    if (data.content && data.content[0] && data.content[0].text) {
+      return data.content[0].text
+    } else {
+      console.error('Unexpected Claude API response format:', data)
+      throw new Error('Unexpected response format from Claude API')
+    }
   }
 
   /**
@@ -443,10 +513,16 @@ export class MultiAIProvider {
   /**
    * Select the best available provider
    */
-  private async selectBestProvider(): Promise<AIProvider> {
+  private async selectBestProvider(userId?: string): Promise<AIProvider> {
     const available = await this.checkAvailableProviders()
     
-    // Prefer Claude Code if available
+    // Prefer Claude API if user has API key (fastest and most reliable)
+    if (userId) {
+      const hasApiKey = await claudeService.hasConnection(userId)
+      if (hasApiKey) return 'claude-api'
+    }
+    
+    // Fall back to Claude Code if available
     const claudeCode = available.find(p => p.provider === 'claude-code' && p.available)
     if (claudeCode) return 'claude-code'
     
@@ -504,9 +580,10 @@ export async function generateAIResponse(
   context: string,
   provider: AIProvider = 'auto',
   projectId?: string,
-  model?: string
+  model?: string,
+  userId?: string
 ): Promise<string> {
-  const config: AIProviderConfig = { provider, model }
+  const config: AIProviderConfig = { provider, model, userId }
   return multiAIProvider.generateResponse(message, context, config, projectId)
 }
 
@@ -515,9 +592,10 @@ export async function generateAIChatResponse(
   context: string,
   provider: AIProvider = 'auto',
   projectId?: string,
-  model?: string
+  model?: string,
+  userId?: string
 ): Promise<string> {
-  const config: AIProviderConfig = { provider, model }
+  const config: AIProviderConfig = { provider, model, userId }
   return multiAIProvider.generateChatResponse(messages, context, config, projectId)
 }
 
