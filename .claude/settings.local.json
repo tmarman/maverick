@@ -33,7 +33,9 @@
       "Bash(cp:*)",
       "Bash(npx prisma:*)",
       "Bash(DATABASE_URL=\"sqlserver://marmandb.database.windows.net:1433;database=maverick;user=tmarman;password=y*!8pf3QjZ%nOsh9;encrypt=true;trustServerCertificate=true;enableArithAbort=true\" npx prisma db push --accept-data-loss)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git clone:*)",
+      "Bash(git worktree:*)"
     ],
     "deny": []
   }

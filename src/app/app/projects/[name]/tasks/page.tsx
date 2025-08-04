@@ -6,6 +6,7 @@ import CockpitShell from '@/components/CockpitShell'
 import { SimpleWorkItemCanvas } from '@/components/SimpleWorkItemCanvas'
 import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 import ProjectSetupLoader from '@/components/ProjectSetupLoader'
+import { usePageTitle, PAGE_TITLES } from '@/hooks/use-page-title'
 
 interface Project {
   id: string
@@ -25,6 +26,9 @@ export default function ProjectTasksPage() {
   const [loading, setLoading] = useState(true)
   const [isSettingUp, setIsSettingUp] = useState(false)
   const [setupError, setSetupError] = useState<string | null>(null)
+
+  // Set page title
+  usePageTitle(PAGE_TITLES.projectTasks(projectName))
 
   useEffect(() => {
     if (projectName) {

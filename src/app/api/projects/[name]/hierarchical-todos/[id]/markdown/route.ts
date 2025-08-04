@@ -7,10 +7,11 @@ import path from 'path'
 // GET /api/projects/[name]/hierarchical-todos/[id]/markdown
 export async function GET(
   request: NextRequest,
-  { params }: { params: { name: string; id: string } }
+  { params }: { params: Promise<{ name: string; id: string }> }
 ) {
   try {
-    const { name: projectName, id: todoId } = params
+    const resolvedParams = await params
+    const { name: projectName, id: todoId } = resolvedParams
 
     // Get project context to access the file system
     const context = await projectContextService.getProjectContext(projectName)
@@ -21,9 +22,8 @@ export async function GET(
       )
     }
 
-    // Read the markdown file directly
-    const workItemsPath = path.join(context.workingDirectory, 'work-items')
-    const filePath = path.join(workItemsPath, `${todoId}.md`)
+    // Read the markdown file directly  
+    const filePath = path.join(context.workItemsPath, `${todoId}.md`)
 
     try {
       const markdown = await fs.readFile(filePath, 'utf-8')
@@ -52,10 +52,11 @@ export async function GET(
 // PUT /api/projects/[name]/hierarchical-todos/[id]/markdown
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { name: string; id: string } }
+  { params }: { params: Promise<{ name: string; id: string }> }
 ) {
   try {
-    const { name: projectName, id: todoId } = params
+    const resolvedParams = await params
+    const { name: projectName, id: todoId } = resolvedParams
     const { markdown } = await request.json()
 
     if (!markdown || typeof markdown !== 'string') {
@@ -75,18 +76,17 @@ export async function PUT(
     }
 
     // Write the markdown file directly
-    const workItemsPath = path.join(context.workingDirectory, 'work-items')
-    const filePath = path.join(workItemsPath, `${todoId}.md`)
+    const filePath = path.join(context.workItemsPath, `${todoId}.md`)
 
     try {
       // Ensure directory exists
-      await fs.mkdir(workItemsPath, { recursive: true })
+      await fs.mkdir(context.workItemsPath, { recursive: true })
       
       // Write the updated markdown
       await fs.writeFile(filePath, markdown, 'utf-8')
       
       // Parse the updated todo from the markdown to return updated metadata
-      const updatedTodo = await hierarchicalTodoService.getTodo(projectName, context.workingDirectory, todoId)
+      const updatedTodo = await hierarchicalTodoService.getTodo(projectName, context.maverickPath, todoId)
       
       return NextResponse.json({
         success: true,

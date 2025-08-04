@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
+import { usePageTitle, PAGE_TITLES } from '@/hooks/use-page-title'
 import { 
   Settings, 
   Calendar,
@@ -104,6 +105,9 @@ export default function ProjectDetailPage() {
   const [activeAgents, setActiveAgents] = useState<any[]>([])
   const [newAgentRequirement, setNewAgentRequirement] = useState('')
   const [isStartingAgent, setIsStartingAgent] = useState(false)
+
+  // Set page title
+  usePageTitle(PAGE_TITLES.projectOverview(projectName))
 
   useEffect(() => {
     if (projectName) {

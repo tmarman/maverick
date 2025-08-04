@@ -1,5 +1,11 @@
 import { Hero } from '@/components/Hero'
 import { Navigation } from '@/components/Navigation'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Maverick • AI-Native Founder Platform',
+  description: 'Build, manage, and scale your business with AI-powered development tools. Complete legal formation, Square integration, and autonomous AI agents.',
+}
 
 export default function Home() {
   return (

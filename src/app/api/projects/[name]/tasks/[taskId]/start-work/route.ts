@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { hierarchicalTodoService } from '@/lib/hierarchical-todos'
 import { projectContextService } from '@/lib/project-context-service'
 import { taskAgentIntegration, type TaskExecutionRequest } from '@/lib/task-agent-integration'
+import { WorktreeManager } from '@/lib/worktree-manager'
 
 // POST /api/projects/[name]/tasks/[taskId]/start-work
 export async function POST(
@@ -11,9 +12,12 @@ export async function POST(
   { params }: { params: Promise<{ name: string; taskId: string }> }
 ) {
   try {
+    console.log('POST /start-work called')
     const session = await getServerSession(authOptions)
+    console.log('Session:', session ? 'Found' : 'Not found', session?.user?.email)
     
     if (!session?.user?.email) {
+      console.log('No session found, returning 401')
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -62,8 +66,7 @@ export async function POST(
         autoUpdateStatus: true,
         dryRun: body.dryRun || false,
         skipTests: body.skipTests || false,
-        skipDemo: body.skipDemo || false,
-        userId: session.user.email
+        skipDemo: body.skipDemo || false
       }
     }
 
@@ -96,7 +99,10 @@ export async function POST(
     } catch (agentError) {
       console.error('Agent execution failed:', agentError)
       return NextResponse.json(
-        { error: 'Failed to start agent execution', details: agentError.message },
+        { 
+          error: 'Failed to start agent execution', 
+          details: agentError instanceof Error ? agentError.message : 'Unknown error'
+        },
         { status: 500 }
       )
     }
@@ -104,7 +110,10 @@ export async function POST(
   } catch (error) {
     console.error('Error starting work:', error)
     return NextResponse.json(
-      { error: 'Failed to start work', details: error.message },
+      { 
+        error: 'Failed to start work', 
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
@@ -174,7 +183,8 @@ export async function GET(
       )
     }
 
-    if (!task.worktreeName || task.status !== 'IN_PROGRESS') {
+    const taskData = task as any
+    if (!taskData.worktreeName || task.status !== 'IN_PROGRESS') {
       return NextResponse.json(
         { error: 'No active worktree for this task' },
         { status: 404 }
@@ -182,8 +192,8 @@ export async function GET(
     }
 
     // Check worktree status
-    const worktreeManager = WorktreeManager.getInstance()
-    const worktreePath = worktreeManager.getWorktreePath(projectName, task.worktreeName)
+    const worktreeManager = new WorktreeManager()
+    const worktreePath = worktreeManager.getWorktreePath(projectName, taskData.worktreeName)
     
     // Simple progress calculation (could be enhanced with actual git analysis)
     const progress = calculateTaskProgress(task, worktreePath)
@@ -191,9 +201,9 @@ export async function GET(
     return NextResponse.json({
       success: true,
       taskId: taskId,
-      branchName: task.worktreeName,
-      worktreePath: task.worktreePath,
-      status: task.worktreeStatus || 'ACTIVE',
+      branchName: taskData.worktreeName,
+      worktreePath: taskData.worktreePath,
+      status: taskData.worktreeStatus || 'ACTIVE',
       progress: progress,
       lastUpdated: task.updatedAt
     })
@@ -220,14 +230,15 @@ function calculateTaskProgress(task: any, worktreePath: string): number {
   const minutesSinceStart = (Date.now() - new Date(task.updatedAt).getTime()) / (1000 * 60)
   
   // Simulate progress based on time and task complexity
-  const effortMultiplier = {
+  const effortMultipliers: Record<string, number> = {
     'XS': 0.8,
     'S': 0.6, 
     'M': 0.4,
     'L': 0.2,
     'XL': 0.1,
     'XXL': 0.05
-  }[task.estimatedEffort] || 0.5
+  }
+  const effortMultiplier = effortMultipliers[task.estimatedEffort] || 0.5
   
   const progress = Math.min(95, minutesSinceStart * effortMultiplier * 10)
   return Math.round(progress)

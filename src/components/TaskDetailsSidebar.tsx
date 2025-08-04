@@ -720,10 +720,10 @@ export function TaskDetailsSidebar({
                   id: localTodo.id,
                   title: localTodo.title,
                   projectName: projectName,
-                  workingDirectory: localTodo.status === 'IN_PROGRESS' && localTodo.worktreeName 
-                    ? `/tmp/repos/${projectName}/${localTodo.worktreeName}`
+                  workingDirectory: localTodo.status === 'IN_PROGRESS' && (localTodo as any).worktreeName 
+                    ? `/tmp/repos/${projectName}/${(localTodo as any).worktreeName}`
                     : `/tmp/repos/${projectName}/main`,
-                  branchName: localTodo.worktreeName || 'main',
+                  branchName: (localTodo as any).worktreeName || 'main',
                   context: {
                     task: localTodo
                   }

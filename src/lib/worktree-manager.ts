@@ -413,11 +413,11 @@ export class WorktreeManager {
       
       console.log(`💤 Deactivated branch: ${branch} (branch reference preserved)`)
     } catch (error) {
-      if (error.message && error.message.includes('no such file')) {
+      if (error instanceof Error && error.message.includes('no such file')) {
         console.log(`⚠️  Branch ${branch} is already inactive`)
         return
       }
-      throw new Error(`Failed to deactivate branch ${branch}: ${error}`)
+      throw new Error(`Failed to deactivate branch ${branch}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 

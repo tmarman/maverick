@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import CockpitShell from '@/components/CockpitShell'
+import { usePageTitle, PAGE_TITLES, formatProjectTitle } from '@/hooks/use-page-title'
 
 interface Project {
   id: string
@@ -43,6 +44,13 @@ function CockpitPageContent() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // Set dynamic page title based on selected project
+  const selectedProjectData = projects.find(p => p.id === selectedProject)
+  const pageTitle = selectedProjectData 
+    ? `${formatProjectTitle(selectedProjectData.name)} Project`
+    : PAGE_TITLES.cockpit
+  usePageTitle(pageTitle)
 
   useEffect(() => {
     fetchProjects()
@@ -71,8 +79,6 @@ function CockpitPageContent() {
       setLoading(false)
     }
   }
-
-  const selectedProjectData = projects.find(p => p.id === selectedProject)
 
   const getStatusColor = (status: string) => {
     switch (status) {

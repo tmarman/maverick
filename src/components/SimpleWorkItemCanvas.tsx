@@ -129,7 +129,7 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
       parentId: workItem.parentId,
       depth: workItem.depth,
       orderIndex: workItem.orderIndex,
-      estimatedEffort: workItem.estimatedEffort,
+      estimatedEffort: workItem.estimatedEffort as HierarchicalTodo['estimatedEffort'],
       assignedTo: workItem.assignedToId,
       createdAt: workItem.createdAt,
       updatedAt: workItem.updatedAt,
@@ -425,11 +425,11 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
     e.dataTransfer.setData('text/html', e.currentTarget.outerHTML)
     
     // Add some visual feedback
-    e.currentTarget.style.opacity = '0.5'
+    ;(e.currentTarget as HTMLElement).style.opacity = '0.5'
   }
 
   const handleDragEnd = (e: React.DragEvent) => {
-    e.currentTarget.style.opacity = '1'
+    ;(e.currentTarget as HTMLElement).style.opacity = '1'
     setDraggedItem(null)
     setDragOverIndex(null)
   }

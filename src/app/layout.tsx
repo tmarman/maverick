@@ -3,8 +3,8 @@ import './globals.css'
 import { Providers } from '@/components/Providers'
 
 export const metadata: Metadata = {
-  title: 'Maverick - AI-Native Founder Platform',
-  description: 'The next-generation founder platform for service-based businesses',
+  title: 'Maverick • AI-Native Founder Platform',
+  description: 'Build, manage, and scale your business with AI-powered development tools',
   icons: {
     icon: '/design/icon.png',
     shortcut: '/design/icon.png',

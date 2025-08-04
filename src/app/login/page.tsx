@@ -4,8 +4,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { signIn, getSession } from 'next-auth/react'
 import { Navigation } from '@/components/Navigation'
+import { usePageTitle, PAGE_TITLES } from '@/hooks/use-page-title'
 
 export default function Login() {
+  // Set page title
+  usePageTitle(PAGE_TITLES.login)
+
   const [formData, setFormData] = useState({
     email: '',
     password: ''

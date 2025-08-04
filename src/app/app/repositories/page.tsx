@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import CockpitShell from '@/components/CockpitShell'
+import { usePageTitle, PAGE_TITLES } from '@/hooks/use-page-title'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -63,6 +64,9 @@ interface Business {
 }
 
 export default function RepositoriesPage() {
+  // Set page title
+  usePageTitle(PAGE_TITLES.repositories)
+
   const { data: session } = useSession()
   const router = useRouter()
   const [repositories, setRepositories] = useState<GitHubRepository[]>([])

@@ -7,6 +7,7 @@ import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 import { VibeChat } from '@/components/VibeChat'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { usePageTitle, PAGE_TITLES } from '@/hooks/use-page-title'
 import { 
   Brain,
   Sparkles,
@@ -29,6 +30,9 @@ export default function VibePage() {
   const projectName = params.name as string
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Set page title
+  usePageTitle(PAGE_TITLES.projectChat(projectName))
 
   useEffect(() => {
     async function loadProject() {

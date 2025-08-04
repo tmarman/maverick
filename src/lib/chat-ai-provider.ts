@@ -52,13 +52,13 @@ export abstract class ChatAIProvider {
     this.config = config
   }
 
-  abstract async streamChat(
+  abstract streamChat(
     messages: ChatMessage[],
     context: ChatContext,
     onChunk: (chunk: ChatStreamChunk) => void
   ): Promise<void>
 
-  abstract async isAvailable(): Promise<boolean>
+  abstract isAvailable(): Promise<boolean>
   
   abstract getName(): string
   

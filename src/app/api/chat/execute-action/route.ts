@@ -94,16 +94,17 @@ async function executeCreateTask(action: ChatAction, scope: ChatScope): Promise<
   
   // Create a new hierarchical todo
   const newTask = await hierarchicalTodoService.createTodo(
+    scope.projectName,
     context.maverickPath,
-    action.title,
-    scope.type === 'task' ? scope.id : undefined, // Parent ID if creating subtask
     {
+      title: action.title,
       description: `Created from chat conversation.\n\n${taskData}`,
       type: 'TASK',
       status: 'PLANNED',
       priority: 'MEDIUM',
       functionalArea: 'SOFTWARE'
-    }
+    },
+    scope.type === 'task' ? scope.id : undefined // Parent ID if creating subtask
   )
 
   return { taskId: newTask.id, title: newTask.title }

@@ -71,7 +71,7 @@ async function calculateTaskProgress(task: any, worktreePath: string) {
     
     // Check for file changes
     const { stdout: changedFiles } = await execAsync(`cd "${worktreePath}" && git diff --name-only HEAD origin/main`)
-    const filesChanged = changedFiles.trim().split('\n').filter(f => f).length
+    const filesChanged = changedFiles.trim().split('\n').filter((f: string) => f).length
     
     // Calculate progress based on multiple factors
     const factors = {
@@ -110,7 +110,7 @@ function calculateTimeProgress(task: any): number {
   const minutesSinceStart = (Date.now() - new Date(task.updatedAt).getTime()) / (1000 * 60)
   
   // Effort-based expected completion times (in minutes)
-  const effortTimes = {
+  const effortTimes: Record<string, number> = {
     'XS': 30,   // 30 minutes
     'S': 120,   // 2 hours  
     'M': 480,   // 8 hours
@@ -140,7 +140,7 @@ async function getGitStats(worktreePath: string) {
     ])
     
     return {
-      recentCommits: commitInfo.stdout.trim().split('\n').filter(c => c),
+      recentCommits: commitInfo.stdout.trim().split('\n').filter((c: string) => c),
       diffSummary: diffStats.stdout.trim(),
       hasChanges: diffStats.stdout.trim().length > 0
     }
@@ -149,7 +149,7 @@ async function getGitStats(worktreePath: string) {
       recentCommits: [],
       diffSummary: 'No changes detected',
       hasChanges: false,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     }
   }
 }

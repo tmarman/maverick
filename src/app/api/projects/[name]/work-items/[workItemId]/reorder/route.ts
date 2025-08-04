@@ -64,7 +64,10 @@ export async function PUT(
   } catch (error) {
     console.error('Error reordering task:', error)
     return NextResponse.json(
-      { error: 'Failed to reorder task', details: error.message },
+      { 
+        error: 'Failed to reorder task', 
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

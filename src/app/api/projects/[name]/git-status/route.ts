@@ -230,7 +230,7 @@ async function findAssociatedTask(
 ): Promise<{ id: string, title: string, status: string } | null> {
   try {
     // Load all tasks and find one with matching worktreeName/branch
-    const todos = await hierarchicalTodoService.getAllTodos(maverickPath)
+    const todos = await hierarchicalTodoService.getAllTodosWithHierarchy(projectName, maverickPath)
     
     for (const todo of todos) {
       // Check if the task has a worktreeName that matches this branch
