@@ -24,18 +24,21 @@ jobs:
           node-version: '22.x'
 
       - name: Install dependencies
-        run: |
-          # Clean install with fresh lockfile if needed
-          rm -f package-lock.json
-          npm install
+        run: npm ci
 
       - name: Run tests
         run: npm test
+
+      - name: Generate Prisma client
+        run: npx prisma generate
 
       - name: Build application
         run: npm run build
         env:
           NODE_ENV: production
+
+      - name: Remove dev dependencies after build
+        run: npm prune --production
 
       - name: List build artifacts (debug)
         run: |
@@ -96,8 +99,9 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'maverick'
+          app-name: 'maverick-fcendrb4gte0dnf5'
           slot-name: 'Production'
           package: .
           startup-command: 'npm start'
+        timeout-minutes: 20
           
