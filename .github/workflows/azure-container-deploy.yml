@@ -1,0 +1,56 @@
+name: Deploy to Azure Container Apps
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AZURE_CONTAINERAPP_NAME: maverick-prod
+  AZURE_RESOURCE_GROUP: maverick-rg
+  AZURE_CONTAINER_ENVIRONMENT: maverick-env
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Build and deploy to Azure Container Apps
+      uses: azure/container-apps-deploy-action@v1
+      with:
+        containerAppName: ${{ env.AZURE_CONTAINERAPP_NAME }}
+        resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
+        containerAppEnvironment: ${{ env.AZURE_CONTAINER_ENVIRONMENT }}
+        targetPort: 5001
+        location: 'East US'
+        environmentVariables: |
+          NODE_ENV=production
+          NEXTAUTH_URL=https://${{ env.AZURE_CONTAINERAPP_NAME }}.azurecontainerapps.io
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          GITHUB_CLIENT_ID=${{ secrets.GITHUB_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET=${{ secrets.GITHUB_CLIENT_SECRET }}
+          AZURE_EMAIL_CONNECTION_STRING=${{ secrets.AZURE_EMAIL_CONNECTION_STRING }}
