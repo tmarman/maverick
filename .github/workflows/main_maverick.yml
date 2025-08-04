@@ -95,11 +95,18 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_AB55E2B457C44CC9A53E1F220838A0F5 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2FDD79C1286245E38F07B5D998099557 }}
 
+      - name: Debug Azure Resources
+        run: |
+          echo "=== Listing Web Apps ==="
+          az webapp list --query "[].{name:name, resourceGroup:resourceGroup, defaultHostName:defaultHostName}" --output table
+          echo "=== Looking for maverick apps specifically ==="
+          az webapp list --query "[?contains(name, 'maverick')].{name:name, resourceGroup:resourceGroup, defaultHostName:defaultHostName}" --output table
+
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'maverick-fcendrb4gte0dnf5'
+          app-name: 'maverick'
           slot-name: 'Production'
           package: .
           startup-command: 'npm start'
