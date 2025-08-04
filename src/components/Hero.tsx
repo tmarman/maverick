@@ -33,7 +33,9 @@ export function Hero() {
           <h1 className="text-3xl tracking-tight font-extrabold text-text-primary sm:text-4xl md:text-5xl lg:text-6xl max-w-6xl mx-auto">
             <span className="inline">From idea to </span>
             <span className="text-accent-primary">revenue</span>
-            <span className="block text-xl sm:text-2xl md:text-3xl lg:text-4xl font-normal text-text-secondary mt-6">We handle incorporation, build your software, and provide expert guidance.</span>
+            <span className="block text-xl sm:text-2xl md:text-3xl lg:text-4xl font-normal text-text-secondary mt-6">
+              AI agents build your software while you focus on customers
+            </span>
           </h1>
         </div>
 
@@ -43,8 +45,8 @@ export function Hero() {
             {/* Left column - Description and features */}
             <div>
               <p className="text-lg text-text-secondary sm:text-xl leading-relaxed mb-8">
-                You bring the vision. We provide the <strong>AI mentorship</strong>, handle the <strong>legal complexity</strong>, 
-                and <strong>build your software</strong>. Focus on your customers, not paperwork.
+                You bring the vision. Our <strong>AI agents</strong> write the code, handle <strong>legal formation</strong>, 
+                and provide <strong>expert guidance</strong>. Watch features get built in real-time while you focus on customers.
               </p>
 
               {/* Three core pillars */}
