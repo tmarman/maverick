@@ -100,11 +100,7 @@ export default function Home() {
                 href="/app" 
                 className="inline-flex items-center px-8 py-4 bg-accent-primary text-white rounded-lg hover:bg-accent-hover font-bold text-lg shadow-xl transform hover:scale-105 transition-all duration-200"
               >
-                🚀 Start Your AI-Powered Business
-                <svg className="w-5 h-5 ml-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </path>
-                </svg>
+                🚀 Start Your AI-Powered Business →
               </a>
             </div>
           </div>
@@ -184,21 +180,99 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-16 bg-accent-primary">
-          <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Ready to Build Your AI-Powered Business?
-            </h2>
-            <p className="text-xl text-blue-100 mb-8">
-              Let AI agents handle the development while you focus on customers and growth.
-            </p>
-            <a 
-              href="/app" 
-              className="inline-flex items-center px-8 py-4 bg-white text-accent-primary rounded-lg hover:bg-gray-50 font-bold text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
-            >
-              🚀 Get Your First AI Agent
-            </a>
+        {/* Feature-Driven Development Section */}
+        <section className="py-24 bg-accent-primary">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-white mb-6">
+                Feature-Driven Development
+              </h2>
+              <p className="text-xl text-blue-100 max-w-4xl mx-auto">
+                Stop thinking in code. Start thinking in customer value. Every feature maps to business outcomes.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div className="text-left">
+                <h3 className="text-2xl font-bold text-white mb-6">Think Like a Founder, Not a Developer</h3>
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-blue-800 font-bold text-sm">1</span>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-white mb-2">Customer Problems First</h4>
+                      <p className="text-blue-100 text-sm">Start with "customers need to login securely" not "implement OAuth2 authentication"</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-4">
+                    <div className="w-8 h-8 bg-green-200 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-green-800 font-bold text-sm">2</span>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-white mb-2">Business Value Tracking</h4>
+                      <p className="text-blue-100 text-sm">See progress in terms of customer outcomes and revenue impact, not lines of code</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-4">
+                    <div className="w-8 h-8 bg-purple-200 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-purple-800 font-bold text-sm">3</span>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-white mb-2">Rapid Iteration Cycles</h4>
+                      <p className="text-blue-100 text-sm">From customer need to working feature in days, not months. Ship value fast.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-4">
+                    <div className="w-8 h-8 bg-orange-200 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-orange-800 font-bold text-sm">4</span>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-white mb-2">Visual Progress</h4>
+                      <p className="text-blue-100 text-sm">Watch your business grow feature by feature with clear visual feedback and metrics</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-8 shadow-2xl">
+                <h4 className="text-xl font-bold text-gray-900 mb-6 text-center">Traditional vs Feature-Driven</h4>
+                
+                <div className="space-y-6">
+                  <div className="border-l-4 border-red-400 pl-4">
+                    <h5 className="font-semibold text-red-700 mb-1">❌ Traditional Development</h5>
+                    <p className="text-sm text-gray-600">"Build user authentication system with JWT tokens, password hashing, and session management"</p>
+                  </div>
+                  
+                  <div className="border-l-4 border-green-400 pl-4">
+                    <h5 className="font-semibold text-green-700 mb-1">✅ Feature-Driven Development</h5>
+                    <p className="text-sm text-gray-600">"Let customers create accounts and login securely so they can save their preferences and access premium features"</p>
+                  </div>
+                </div>
+
+                <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+                  <h5 className="font-semibold text-blue-800 mb-2">The Result:</h5>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• Clear business value for every feature</li>
+                    <li>• Faster decision making and prioritization</li>
+                    <li>• Better communication with stakeholders</li>
+                    <li>• Features that actually solve customer problems</li>
+                  </ul>
+                </div>
+
+                <div className="text-center mt-8">
+                  <a 
+                    href="/app" 
+                    className="inline-flex items-center px-8 py-4 bg-accent-primary text-white rounded-lg hover:bg-accent-hover font-bold text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
+                  >
+                    🚀 Start Building Features That Matter →
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
