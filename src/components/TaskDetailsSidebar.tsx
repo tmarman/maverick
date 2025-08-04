@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import { HierarchicalTodo, hierarchicalTodoClientService } from '@/lib/hierarchical-todos-client'
 import { toast } from '@/hooks/use-toast'
+import { ContextualChat, type ChatScope } from '@/components/ContextualChat'
 
 interface TaskDetailsSidebarProps {
   todo: HierarchicalTodo | null
@@ -59,6 +60,7 @@ export function TaskDetailsSidebar({
   const [loading, setLoading] = useState(false)
   const [breadcrumbs, setBreadcrumbs] = useState<HierarchicalTodo[]>([])
   const [parentTask, setParentTask] = useState<HierarchicalTodo | null>(null)
+  const [showChat, setShowChat] = useState(false)
 
   // Local state for editing
   const [localTodo, setLocalTodo] = useState<HierarchicalTodo | null>(todo)
@@ -119,7 +121,9 @@ export function TaskDetailsSidebar({
         projectName,
         todo.id
       )
-      setSubtasks(children)
+      // Sort subtasks by orderIndex for consistent ordering
+      const sortedChildren = children.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0))
+      setSubtasks(sortedChildren)
     } catch (error) {
       console.error('Failed to load subtasks:', error)
     }
@@ -217,14 +221,20 @@ export function TaskDetailsSidebar({
 
     setLoading(true)
     try {
+      console.log('Starting work for task:', localTodo.id, 'in project:', projectName)
+      
       // Call API to create worktree and start agent work
       const response = await fetch(`/api/projects/${projectName}/tasks/${localTodo.id}/start-work`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' // Ensure cookies/session are included
       })
 
+      console.log('API response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('API response data:', data)
         
         // Update task status to IN_PROGRESS
         await handleUpdate({ status: 'IN_PROGRESS' })
@@ -235,9 +245,10 @@ export function TaskDetailsSidebar({
         })
       } else {
         const error = await response.json()
+        console.error('API error response:', error)
         toast({
           title: 'Failed to start work',
-          description: error.message || 'Could not create worktree',
+          description: error.error || error.message || 'Could not create worktree',
           variant: 'destructive'
         })
       }
@@ -679,6 +690,52 @@ export function TaskDetailsSidebar({
               {subtasks.length === 0 && (
                 <p className="text-sm text-gray-500 italic">No subtasks yet</p>
               )}
+            </div>
+          )}
+        </div>
+
+        {/* Chat Section */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <button
+              type="button"
+              onClick={() => setShowChat(!showChat)}
+              className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Task Chat
+              {showChat ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+
+          {showChat && (
+            <div className="h-80 border border-gray-200 rounded-lg overflow-hidden">
+              <ContextualChat
+                scope={{
+                  type: 'task',
+                  id: localTodo.id,
+                  title: localTodo.title,
+                  projectName: projectName,
+                  workingDirectory: localTodo.status === 'IN_PROGRESS' && localTodo.worktreeName 
+                    ? `/tmp/repos/${projectName}/${localTodo.worktreeName}`
+                    : `/tmp/repos/${projectName}/main`,
+                  branchName: localTodo.worktreeName || 'main',
+                  context: {
+                    task: localTodo
+                  }
+                }}
+                compact={true}
+                onAction={(action) => {
+                  toast({
+                    title: 'Action Executed',
+                    description: action.title
+                  })
+                }}
+              />
             </div>
           )}
         </div>

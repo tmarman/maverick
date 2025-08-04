@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -15,7 +15,8 @@ import {
   GitBranch,
   MoreHorizontal,
   ArrowRight,
-  ChevronDown
+  ChevronDown,
+  FileText
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { WorkItemDetailSidebar } from '@/components/WorkItemDetailSidebar'
@@ -78,6 +79,8 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
   const [showCompleted, setShowCompleted] = useState(false)
   const [selectedHierarchicalTodo, setSelectedHierarchicalTodo] = useState<HierarchicalTodo | null>(null)
   const [hierarchicalSidebarOpen, setHierarchicalSidebarOpen] = useState(false)
+  const [draggedItem, setDraggedItem] = useState<WorkItem | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
   useEffect(() => {
     loadWorkItems()
@@ -268,11 +271,13 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
     }
   }
 
-  // Filter to only show top-level tasks (no valid parentId)
-  const topLevelTasks = workItems.filter(item => {
-    const hasParent = item.parentId && item.parentId !== 'null' && item.parentId !== 'undefined' && item.parentId.trim() !== ''
-    return !hasParent
-  })
+  // Filter to only show top-level tasks (no valid parentId) and sort by orderIndex
+  const topLevelTasks = workItems
+    .filter(item => {
+      const hasParent = item.parentId && item.parentId !== 'null' && item.parentId !== 'undefined' && item.parentId.trim() !== ''
+      return !hasParent
+    })
+    .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0))
 
   // Group work items by status for list view
   const statusGroups = [
@@ -413,6 +418,99 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
     loadWorkItems()
   }
 
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, item: WorkItem, index: number) => {
+    setDraggedItem(item)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/html', e.currentTarget.outerHTML)
+    
+    // Add some visual feedback
+    e.currentTarget.style.opacity = '0.5'
+  }
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.currentTarget.style.opacity = '1'
+    setDraggedItem(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if we're leaving the entire row, not just moving between child elements
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverIndex(null)
+    }
+  }
+
+  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault()
+    setDragOverIndex(null)
+    
+    if (!draggedItem) return
+    
+    const sourceIndex = topLevelTasks.findIndex(item => item.id === draggedItem.id)
+    if (sourceIndex === -1 || sourceIndex === targetIndex) return
+
+    try {
+      // Reorder the items locally first for immediate feedback
+      const newItems = [...topLevelTasks]
+      const [movedItem] = newItems.splice(sourceIndex, 1)
+      newItems.splice(targetIndex, 0, movedItem)
+      
+      // Update order indices
+      const updatedItems = newItems.map((item, index) => ({
+        ...item,
+        orderIndex: index
+      }))
+      
+      // Update local state immediately
+      setWorkItems(prev => {
+        const nonTopLevel = prev.filter(item => {
+          const hasParent = item.parentId && item.parentId !== 'null' && item.parentId !== 'undefined' && item.parentId.trim() !== ''
+          return hasParent
+        })
+        return [...updatedItems, ...nonTopLevel]
+      })
+
+      // Update the server
+      await updateTaskOrder(draggedItem.id, targetIndex)
+      
+      toast({
+        title: 'Task reordered',
+        description: `Moved "${draggedItem.title}" to position ${targetIndex + 1}`
+      })
+      
+    } catch (error) {
+      console.error('Failed to reorder task:', error)
+      // Reload to revert on error
+      loadWorkItems()
+      toast({
+        title: 'Reorder failed',
+        description: 'Could not save new task order',
+        variant: 'destructive'
+      })
+    }
+    
+    setDraggedItem(null)
+  }
+
+  const updateTaskOrder = async (taskId: string, newIndex: number) => {
+    const response = await fetch(`/api/projects/${project.name}/work-items/${taskId}/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderIndex: newIndex })
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to update task order')
+    }
+  }
+
   const handleViewFullDetails = (todo: HierarchicalTodo) => {
     setSelectedHierarchicalTodo(todo)
     setViewMode('task-full-detail')
@@ -530,130 +628,137 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
           </p>
         </div>
 
-        {/* Asana-Style Table View */}
+        {/* Simplified Asana-Style Table */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {/* Table Header */}
           <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
-            <div className="grid grid-cols-8 gap-4 items-center text-sm font-medium text-gray-600">
-              <div className="col-span-1">
-                <input type="checkbox" className="w-4 h-4 rounded border-gray-300" />
-              </div>
-              <div className="col-span-5">Task name</div>
-              <div className="col-span-1">Priority</div>
+            <div className="grid grid-cols-12 gap-4 items-center text-sm font-medium text-gray-600">
+              <div className="col-span-1">Order</div>
+              <div className="col-span-7">Task name</div>
+              <div className="col-span-2">Priority</div>
               <div className="col-span-1">Effort</div>
+              <div className="col-span-1">File</div>
             </div>
           </div>
 
-          {/* Table Body */}
+          {/* Task List (Ordered) */}
           <div className="divide-y divide-gray-100">
-            {statusGroups.map((group) => (
-              <div key={group.key}>
-                {/* Section Header */}
-                {group.items.length > 0 && (
-                  <div className="bg-gray-25 px-4 py-2 border-b border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-700">{group.title}</span>
-                      <span className="text-xs text-gray-500">({group.items.length})</span>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Section Items */}
-                {group.items.map((item, index) => (
-                  <div
-                    key={item.id}
-                    className={`grid grid-cols-8 gap-4 items-center px-4 py-3 hover:bg-gray-50 cursor-pointer group transition-all duration-150 ease-out hover:shadow-sm hover:scale-[1.01] ${
-                      index % 2 === 0 ? 'bg-white' : 'bg-gray-25'
-                    } ${item.status === 'DONE' ? 'opacity-60' : ''}`}
-                    onClick={() => handleWorkItemClick(item)}
+            {topLevelTasks.map((item, index) => (
+              <div
+                key={item.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, item, index)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                className={`grid grid-cols-12 gap-4 items-center px-4 py-3 hover:bg-gray-50 cursor-pointer group transition-all duration-150 ease-out hover:shadow-sm ${
+                  dragOverIndex === index ? 'bg-blue-50 border-t-2 border-blue-500' : ''
+                } ${draggedItem?.id === item.id ? 'opacity-50' : ''}`}
+                onClick={() => handleWorkItemClick(item)}
+              >
+                {/* Order Number */}
+                <div className="col-span-1 flex items-center gap-2">
+                  <div 
+                    className="opacity-0 group-hover:opacity-100 transition-opacity cursor-move"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    title="Drag to reorder"
                   >
-                    {/* Checkbox */}
-                    <div className="col-span-1 flex items-center">
-                      <input 
-                        type="checkbox" 
-                        className="w-4 h-4 rounded border-gray-300"
-                        checked={item.status === 'DONE'}
-                        onChange={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    
-                    {/* Task Name */}
-                    <div className="col-span-5 flex items-center gap-3">
-                      <div className="flex-shrink-0">
-                        {item.status === 'PENDING' ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
-                        ) : (
-                          <div className="w-4 h-4 flex items-center justify-center">
-                            {getTypeIcon(item.type)}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-sm font-medium truncate ${
-                            item.status === 'DONE' ? 'line-through text-gray-500' : 'text-gray-900'
-                          }`}>
-                            {item.title}
-                          </span>
-                          {item.status === 'PENDING' && (
-                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                              🤖 Enhancing
-                            </span>
-                          )}
-                        </div>
-                        {item.description && (
-                          <p className="text-xs text-gray-500 truncate mt-0.5">
-                            {item.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Priority */}
-                    <div className="col-span-1">
-                      {item.priority === 'HIGH' && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200 transition-all duration-150 hover:bg-orange-200">
-                          High
-                        </span>
-                      )}
-                      {item.priority === 'URGENT' && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-200 text-orange-900 border border-orange-300 transition-all duration-150 hover:bg-orange-300">
-                          Urgent
-                        </span>
-                      )}
-                      {item.priority === 'MEDIUM' && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200 transition-all duration-150 hover:bg-gray-100">
-                          Med
-                        </span>
-                      )}
-                      {item.priority === 'LOW' && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200 transition-all duration-150 hover:bg-gray-100">
-                          Low
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Effort */}
-                    <div className="col-span-1 flex items-center gap-1">
-                      {item.estimatedEffort && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 transition-all duration-150 hover:bg-blue-100 hover:scale-105">
-                          {item.estimatedEffort}
-                        </span>
-                      )}
-                      {item.functionalArea !== 'SOFTWARE' && (
-                        <span className="inline-flex items-center px-1 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200 text-[10px]">
-                          {item.functionalArea.slice(0,3)}
-                        </span>
-                      )}
-                      {item.worktreeName && (
-                        <span className="inline-flex items-center px-1 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
-                          <GitBranch className="w-2 h-2" />
-                        </span>
-                      )}
+                    <div className="w-1.5 h-3 flex flex-col gap-0.5">
+                      <div className="w-full h-0.5 bg-gray-300 rounded"></div>
+                      <div className="w-full h-0.5 bg-gray-300 rounded"></div>
+                      <div className="w-full h-0.5 bg-gray-300 rounded"></div>
                     </div>
                   </div>
-                ))}
+                  <span className="text-xs text-gray-400 font-mono w-6 text-center">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                </div>
+                
+                {/* Task Name */}
+                <div className="col-span-7 flex items-center gap-3">
+                  <div className="flex-shrink-0">
+                    {item.status === 'PENDING' ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                    ) : (
+                      <div className="w-4 h-4 flex items-center justify-center">
+                        {getTypeIcon(item.type)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-medium truncate ${
+                        item.status === 'DONE' ? 'line-through text-gray-500' : 'text-gray-900'
+                      }`}>
+                        {item.title}
+                      </span>
+                      {item.status === 'PENDING' && (
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                          🤖 Enhancing
+                        </span>
+                      )}
+                      {item.status === 'IN_PROGRESS' && (
+                        <span className="text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                          In Progress
+                        </span>
+                      )}
+                    </div>
+                    {item.description && (
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Priority */}
+                <div className="col-span-2">
+                  {item.priority === 'HIGH' && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                      High
+                    </span>
+                  )}
+                  {item.priority === 'URGENT' && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-300">
+                      Urgent
+                    </span>
+                  )}
+                  {item.priority === 'MEDIUM' && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
+                      Med
+                    </span>
+                  )}
+                  {item.priority === 'LOW' && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200">
+                      Low
+                    </span>
+                  )}
+                </div>
+                
+                {/* Effort */}
+                <div className="col-span-1">
+                  {item.estimatedEffort && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                      {item.estimatedEffort}
+                    </span>
+                  )}
+                </div>
+
+                {/* File Link */}
+                <div className="col-span-1">
+                  <button
+                    type="button"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 rounded"
+                    title="Open markdown file"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      // TODO: Open file
+                    }}
+                  >
+                    <FileText className="w-3 h-3 text-gray-500" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
