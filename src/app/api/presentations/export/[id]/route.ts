@@ -72,7 +72,7 @@ export async function POST(
       jpeg: 'image/jpeg'
     }
 
-    return new NextResponse(buffer, {
+    return new NextResponse(Buffer.from(buffer), {
       headers: {
         'Content-Type': mimeTypes[format],
         'Content-Disposition': `attachment; filename="presentation.${format}"`
