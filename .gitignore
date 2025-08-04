@@ -46,3 +46,11 @@ next-env.d.ts
 
 # repositories and worktrees for AI agents
 /repositories/
+
+# temporary work directories
+/tmp/
+/test-worktrees/
+/feature-branch/
+
+# maverick work items and swap files
+.maverick/work-items/*.swp
