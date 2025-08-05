@@ -76,6 +76,13 @@ function buildApp() {
   
   run('npm ci');
   run('npm test');
+  
+  // Use SQL Server schema for Azure deployment
+  if (fs.existsSync('prisma/schema.sqlserver.prisma')) {
+    log('Switching to SQL Server schema for Azure...');
+    run('cp prisma/schema.sqlserver.prisma prisma/schema.prisma');
+  }
+  
   run('npx prisma generate');
   run('npm run build', { env: { ...process.env, NODE_ENV: 'production' } });
   

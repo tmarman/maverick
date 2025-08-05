@@ -77,6 +77,15 @@ function main() {
     }
   });
   
+  // Switch to SQL Server schema for Azure deployment
+  log('Using SQL Server schema for Azure deployment...');
+  if (fs.existsSync('prisma/schema.sqlserver.prisma')) {
+    run(`cp prisma/schema.sqlserver.prisma "${deployDir}/prisma/schema.prisma"`);
+    log('✓ Replaced with SQL Server schema');
+  } else {
+    log('⚠ Warning: SQL Server schema not found, using default');
+  }
+  
   // Create .deployment file in deploy directory
   const deploymentConfig = `[config]
 command = node server.js`;
