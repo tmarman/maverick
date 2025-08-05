@@ -57,37 +57,21 @@ jobs:
           echo "Verifying npm start will work:"
           cat package.json | grep '"start"'
 
-      - name: Create deployment package
-        run: |
-          echo "Creating optimized deployment package..."
-          mkdir -p deploy-package
-          
-          # Copy essential files
-          cp package.json deploy-package/
-          cp server.js deploy-package/
-          cp web.config deploy-package/
-          cp .deployment deploy-package/
-          
-          # Copy built assets
-          cp -r .next deploy-package/
-          cp -r public deploy-package/
-          
-          # Copy Prisma files
-          cp -r prisma deploy-package/
-          
-          # Create node_modules structure and copy production dependencies
-          cp -r node_modules deploy-package/
-          
-          echo "Deployment package contents:"
-          ls -la deploy-package/
-          echo "Deployment package size:"
-          du -sh deploy-package/
-
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: deploy-package/
+          path: |
+            .
+            !coverage
+            !.git
+            !src
+            !**/*.test.*
+            !**/*.spec.*
+            !jest.config.*
+            !**/__tests__
+            !scripts
+            !project
 
   deploy:
     runs-on: ubuntu-latest
