@@ -2,17 +2,17 @@ Maverick: Product Specification
 
 Overview
 
-Maverick is the next-generation founder platform from Block — a powerful, AI-native launchpad for starting and scaling businesses. It combines:
+Maverick is the AI-native software development platform that generates production-ready applications for businesses. It combines:
 
-Formation: Seamless company creation (LLC, C-Corp, EIN, banking)
+AI-Powered Development: Custom applications generated from natural language descriptions
 
-Goose: An embedded AI assistant for product building, ops, and growth
+Square Ecosystem Integration: Deep integration with Square's full API suite for payments, inventory, customers
 
-App Creation: Vibe-coded software tools that are local-first and customizable
+Business Intelligence: AI-powered insights and automated reporting from business data
 
-Square Integration: Banking, payments, commerce, and POS stitched in by default
+Professional Development Tools: GitHub integration, version control, and deployment automation
 
-This document outlines the specification for the Maverick platform, focused on minimal, beautiful UX with strong local control and modern developer ergonomics.
+This document outlines the specification for the Maverick platform, focused on making custom software development accessible to business owners without coding experience while maintaining professional-grade quality and Square ecosystem integration.
 
 Visual & Brand Vibe
 

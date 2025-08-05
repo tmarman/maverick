@@ -3,17 +3,17 @@
 
 ## 📋 Core Value Proposition
 
-**Primary Headline:** "From idea to revenue"
-**Tagline:** "The Complete Founder Platform"  
-**Promise:** "We handle incorporation, build your software, and provide expert guidance."
+**Primary Headline:** "Build Custom Software for Your Business Using AI"
+**Tagline:** "AI-Native Software Development Platform"  
+**Promise:** "Generate production-ready applications tailored to your business - no coding required, powered by deep Square integration."
 
 ## 🎯 Target Audience
 
 ### Primary Segments
-1. **Tech Entrepreneurs** - SaaS, apps, online services
-2. **Service Business Owners** - Consultants, agencies, professionals  
-3. **Physical Business Owners** - Restaurants, retail, wineries, local services
-4. **Side Hustlers** - Turning skills into businesses
+1. **Square Merchants** - 4M+ existing Square sellers needing custom applications
+2. **Small Business Owners** - Need custom software but can't afford $50K+ development costs
+3. **Service Business Owners** - Restaurants, retail, salons, fitness, professional services
+4. **Entrepreneurs** - Building new businesses that need custom software solutions
 
 ### User Journey Stages
 1. **Visitor** (not logged in) → Wants to start a business
