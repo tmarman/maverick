@@ -61,3 +61,14 @@ jobs:
           slot-name: 'production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: deploy-package
+        timeout-minutes: 10
+        env:
+          ACTIONS_STEP_DEBUG: true
+          AZURE_HTTP_USER_AGENT: "GitHub-Actions-Deploy"
+          
+      - name: Check deployment status
+        if: always()
+        run: |
+          echo "Deployment step completed at: $(date)"
+          echo "Checking if app is responding..."
+          curl -I https://maverick-fcendrb4gte0dnf5.centralus-01.azurewebsites.net/ || echo "App not responding yet"
