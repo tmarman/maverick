@@ -116,7 +116,7 @@ function CockpitPageContent() {
             New Project
           </button>
           <button
-            onClick={() => router.push('/app/repositories')}
+            onClick={() => router.push('/app/import/repos')}
             className="flex items-center justify-center px-3 py-2 bg-background-secondary text-text-secondary rounded-md text-xs font-medium hover:bg-background-tertiary transition-colors flex-1"
           >
             <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
@@ -184,7 +184,7 @@ function CockpitPageContent() {
               <p className="text-sm font-medium text-gray-900 mb-1">No projects yet</p>
               <p className="text-xs text-gray-500 mb-3">Create your first project to get started</p>
               <button
-                onClick={() => router.push('/app/repositories')}
+                onClick={() => router.push('/app/import/repos')}
                 className="text-xs text-blue-600 hover:text-blue-700 font-medium"
               >
                 Import Repository
@@ -349,7 +349,7 @@ function CockpitPageContent() {
                   <div className="flex items-center justify-center gap-6 text-sm text-text-secondary">
                     <span>Explore more options:</span>
                     <button
-                      onClick={() => router.push('/app/repositories')}
+                      onClick={() => router.push('/app/import/repos')}
                       className="text-accent-primary hover:text-accent-hover font-medium underline"
                     >
                       Browse existing projects
