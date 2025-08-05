@@ -38,7 +38,22 @@ jobs:
           NODE_ENV: production
 
       - name: Remove dev dependencies after build
-        run: npm prune --production
+        run: |
+          echo "Before pruning:"
+          du -sh node_modules/
+          npm prune --production
+          echo "After pruning:"
+          du -sh node_modules/
+          echo "Removing additional large dev-only packages:"
+          rm -rf node_modules/@types || true
+          rm -rf node_modules/typescript || true
+          rm -rf node_modules/eslint* || true
+          rm -rf node_modules/@typescript-eslint || true
+          rm -rf node_modules/jest* || true
+          rm -rf node_modules/@testing-library || true
+          rm -rf node_modules/babel-jest || true
+          echo "Final size:"
+          du -sh node_modules/
 
       - name: List build artifacts (debug)
         run: |
@@ -83,8 +98,14 @@ jobs:
           # Copy Prisma schema
           cp -r prisma deployment-package/
           
-          # Copy only production node_modules (already pruned)
-          cp -r node_modules deployment-package/
+          # Install only production dependencies in clean directory
+          cd deployment-package
+          npm ci --only=production --no-optional
+          npx prisma generate
+          cd ..
+          
+          echo "Production node_modules size:"
+          du -sh deployment-package/node_modules/
           
           echo "Deployment package contents:"
           ls -la deployment-package/
