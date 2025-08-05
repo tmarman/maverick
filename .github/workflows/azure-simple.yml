@@ -9,6 +9,11 @@ on:
   #   branches:
   #     - main
 
+# Cancel any in-progress deployments
+concurrency:
+  group: azure-deployment
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -54,7 +59,13 @@ jobs:
           name: nextjs-app
           path: deploy-package
 
+      - name: Wait for any pending deployments
+        run: |
+          echo "Waiting 30 seconds to avoid deployment conflicts..."
+          sleep 30
+
       - name: Deploy to Azure Web App
+        id: deploy
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'maverick'
@@ -66,9 +77,25 @@ jobs:
           ACTIONS_STEP_DEBUG: true
           AZURE_HTTP_USER_AGENT: "GitHub-Actions-Deploy"
           
-      - name: Check deployment status
-        if: always()
+      - name: Check deployment result
         run: |
-          echo "Deployment step completed at: $(date)"
-          echo "Checking if app is responding..."
-          curl -I https://maverick-fcendrb4gte0dnf5.centralus-01.azurewebsites.net/ || echo "App not responding yet"
+          echo "Deployment step exit code: ${{ steps.deploy.outcome }}"
+          echo "Deployment completed at: $(date)"
+          if [ "${{ steps.deploy.outcome }}" != "success" ]; then
+            echo "❌ Deployment failed!"
+            exit 1
+          fi
+          
+      - name: Verify app is responding
+        if: success()
+        run: |
+          echo "✅ Deployment succeeded, checking if app is responding..."
+          for i in {1..5}; do
+            echo "Attempt $i/5..."
+            if curl -I https://maverick-fcendrb4gte0dnf5.centralus-01.azurewebsites.net/; then
+              echo "✅ App is responding!"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "⚠️ App deployed but not responding yet"
