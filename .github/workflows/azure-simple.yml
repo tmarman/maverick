@@ -28,11 +28,31 @@ jobs:
       - name: Build Next.js app
         run: npm run build
 
+      - name: Create optimized deployment package
+        run: |
+          echo "Creating deployment directory..."
+          mkdir -p deploy-package
+          
+          # Copy only essential files for production
+          cp -r .next deploy-package/
+          cp -r public deploy-package/ || echo "No public directory"
+          cp -r prisma deploy-package/
+          cp package.json deploy-package/
+          cp package-lock.json deploy-package/
+          cp azure-startup.js deploy-package/server.js
+          cp .deployment deploy-package/ || echo "No .deployment file"
+          
+          # Show what we're deploying
+          echo "Deployment package contents:"
+          ls -la deploy-package/
+          echo "Deployment package size:"
+          du -sh deploy-package/
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-app
-          path: .
+          path: deploy-package
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -40,4 +60,4 @@ jobs:
           app-name: 'maverick'
           slot-name: 'production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-          package: .
+          package: deploy-package
