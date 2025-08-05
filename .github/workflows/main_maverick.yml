@@ -57,14 +57,37 @@ jobs:
           echo "Verifying npm start will work:"
           cat package.json | grep '"start"'
 
+      - name: Create deployment package
+        run: |
+          echo "Creating optimized deployment package..."
+          mkdir -p deploy-package
+          
+          # Copy essential files
+          cp package.json deploy-package/
+          cp server.js deploy-package/
+          cp web.config deploy-package/
+          
+          # Copy built assets
+          cp -r .next deploy-package/
+          cp -r public deploy-package/
+          
+          # Copy Prisma files
+          cp -r prisma deploy-package/
+          cp -r node_modules/.prisma deploy-package/node_modules/.prisma/
+          mkdir -p deploy-package/node_modules/@prisma
+          cp -r node_modules/@prisma/client deploy-package/node_modules/@prisma/
+          
+          # Copy only production node_modules (already pruned)
+          cp -r node_modules deploy-package/
+          
+          echo "Deployment package size:"
+          du -sh deploy-package/
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: |
-            .
-            !coverage
-            !.git
+          path: deploy-package/
 
   deploy:
     runs-on: ubuntu-latest
@@ -103,6 +126,5 @@ jobs:
           resource-group-name: 'maverick_group'
           slot-name: 'Production'
           package: .
-          startup-command: 'npm start'
-        timeout-minutes: 20
+        timeout-minutes: 30
           
