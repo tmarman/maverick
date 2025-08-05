@@ -79,6 +79,7 @@ jobs:
           
           # Copy essential runtime files
           cp package.json deployment-package/
+          cp package-lock.json deployment-package/
           cp server.js deployment-package/
           cp web.config deployment-package/
           cp .deployment deployment-package/
@@ -100,7 +101,7 @@ jobs:
           
           # Install only production dependencies in clean directory
           cd deployment-package
-          npm ci --only=production --no-optional
+          npm ci --omit=dev --omit=optional
           npx prisma generate
           cd ..
           
