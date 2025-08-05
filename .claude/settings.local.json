@@ -37,7 +37,10 @@
       "Bash(git clone:*)",
       "Bash(git worktree:*)",
       "Bash(npm test:*)",
-      "Bash(az:*)"
+      "Bash(az:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git rm:*)",
+      "WebFetch(domain:openrouter.ai)"
     ],
     "deny": []
   }

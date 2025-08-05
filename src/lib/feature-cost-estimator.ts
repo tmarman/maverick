@@ -138,23 +138,27 @@ export class FeatureCostEstimator {
     
     let totalPoints = 0
     let primaryCategory: FeatureComplexity['category'] = 'ui'
-    const categoryCounts: Record<string, number> = {}
+    const categoryCounts: Partial<Record<FeatureComplexity['category'], number>> = {}
     
     // Analyze text for complexity indicators
     Object.entries(COMPLEXITY_INDICATORS).forEach(([keyword, info]) => {
       const occurrences = (text.match(new RegExp(keyword, 'g')) || []).length
       if (occurrences > 0) {
         totalPoints += info.points * occurrences
-        categoryCounts[info.category] = (categoryCounts[info.category] || 0) + info.points * occurrences
+        const cat = info.category as FeatureComplexity['category']
+        categoryCounts[cat] = (categoryCounts[cat] || 0) + info.points * occurrences
       }
     })
     
-    // Determine primary category
+    // Determine primary category  
     let maxCategoryPoints = 0
+    const validCategories: FeatureComplexity['category'][] = ['ui', 'api', 'database', 'integration', 'algorithm', 'infrastructure']
+    
     Object.entries(categoryCounts).forEach(([category, points]) => {
-      if (points > maxCategoryPoints) {
+      const cat = category as FeatureComplexity['category']
+      if (points > maxCategoryPoints && validCategories.includes(cat)) {
         maxCategoryPoints = points
-        primaryCategory = category as FeatureComplexity['category']
+        primaryCategory = cat
       }
     })
     
@@ -194,10 +198,10 @@ export class FeatureCostEstimator {
     }
     
     // Adjust based on category-specific factors
-    if (primaryCategory === 'integration' || primaryCategory === 'algorithm') {
+    const category = primaryCategory as string
+    if (['integration', 'algorithm'].includes(category)) {
       riskFactor *= 1.3
-    }
-    if (primaryCategory === 'infrastructure') {
+    } else if (category === 'infrastructure') {
       riskFactor *= 1.2
     }
     
