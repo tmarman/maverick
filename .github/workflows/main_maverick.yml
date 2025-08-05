@@ -10,10 +10,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -37,14 +38,15 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: Remove dev dependencies after build
+      - name: Optimize for production deployment
         run: |
-          echo "Before pruning:"
+          echo "Before optimization:"
           du -sh node_modules/
+          
+          # Remove dev dependencies
           npm prune --production
-          echo "After pruning:"
-          du -sh node_modules/
-          echo "Removing additional large dev-only packages:"
+          
+          # Remove large dev-only packages that may remain
           rm -rf node_modules/@types || true
           rm -rf node_modules/typescript || true
           rm -rf node_modules/eslint* || true
@@ -52,97 +54,16 @@ jobs:
           rm -rf node_modules/jest* || true
           rm -rf node_modules/@testing-library || true
           rm -rf node_modules/babel-jest || true
-          echo "Final size:"
+          
+          echo "After optimization:"
           du -sh node_modules/
-
-      - name: List build artifacts (debug)
-        run: |
-          echo "Checking .next directory:"
-          ls -la .next/ || echo ".next directory not found!"
-          echo "Checking root directory for server.js:"
-          ls -la server.js || echo "server.js not found!"
-          echo "Checking package.json scripts:"
-          grep -A 5 '"scripts"' package.json
-
-      - name: Prepare Azure deployment package
-        run: |
-          echo "Preparing deployment package for Azure"
-          echo "Root directory contents:"
-          ls -la
-          echo "Verifying npm start will work:"
-          cat package.json | grep '"start"'
-
-      - name: Create production deployment package
-        run: |
-          echo "Creating deployment package..."
-          mkdir deployment-package
           
-          # Copy essential runtime files
-          cp package.json deployment-package/
-          cp package-lock.json deployment-package/
-          cp server.js deployment-package/
-          cp web.config deployment-package/
-          cp .deployment deployment-package/
+          echo "Verifying .next directory exists:"
+          ls -la .next/ | head -5
           
-          # Copy built Next.js application
-          if [ -d ".next" ]; then
-            cp -r .next deployment-package/
-            echo "✅ .next directory copied"
-          else
-            echo "❌ .next directory not found!"
-            exit 1
-          fi
-          
-          # Copy public assets
-          cp -r public deployment-package/
-          
-          # Copy Prisma schema
-          cp -r prisma deployment-package/
-          
-          # Install only production dependencies in clean directory
-          cd deployment-package
-          npm ci --omit=dev --omit=optional
-          npx prisma generate
-          cd ..
-          
-          echo "Production node_modules size:"
-          du -sh deployment-package/node_modules/
-          
-          echo "Deployment package contents:"
-          ls -la deployment-package/
-          echo "Checking .next in package:"
-          ls -la deployment-package/.next/ | head -10 || echo "No .next found"
-          echo "Package size:"
-          du -sh deployment-package/
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-app
-          path: deployment-package/
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app
-
-      - name: Verify deployment package (debug)
-        run: |
-          echo "=== Deployment package contents ==="
-          ls -la
-          echo "=== Checking for .next directory ==="
-          ls -la .next/ || echo ".next directory missing in deployment package!"
-          echo "=== Total package size ==="
+          echo "Total deployment size:"
           du -sh .
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
