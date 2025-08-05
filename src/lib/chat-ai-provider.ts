@@ -26,6 +26,27 @@ export interface ChatAction {
   data?: Record<string, any>
 }
 
+export interface ModelMetadata {
+  id: string
+  name: string
+  provider: string
+  contextWindow: number
+  inputCostPer1M: number  // Cost per million input tokens
+  outputCostPer1M: number // Cost per million output tokens
+  capabilities: string[]
+  speed: 'fast' | 'medium' | 'slow'
+  quality: 'basic' | 'good' | 'excellent'
+  enabled: boolean
+}
+
+export interface UsageStats {
+  inputTokens: number
+  outputTokens: number
+  totalCost: number
+  conversationId?: string
+  timestamp: Date
+}
+
 export interface ChatContext {
   workingDirectory?: string
   projectName?: string
@@ -36,13 +57,14 @@ export interface ChatContext {
 }
 
 export interface ChatProviderConfig {
-  provider: 'claude' | 'gemini' | 'openai' | 'ollama' | 'cline' | 'local'
+  provider: 'claude' | 'gemini' | 'openai' | 'ollama' | 'cline' | 'local' | 'openrouter'
   model?: string
   apiKey?: string
   baseUrl?: string // For local models or custom endpoints
   maxTokens?: number
   temperature?: number
   userId?: string
+  costLimit?: number // Max cost per conversation
 }
 
 export abstract class ChatAIProvider {
@@ -379,6 +401,368 @@ export class CLINEProvider extends ChatAIProvider {
 }
 
 /**
+ * OpenRouter Provider - Access to 300+ models
+ */
+export class OpenRouterProvider extends ChatAIProvider {
+  private usage: UsageStats = {
+    inputTokens: 0,
+    outputTokens: 0,
+    totalCost: 0,
+    timestamp: new Date()
+  }
+
+  async streamChat(
+    messages: ChatMessage[],
+    context: ChatContext,
+    onChunk: (chunk: ChatStreamChunk) => void
+  ): Promise<void> {
+    try {
+      if (!this.config.apiKey) {
+        onChunk({
+          type: 'error',
+          error: 'OpenRouter API key not configured. Please set up your API key in Settings → Integrations.'
+        })
+        return
+      }
+
+      const model = this.config.model || 'anthropic/claude-3.5-sonnet'
+      const systemPrompt = this.buildSystemPrompt(context)
+      
+      // Prepare messages with system prompt
+      const formattedMessages = [
+        { role: 'system', content: systemPrompt },
+        ...messages.filter(m => m.role !== 'system').map(m => ({
+          role: m.role,
+          content: m.content
+        }))
+      ]
+
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://maverick.ai',
+          'X-Title': 'Maverick AI Business Platform'
+        },
+        body: JSON.stringify({
+          model,
+          messages: formattedMessages,
+          max_tokens: this.config.maxTokens || 4000,
+          temperature: this.config.temperature || 0.7,
+          stream: true
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(`OpenRouter API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`)
+      }
+
+      if (!response.body) {
+        throw new Error('No response body from OpenRouter')
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let fullContent = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split('\n').filter(line => line.trim() && line.startsWith('data: '))
+
+        for (const line of lines) {
+          const data = line.slice(6) // Remove 'data: ' prefix
+          
+          if (data === '[DONE]') {
+            // Calculate usage and cost
+            const modelData = getModelMetadata(model)
+            if (modelData) {
+              const inputTokens = this.estimateTokens(formattedMessages.map(m => m.content).join(' '))
+              const outputTokens = this.estimateTokens(fullContent)
+              const cost = this.calculateCost(inputTokens, outputTokens, modelData)
+              
+              this.usage = {
+                inputTokens,
+                outputTokens,
+                totalCost: cost,
+                conversationId: context.taskId,
+                timestamp: new Date()
+              }
+            }
+
+            // Extract and send actions
+            const actions = this.extractActions(fullContent, context)
+            for (const action of actions) {
+              onChunk({ type: 'action', action })
+            }
+
+            onChunk({ type: 'done' })
+            return
+          }
+
+          try {
+            const parsed = JSON.parse(data)
+            const content = parsed.choices?.[0]?.delta?.content
+            
+            if (content) {
+              fullContent += content
+              onChunk({ type: 'content', content })
+            }
+          } catch (e) {
+            // Skip malformed JSON
+          }
+        }
+      }
+
+    } catch (error) {
+      onChunk({
+        type: 'error',
+        error: error instanceof Error ? error.message : 'OpenRouter connection failed'
+      })
+    }
+  }
+
+  async isAvailable(): Promise<boolean> {
+    try {
+      if (!this.config.apiKey) return false
+      
+      const response = await fetch('https://openrouter.ai/api/v1/models', {
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`
+        }
+      })
+      return response.ok
+    } catch {
+      return false
+    }
+  }
+
+  getName(): string {
+    const model = this.config.model || 'anthropic/claude-3.5-sonnet'
+    const modelName = model.split('/').pop() || model
+    return `OpenRouter (${modelName})`
+  }
+
+  getCapabilities(): string[] {
+    return [
+      'Access to 300+ AI models',
+      'Cost-effective model routing',
+      'Multi-provider fallback',
+      'Real-time usage tracking',
+      'Code analysis and generation',
+      'Task planning and execution'
+    ]
+  }
+
+  getUsage(): UsageStats {
+    return this.usage
+  }
+
+  private buildSystemPrompt(context: ChatContext): string {
+    let prompt = `You are an AI assistant integrated with Maverick, an AI-native business formation and project management platform.
+
+CONTEXT:
+- Project: ${context.projectName || 'Unknown'}
+- Working Directory: ${context.workingDirectory || '/tmp/repos/maverick/main'}
+`
+
+    if (context.branchName) {
+      prompt += `- Current Branch: ${context.branchName}\n`
+    }
+
+    if (context.taskId) {
+      prompt += `- Task Context: You are working on task ID: ${context.taskId}\n`
+    }
+
+    prompt += `
+CAPABILITIES:
+You can suggest actionable items such as:
+- Creating new tasks or subtasks
+- Running terminal commands (use \`\`\`bash code blocks)
+- Creating or modifying files (use \`\`\`language code blocks with // filename.ext)
+- Planning implementation approaches
+- Debugging and troubleshooting
+
+RESPONSE STYLE:
+- Be conversational but practical
+- Provide specific, actionable suggestions
+- Use appropriate code blocks for commands and file creation
+- Focus on helping with business formation, project management, and software development tasks
+`
+
+    return prompt
+  }
+
+  private estimateTokens(text: string): number {
+    // Rough estimation: ~4 characters per token for most models
+    return Math.ceil(text.length / 4)
+  }
+
+  private calculateCost(inputTokens: number, outputTokens: number, model: ModelMetadata): number {
+    const inputCost = (inputTokens / 1_000_000) * model.inputCostPer1M
+    const outputCost = (outputTokens / 1_000_000) * model.outputCostPer1M
+    return inputCost + outputCost
+  }
+}
+
+/**
+ * Model Metadata Registry
+ */
+const MODEL_REGISTRY: Record<string, ModelMetadata> = {
+  // Anthropic Models via OpenRouter
+  'anthropic/claude-3.5-sonnet': {
+    id: 'anthropic/claude-3.5-sonnet',
+    name: 'Claude 3.5 Sonnet',
+    provider: 'anthropic',
+    contextWindow: 200000,
+    inputCostPer1M: 3.0,
+    outputCostPer1M: 15.0,
+    capabilities: ['code', 'analysis', 'reasoning', 'creative'],
+    speed: 'fast',
+    quality: 'excellent',
+    enabled: true
+  },
+  'anthropic/claude-3-haiku': {
+    id: 'anthropic/claude-3-haiku',
+    name: 'Claude 3 Haiku',
+    provider: 'anthropic',
+    contextWindow: 200000,
+    inputCostPer1M: 0.25,
+    outputCostPer1M: 1.25,
+    capabilities: ['code', 'analysis', 'fast-responses'],
+    speed: 'fast',
+    quality: 'good',
+    enabled: true
+  },
+  // OpenAI Models
+  'openai/gpt-4o': {
+    id: 'openai/gpt-4o',
+    name: 'GPT-4o',
+    provider: 'openai',
+    contextWindow: 128000,
+    inputCostPer1M: 2.5,
+    outputCostPer1M: 10.0,
+    capabilities: ['code', 'analysis', 'reasoning', 'vision'],
+    speed: 'medium',
+    quality: 'excellent',
+    enabled: true
+  },
+  'openai/gpt-4o-mini': {
+    id: 'openai/gpt-4o-mini',
+    name: 'GPT-4o Mini',
+    provider: 'openai',
+    contextWindow: 128000,
+    inputCostPer1M: 0.15,
+    outputCostPer1M: 0.6,
+    capabilities: ['code', 'analysis', 'fast-responses'],
+    speed: 'fast',
+    quality: 'good',
+    enabled: true
+  },
+  // Google Models
+  'google/gemini-pro-1.5': {
+    id: 'google/gemini-pro-1.5',
+    name: 'Gemini Pro 1.5',
+    provider: 'google',
+    contextWindow: 2000000,
+    inputCostPer1M: 1.25,
+    outputCostPer1M: 5.0,
+    capabilities: ['code', 'analysis', 'reasoning', 'large-context'],
+    speed: 'medium',
+    quality: 'excellent',
+    enabled: true
+  },
+  'google/gemini-flash-1.5': {
+    id: 'google/gemini-flash-1.5',
+    name: 'Gemini Flash 1.5',
+    provider: 'google',
+    contextWindow: 1000000,
+    inputCostPer1M: 0.075,
+    outputCostPer1M: 0.3,
+    capabilities: ['code', 'analysis', 'fast-responses', 'large-context'],
+    speed: 'fast',
+    quality: 'good',
+    enabled: true
+  },
+  // Meta Models
+  'meta-llama/llama-3.1-70b-instruct': {
+    id: 'meta-llama/llama-3.1-70b-instruct',
+    name: 'Llama 3.1 70B',
+    provider: 'meta',
+    contextWindow: 131072,
+    inputCostPer1M: 0.8,
+    outputCostPer1M: 0.8,
+    capabilities: ['code', 'analysis', 'reasoning', 'open-source'],
+    speed: 'medium',
+    quality: 'good',
+    enabled: true
+  },
+  // Cohere Models
+  'cohere/command-r-plus': {
+    id: 'cohere/command-r-plus',
+    name: 'Command R+',
+    provider: 'cohere',
+    contextWindow: 128000,
+    inputCostPer1M: 3.0,
+    outputCostPer1M: 15.0,
+    capabilities: ['code', 'analysis', 'reasoning', 'rag'],
+    speed: 'medium',
+    quality: 'excellent',
+    enabled: true
+  }
+}
+
+export function getModelMetadata(modelId: string): ModelMetadata | null {
+  return MODEL_REGISTRY[modelId] || null
+}
+
+export function getAllModels(): ModelMetadata[] {
+  return Object.values(MODEL_REGISTRY)
+}
+
+export function getEnabledModels(): ModelMetadata[] {
+  return Object.values(MODEL_REGISTRY).filter(model => model.enabled)
+}
+
+export function getBestModelForTask(
+  task: 'code' | 'analysis' | 'creative' | 'fast' | 'cost-effective',
+  maxCostPer1M?: number
+): ModelMetadata | null {
+  const models = getEnabledModels()
+  
+  let filteredModels = models.filter(model => 
+    model.capabilities.includes(task === 'cost-effective' ? 'fast-responses' : task)
+  )
+  
+  if (maxCostPer1M) {
+    filteredModels = filteredModels.filter(model => 
+      Math.max(model.inputCostPer1M, model.outputCostPer1M) <= maxCostPer1M
+    )
+  }
+  
+  if (filteredModels.length === 0) return null
+  
+  // Sort by quality and cost
+  filteredModels.sort((a, b) => {
+    if (task === 'cost-effective') {
+      return (a.inputCostPer1M + a.outputCostPer1M) - (b.inputCostPer1M + b.outputCostPer1M)
+    } else if (task === 'fast') {
+      const speedOrder = { fast: 0, medium: 1, slow: 2 }
+      return speedOrder[a.speed] - speedOrder[b.speed]
+    } else {
+      const qualityOrder = { excellent: 0, good: 1, basic: 2 }
+      return qualityOrder[a.quality] - qualityOrder[b.quality]
+    }
+  })
+  
+  return filteredModels[0]
+}
+
+/**
  * Provider Factory
  */
 export class ChatProviderFactory {
@@ -390,6 +774,8 @@ export class ChatProviderFactory {
         return new GeminiProvider(config)
       case 'ollama':
         return new OllamaProvider(config)
+      case 'openrouter':
+        return new OpenRouterProvider(config)
       case 'cline':
         return new CLINEProvider(config)
       default:
@@ -400,6 +786,7 @@ export class ChatProviderFactory {
   static async getAvailableProviders(userId?: string): Promise<Array<{ name: string, provider: string, available: boolean, capabilities: string[] }>> {
     const providers = [
       { name: 'Claude', provider: 'claude', config: { provider: 'claude' as const, userId } },
+      { name: 'OpenRouter', provider: 'openrouter', config: { provider: 'openrouter' as const, userId } },
       { name: 'Gemini', provider: 'gemini', config: { provider: 'gemini' as const } },
       { name: 'Ollama', provider: 'ollama', config: { provider: 'ollama' as const } },
       { name: 'CLINE', provider: 'cline', config: { provider: 'cline' as const } }
