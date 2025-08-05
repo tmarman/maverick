@@ -46,38 +46,21 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: Optimize for production deployment
+      - name: Prepare Azure deployment package
         run: |
-          echo "Before optimization:"
-          du -sh node_modules/
-          
           # Use Azure production server for deployment (no WebSocket dependencies)
           cp azure-startup.js server.js
           echo "✓ Using Azure production server (WebSocket features disabled)"
           
-          # Remove dev dependencies
-          npm prune --production
-          
-          # Remove large dev-only packages that may remain
-          rm -rf node_modules/@types || true
-          rm -rf node_modules/typescript || true
-          rm -rf node_modules/eslint* || true
-          rm -rf node_modules/@typescript-eslint || true
-          rm -rf node_modules/jest* || true
-          rm -rf node_modules/@testing-library || true
-          rm -rf node_modules/babel-jest || true
-          
-          # Remove WebSocket dependencies not needed in production
-          rm -rf node_modules/ws || true
-          
-          echo "After optimization:"
-          du -sh node_modules/
+          # Remove node_modules to let Azure handle fresh install
+          rm -rf node_modules
+          echo "✓ Removed node_modules - Azure will do fresh npm install"
           
           echo "Verifying .next directory exists:"
           ls -la .next/ | head -5
           
-          echo "Total deployment size:"
-          du -sh .
+          echo "Package contents:"
+          ls -la
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -95,4 +78,11 @@ jobs:
           slot-name: 'Production'
           package: .
         timeout-minutes: 30
+        
+      - name: 'Wait for deployment to stabilize'
+        run: |
+          echo "Waiting 30 seconds for deployment to stabilize..."
+          sleep 30
+          echo "Checking app status..."
+          curl -I https://maverick-fcendrb4gte0dnf5.centralus-01.azurewebsites.net/ || echo "App may still be starting up"
           
