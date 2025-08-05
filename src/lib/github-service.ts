@@ -67,6 +67,30 @@ export class GitHubService {
     per_page?: number
     page?: number
   } = {}): Promise<GitHubRepository[]> {
+    // If per_page is 100 (our "get all" indicator), fetch all repositories
+    if (options.per_page === 100) {
+      const allRepos: GitHubRepository[] = []
+      let page = 1
+      let hasMore = true
+      
+      while (hasMore) {
+        const { data } = await this.octokit.rest.repos.listForAuthenticatedUser({
+          type: options.type || 'owner',
+          sort: options.sort || 'updated',
+          direction: options.direction || 'desc',
+          per_page: 100, // GitHub API max
+          page,
+        })
+        
+        allRepos.push(...(data as GitHubRepository[]))
+        hasMore = data.length === 100 // If we got less than 100, we're done
+        page++
+      }
+      
+      return allRepos
+    }
+    
+    // Single page request
     const { data } = await this.octokit.rest.repos.listForAuthenticatedUser({
       type: options.type || 'owner',
       sort: options.sort || 'updated',

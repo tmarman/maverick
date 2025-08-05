@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import CockpitShell from '@/components/CockpitShell'
 import { usePageTitle, PAGE_TITLES } from '@/hooks/use-page-title'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -28,7 +27,8 @@ import {
   Code,
   RefreshCw,
   Building,
-  User
+  User,
+  Lock
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 
@@ -79,38 +79,21 @@ export default function RepositoriesPage() {
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [projectName, setProjectName] = useState('')
   const [projectDescription, setProjectDescription] = useState('')
-  
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const [perPage, setPerPage] = useState(30)
-  const [hasMore, setHasMore] = useState(false)
-  const [totalRepos, setTotalRepos] = useState(0)
 
   useEffect(() => {
     loadData()
-  }, [currentPage])
+  }, [])
 
-  const loadData = async (page = currentPage) => {
+  const loadData = async () => {
     try {
       setLoading(true)
       
-      // Load repositories with pagination
-      const reposResponse = await fetch(
-        `/api/github/repositories?page=${page}&per_page=${perPage}&sort=updated`
-      )
+      // Load all repositories (no pagination)
+      const reposResponse = await fetch('/api/github/repositories?sort=updated')
 
       if (reposResponse.ok) {
         const reposData = await reposResponse.json()
-        
-        if (page === 1) {
-          setRepositories(reposData.repositories || [])
-        } else {
-          // Append to existing repositories for "Load More" functionality
-          setRepositories(prev => [...prev, ...(reposData.repositories || [])])
-        }
-        
-        setHasMore(reposData.pagination?.has_more || false)
-        setTotalRepos(reposData.pagination?.total || reposData.repositories?.length || 0)
+        setRepositories(reposData.repositories || [])
         setGithubConnected(true)
       } else {
         const repoError = await reposResponse.json()
@@ -127,16 +110,9 @@ export default function RepositoriesPage() {
     }
   }
 
-  const loadMore = () => {
-    if (hasMore && !loading) {
-      setCurrentPage(prev => prev + 1)
-    }
-  }
-
   const refreshRepositories = () => {
-    setCurrentPage(1)
     setRepositories([])
-    loadData(1)
+    loadData()
   }
 
   const filteredRepositories = repositories.filter(repo => 
@@ -282,8 +258,7 @@ export default function RepositoriesPage() {
         
         {repositories.length > 0 && (
           <div className="text-sm text-text-muted">
-            Showing {repositories.length} repositories
-            {hasMore && ` • Load more available`}
+            {repositories.length} repositories
           </div>
         )}
       </div>
@@ -299,7 +274,7 @@ export default function RepositoriesPage() {
         />
       </div>
 
-      {/* Repositories Grid */}
+      {/* Repositories List */}
       {filteredRepositories.length === 0 ? (
         <div className="text-center py-12">
           <Github className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -313,115 +288,89 @@ export default function RepositoriesPage() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredRepositories.map((repo) => (
-            <Card key={repo.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2 min-w-0">
-                    {repo.owner.type === 'Organization' ? (
-                      <Building className="w-4 h-4 text-gray-600 flex-shrink-0" />
-                    ) : (
-                      <User className="w-4 h-4 text-gray-600 flex-shrink-0" />
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="divide-y divide-gray-200">
+            {filteredRepositories.map((repo) => (
+              <div key={repo.id} className="p-4 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center justify-between">
+                  {/* Repository Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2">
+                      {repo.owner.type === 'Organization' ? (
+                        <Building className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                      ) : (
+                        <User className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                      )}
+                      
+                      <div className="flex items-center gap-2 min-w-0">
+                        <h3 className="font-semibold text-gray-900 truncate">{repo.name}</h3>
+                        {repo.private && (
+                          <Lock className="w-3 h-3 text-gray-500" />
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-3 text-sm text-gray-500">
+                        {repo.language && (
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-blue-500" />
+                            {repo.language}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3" />
+                          {repo.stargazers_count}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <GitFork className="w-3 h-3" />
+                          {repo.forks_count}
+                        </div>
+                        {repo.open_issues_count > 0 && (
+                          <div className="flex items-center gap-1 text-orange-600">
+                            <AlertCircle className="w-3 h-3" />
+                            {repo.open_issues_count}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-600 mb-2">{repo.full_name}</p>
+                    
+                    {repo.description && (
+                      <p className="text-sm text-gray-700 mb-2 line-clamp-2">{repo.description}</p>
                     )}
-                    <div className="min-w-0">
-                      <CardTitle className="text-lg truncate">{repo.name}</CardTitle>
-                      <p className="text-sm text-text-muted truncate">{repo.full_name}</p>
+                    
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Updated {formatDate(repo.updated_at)}</span>
+                      <span>{formatSize(repo.size)}</span>
                     </div>
                   </div>
-                  {repo.private && (
-                    <Badge variant="outline" className="flex-shrink-0">Private</Badge>
-                  )}
-                </div>
-                {repo.description && (
-                  <CardDescription className="line-clamp-2">
-                    {repo.description}
-                  </CardDescription>
-                )}
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                {/* Repository Stats */}
-                <div className="flex items-center gap-4 text-sm text-text-muted">
-                  {repo.language && (
-                    <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded-full bg-blue-500" />
-                      {repo.language}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3 h-3" />
-                    {repo.stargazers_count}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <GitFork className="w-3 h-3" />
-                    {repo.forks_count}
+                  
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 ml-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(repo.html_url, '_blank')}
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => openImportDialog(repo)}
+                      disabled={importing === repo.id.toString()}
+                    >
+                      {importing === repo.id.toString() ? (
+                        <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                      ) : (
+                        <Plus className="w-3 h-3 mr-1" />
+                      )}
+                      Import
+                    </Button>
                   </div>
                 </div>
-
-                {/* Repository Info */}
-                <div className="text-xs text-text-muted space-y-1">
-                  <div>Size: {formatSize(repo.size)}</div>
-                  <div>Updated: {formatDate(repo.updated_at)}</div>
-                  {repo.open_issues_count > 0 && (
-                    <div className="flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {repo.open_issues_count} open issues
-                    </div>
-                  )}
-                </div>
-
-
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => openImportDialog(repo)}
-                    disabled={importing === repo.id.toString()}
-                    className="flex-1"
-                  >
-                    {importing === repo.id.toString() ? (
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Plus className="w-4 h-4 mr-2" />
-                    )}
-                    Import Project
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(repo.html_url, '_blank')}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Load More Button */}
-      {hasMore && filteredRepositories.length > 0 && (
-        <div className="flex justify-center mt-6">
-          <Button
-            variant="outline"
-            onClick={loadMore}
-            disabled={loading}
-            className="px-6"
-          >
-            {loading ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Loading...
-              </>
-            ) : (
-              <>
-                Load More Repositories
-                <Plus className="w-4 h-4 ml-2" />
-              </>
-            )}
-          </Button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
