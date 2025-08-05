@@ -25,8 +25,12 @@ export class BackgroundSyncService {
   private readonly syncIntervalMs = 5 * 60 * 1000 // 5 minutes
 
   constructor() {
-    // Start background sync when service is created
-    this.start()
+    // Start background sync when service is created (unless disabled)
+    if (!process.env.DISABLE_BACKGROUND_SERVICES) {
+      this.start()
+    } else {
+      console.log('⚠️  Background sync service disabled for cloud deployment')
+    }
   }
 
   /**

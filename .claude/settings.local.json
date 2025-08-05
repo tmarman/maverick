@@ -41,7 +41,9 @@
       "Bash(git ls-tree:*)",
       "Bash(git rm:*)",
       "WebFetch(domain:openrouter.ai)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(tree:*)",
+      "Bash(npx next:*)"
     ],
     "deny": []
   }

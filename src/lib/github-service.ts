@@ -252,11 +252,78 @@ export async function getGitHubServiceForUser(userEmail: string): Promise<GitHub
       return null
     }
     
-    return new GitHubService(user.githubConnection.accessToken)
+    const connection = user.githubConnection
+    
+    // Check if token is expired and refresh if needed
+    if (connection.expiresAt && new Date() > connection.expiresAt && connection.refreshToken) {
+      console.log('GitHub token expired, attempting refresh...')
+      
+      try {
+        const refreshedToken = await refreshGitHubToken(connection.refreshToken)
+        
+        // Update the connection with new token
+        await prisma.gitHubConnection.update({
+          where: { id: connection.id },
+          data: {
+            accessToken: refreshedToken.access_token,
+            expiresAt: new Date(Date.now() + (refreshedToken.expires_in || 3600) * 1000),
+            updatedAt: new Date(),
+          },
+        })
+        
+        console.log('GitHub token refreshed successfully')
+        return new GitHubService(refreshedToken.access_token)
+      } catch (refreshError) {
+        console.error('Failed to refresh GitHub token:', refreshError)
+        // Fall back to trying the existing token - it might still work
+      }
+    }
+    
+    return new GitHubService(connection.accessToken)
   } catch (error) {
     console.error('Failed to get GitHub service for user:', error)
     return null
   }
+}
+
+// Refresh GitHub access token using refresh token
+async function refreshGitHubToken(refreshToken: string): Promise<{
+  access_token: string
+  expires_in?: number
+  refresh_token?: string
+}> {
+  const clientId = process.env.GITHUB_CLIENT_ID
+  const clientSecret = process.env.GITHUB_CLIENT_SECRET
+  
+  if (!clientId || !clientSecret) {
+    throw new Error('GitHub OAuth credentials not configured')
+  }
+  
+  const response = await fetch('https://github.com/login/oauth/access_token', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    }),
+  })
+  
+  if (!response.ok) {
+    throw new Error(`GitHub token refresh failed: ${response.status} ${response.statusText}`)
+  }
+  
+  const data = await response.json()
+  
+  if (data.error) {
+    throw new Error(`GitHub token refresh error: ${data.error_description || data.error}`)
+  }
+  
+  return data
 }
 
 // Store GitHub connection in database

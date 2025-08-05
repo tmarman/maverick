@@ -5,7 +5,7 @@ const { WebSocketServer } = require('ws')
 const { spawn } = require('child_process')
 
 const dev = process.env.NODE_ENV !== 'production'
-const hostname = 'localhost'
+const hostname = process.env.HOSTNAME || '0.0.0.0' // Allow external connections on Azure
 const port = process.env.PORT || process.env.WEBSITES_PORT || 5001
 
 const app = next({ dev, hostname, port })
@@ -887,21 +887,26 @@ const sessionManager = new ClaudeCodeSessionManager()
 const { claudeTerminalManager } = require('./src/lib/claude-terminal-manager.js')
 
 app.prepare().then(async () => {
-  // Fire off a non-blocking database warmup call  
-  console.log('🔥 Starting database warmup in background...')
-  setTimeout(async () => {
-    try {
-      // Simple warmup query - don't wait or block startup
-      const { PrismaClient } = await import('@prisma/client')
-      const prisma = new PrismaClient()
-      await prisma.$queryRaw`SELECT 1 as warmup`
-      await prisma.$disconnect()
-      console.log('✅ Database warmed up successfully')
-    } catch (error) {
-      console.log('⚠️  Database warmup failed:', error.message.substring(0, 100))
-      console.log('📝 This is normal if database is not accessible - app will still work')
-    }
-  }, 1000) // Wait 1 second for server to be ready
+  // Skip database warmup and complex initialization on Azure
+  if (!process.env.DISABLE_BACKGROUND_SERVICES) {
+    // Fire off a non-blocking database warmup call  
+    console.log('🔥 Starting database warmup in background...')
+    setTimeout(async () => {
+      try {
+        // Simple warmup query - don't wait or block startup
+        const { PrismaClient } = await import('@prisma/client')
+        const prisma = new PrismaClient()
+        await prisma.$queryRaw`SELECT 1 as warmup`
+        await prisma.$disconnect()
+        console.log('✅ Database warmed up successfully')
+      } catch (error) {
+        console.log('⚠️  Database warmup failed:', error.message.substring(0, 100))
+        console.log('📝 This is normal if database is not accessible - app will still work')
+      }
+    }, 1000) // Wait 1 second for server to be ready
+  } else {
+    console.log('⚠️  Background services disabled for cloud deployment')
+  }
   const server = createServer(async (req, res) => {
     try {
       // Log client IP for debugging connection issues
@@ -1262,12 +1267,14 @@ app.prepare().then(async () => {
   server.listen(port, (err) => {
     if (err) throw err
     console.log(`> Ready on http://${hostname}:${port}`)
-    console.log(`> Claude Code WebSocket available at ws://${hostname}:${port}/api/claude-code/ws`)
-    console.log(`> Claude Terminal WebSocket available at ws://${hostname}:${port}/ws/claude-terminal`)
     
-    // Get external IP to help debug VPN issues
-    const https = require('https')
-    const getExternalIP = () => {
+    if (!process.env.DISABLE_BACKGROUND_SERVICES) {
+      console.log(`> Claude Code WebSocket available at ws://${hostname}:${port}/api/claude-code/ws`)
+      console.log(`> Claude Terminal WebSocket available at ws://${hostname}:${port}/ws/claude-terminal`)
+      
+      // Get external IP to help debug VPN issues
+      const https = require('https')
+      const getExternalIP = () => {
       https.get('https://api.ipify.org?format=json', (res) => {
         let data = ''
         res.on('data', (chunk) => data += chunk)
@@ -1303,21 +1310,24 @@ app.prepare().then(async () => {
       }).on('error', () => {
         console.log('> Could not get external IP')
       })
-    }
-    
-    getExternalIP()
-    
-    // Log local network interfaces
-    const os = require('os')
-    const networkInterfaces = os.networkInterfaces()
-    console.log('> Local network interfaces:')
-    Object.keys(networkInterfaces).forEach(interfaceName => {
-      const interfaces = networkInterfaces[interfaceName]
-      interfaces.forEach(iface => {
-        if (iface.family === 'IPv4' && !iface.internal) {
-          console.log(`  ${interfaceName}: ${iface.address}`)
-        }
+      }
+      
+      getExternalIP()
+      
+      // Log local network interfaces
+      const os = require('os')
+      const networkInterfaces = os.networkInterfaces()
+      console.log('> Local network interfaces:')
+      Object.keys(networkInterfaces).forEach(interfaceName => {
+        const interfaces = networkInterfaces[interfaceName]
+        interfaces.forEach(iface => {
+          if (iface.family === 'IPv4' && !iface.internal) {
+            console.log(`  ${interfaceName}: ${iface.address}`)
+          }
+        })
       })
-    })
+    } else {
+      console.log('> ⚠️  Network debugging disabled for cloud deployment')
+    }
   })
 })
