@@ -38,9 +38,18 @@ function run(command, options = {}) {
 function main() {
   log('Quick deployment to Azure...');
   
-  // Build the app
+  // Build the app (without standalone for Azure)
   log('Building...');
-  run('npm run build', { env: { ...process.env, NODE_ENV: 'production' } });
+  run('npm ci'); // Ensure dependencies are installed
+  
+  // Switch to SQL Server schema for Azure deployment BEFORE generating client
+  if (fs.existsSync('prisma/schema.sqlserver.prisma')) {
+    log('Switching to SQL Server schema for Azure build...');
+    run('cp prisma/schema.sqlserver.prisma prisma/schema.prisma');
+  }
+  
+  run('npx prisma generate'); // Generate Prisma client with SQL Server schema
+  run('next build', { env: { ...process.env, NODE_ENV: 'production' } }); // Use next build directly
   
   if (!fs.existsSync('.next')) {
     error('.next directory missing after build');
@@ -55,10 +64,14 @@ function main() {
   }
   run(`mkdir ${deployDir}`);
   
-  // Copy essential files for standalone deployment
+  // Copy essential files for Azure deployment (not using standalone)
   const filesToCopy = [
-    '.next/standalone',
+    '.next',
+    'node_modules',
     'prisma',
+    'public',
+    'server.js',
+    'package.json', 
     'web.config',
     '.deployment'
   ];
@@ -66,10 +79,7 @@ function main() {
   filesToCopy.forEach(item => {
     if (fs.existsSync(item)) {
       log(`Copying ${item}...`);
-      if (item === '.next/standalone') {
-        // Copy standalone contents to deploy root
-        run(`cp -r "${item}"/* "${deployDir}/"`);
-      } else if (fs.statSync(item).isDirectory()) {
+      if (fs.statSync(item).isDirectory()) {
         run(`cp -r "${item}" "${deployDir}/"`);
       } else {
         run(`cp "${item}" "${deployDir}/"`);
@@ -77,14 +87,8 @@ function main() {
     }
   });
   
-  // Switch to SQL Server schema for Azure deployment
-  log('Using SQL Server schema for Azure deployment...');
-  if (fs.existsSync('prisma/schema.sqlserver.prisma')) {
-    run(`cp prisma/schema.sqlserver.prisma "${deployDir}/prisma/schema.prisma"`);
-    log('✓ Replaced with SQL Server schema');
-  } else {
-    log('⚠ Warning: SQL Server schema not found, using default');
-  }
+  // SQL Server schema already switched during build
+  log('✓ SQL Server schema already applied during build');
   
   // Create .deployment file in deploy directory
   const deploymentConfig = `[config]
@@ -148,6 +152,12 @@ command = node server.js`;
     // Clean up deploy directory
     log('Cleaning up deployment directory...');
     run(`rm -rf ${deployDir}`);
+    
+    // Restore PostgreSQL schema for local development
+    log('Restoring PostgreSQL schema for local development...');
+    run('git checkout HEAD -- prisma/schema.prisma');
+    run('npx prisma generate'); // Regenerate client with PostgreSQL schema
+    log('✓ Local development environment restored');
   }
 }
 
