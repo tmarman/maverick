@@ -44,9 +44,9 @@ export default function CockpitShell({ children, sidebarContent, title }: Cockpi
         </Link>
 
         <Link
-          href="/app/repositories"
+          href="/app/import/repos"
           className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors group ${
-            isActiveRoute('/app/repositories') 
+            isActiveRoute('/app/import/repos') 
               ? 'bg-accent-primary text-text-inverse' 
               : 'hover:bg-background-secondary text-text-primary'
           }`}

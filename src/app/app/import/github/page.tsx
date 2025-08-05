@@ -111,9 +111,9 @@ export default function GitHubImportPage() {
                 <Check className="w-4 h-4 mr-2" />
                 GitHub Connected
               </Badge>
-              <Button onClick={() => router.push('/cockpit')}>
+              <Button onClick={() => router.push('/app/import/repos')}>
                 <Rocket className="w-4 h-4 mr-2" />
-                Go to Cockpit
+                Import Repositories
               </Button>
             </div>
           ) : (

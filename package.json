@@ -11,7 +11,7 @@
     "vercel-build": "prisma generate && next build",
     "start": "next start",
     "start:dev": "NODE_ENV=production node server.js",
-    "start:azure": "next start",
+    "start:azure": "node azure-startup.js",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "jest",
