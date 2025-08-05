@@ -34,14 +34,10 @@ jobs:
           name: nextjs-app
           path: .
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'maverick'
           slot-name: 'production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: .
