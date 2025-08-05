@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "PORT=5001 node server.js",
     "dev:next": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
     "vercel-build": "prisma generate && next build",
     "start": "NODE_ENV=production node server.js",
     "start:next": "next start",
@@ -20,6 +20,10 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:verify": "node scripts/verify-database.js",
+    "deploy:local": "node scripts/deploy-local.js",
+    "deploy:simple": "node scripts/deploy-simple.js",
+    "deploy:profile": "node scripts/deploy-with-profile.js",
+    "deploy:kudu": "node scripts/deploy-kudu.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

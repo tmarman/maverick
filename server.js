@@ -6,7 +6,7 @@ const { spawn } = require('child_process')
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = 'localhost'
-const port = process.env.PORT || 5001
+const port = process.env.PORT || process.env.WEBSITES_PORT || 5001
 
 const app = next({ dev, hostname, port })
 const handle = app.getRequestHandler()

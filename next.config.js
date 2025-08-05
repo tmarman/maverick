@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Standalone build for Azure deployment
+  output: "standalone",
+  
   // App directory is now stable in Next.js 14
   
   // Exclude temporary directories and git repositories from build
