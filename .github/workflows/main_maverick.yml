@@ -51,9 +51,9 @@ jobs:
           echo "Before optimization:"
           du -sh node_modules/
           
-          # Use production server for deployment (no WebSocket dependencies)
-          cp server.production.js server.js
-          echo "✓ Using production server (WebSocket features disabled)"
+          # Use Azure production server for deployment (no WebSocket dependencies)
+          cp azure-startup.js server.js
+          echo "✓ Using Azure production server (WebSocket features disabled)"
           
           # Remove dev dependencies
           npm prune --production
