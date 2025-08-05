@@ -54,3 +54,9 @@ next-env.d.ts
 
 # maverick work items and swap files
 .maverick/work-items/*.swp
+
+# azure deployment files
+scripts/*.PublishSettings
+/deploy/
+deployment.zip
+.azure/
