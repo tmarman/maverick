@@ -1,0 +1,43 @@
+# Simple Next.js deployment to Azure Web App
+# Based on baseline Next.js + Azure best practices
+
+name: Simple Azure Deployment
+
+on:
+  workflow_dispatch:  # Manual trigger only for testing
+  # push:
+  #   branches:
+  #     - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js app
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-app
+          path: .
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'maverick'
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: .

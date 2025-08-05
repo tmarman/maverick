@@ -4,10 +4,10 @@
 name: Build and deploy Node.js app to Azure Web App - maverick
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:  # Manual trigger only - disabled for testing simple workflow
 
 # Cancel previous runs when new commits are pushed
 concurrency:
