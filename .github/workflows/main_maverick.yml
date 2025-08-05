@@ -66,6 +66,7 @@ jobs:
           cp package.json deploy-package/
           cp server.js deploy-package/
           cp web.config deploy-package/
+          cp .deployment deploy-package/
           
           # Copy built assets
           cp -r .next deploy-package/
@@ -73,13 +74,12 @@ jobs:
           
           # Copy Prisma files
           cp -r prisma deploy-package/
-          cp -r node_modules/.prisma deploy-package/node_modules/.prisma/
-          mkdir -p deploy-package/node_modules/@prisma
-          cp -r node_modules/@prisma/client deploy-package/node_modules/@prisma/
           
-          # Copy only production node_modules (already pruned)
+          # Create node_modules structure and copy production dependencies
           cp -r node_modules deploy-package/
           
+          echo "Deployment package contents:"
+          ls -la deploy-package/
           echo "Deployment package size:"
           du -sh deploy-package/
 
