@@ -49,7 +49,7 @@ function main() {
   }
   
   run('npx prisma generate'); // Generate Prisma client with SQL Server schema
-  run('next build', { env: { ...process.env, NODE_ENV: 'production' } }); // Use next build directly
+  run('npm run build:production', { env: { ...process.env, NODE_ENV: 'production' } }); // Use production build
   
   if (!fs.existsSync('.next')) {
     error('.next directory missing after build');
@@ -64,13 +64,13 @@ function main() {
   }
   run(`mkdir ${deployDir}`);
   
-  // Copy essential files for Azure deployment (not using standalone)
+  // Copy essential files for Azure deployment (using production server)
   const filesToCopy = [
     '.next',
     'node_modules',
     'prisma',
     'public',
-    'server.js',
+    'server.production.js',
     'package.json', 
     'web.config',
     '.deployment'
@@ -89,6 +89,12 @@ function main() {
   
   // SQL Server schema already switched during build
   log('✓ SQL Server schema already applied during build');
+  
+  // Rename production server to server.js for Azure
+  if (fs.existsSync(`${deployDir}/server.production.js`)) {
+    run(`mv "${deployDir}/server.production.js" "${deployDir}/server.js"`);
+    log('✓ Production server renamed to server.js for Azure');
+  }
   
   // Create .deployment file in deploy directory
   const deploymentConfig = `[config]
