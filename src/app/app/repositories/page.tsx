@@ -71,6 +71,7 @@ export default function RepositoriesPage() {
   const router = useRouter()
   const [repositories, setRepositories] = useState<GitHubRepository[]>([])
   const [businesses, setBusinesses] = useState<Business[]>([])
+  const [importedRepoIds, setImportedRepoIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [importing, setImporting] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -90,11 +91,28 @@ export default function RepositoriesPage() {
       
       // Load all repositories (no pagination)
       const reposResponse = await fetch('/api/github/repositories?sort=updated')
+      
+      // Load existing projects to check for already imported repositories
+      const projectsResponse = await fetch('/api/projects')
 
       if (reposResponse.ok) {
         const reposData = await reposResponse.json()
         setRepositories(reposData.repositories || [])
         setGithubConnected(true)
+        
+        // Check for already imported repositories
+        if (projectsResponse.ok) {
+          const projectsData = await projectsResponse.json()
+          const importedIds = new Set<string>()
+          
+          projectsData.projects?.forEach((project: any) => {
+            if (project.githubRepoId) {
+              importedIds.add(project.githubRepoId)
+            }
+          })
+          
+          setImportedRepoIds(importedIds)
+        }
       } else {
         const repoError = await reposResponse.json()
         console.error('Failed to load repositories:', repoError)
@@ -112,6 +130,7 @@ export default function RepositoriesPage() {
 
   const refreshRepositories = () => {
     setRepositories([])
+    setImportedRepoIds(new Set())
     loadData()
   }
 
@@ -290,86 +309,130 @@ export default function RepositoriesPage() {
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="divide-y divide-gray-200">
-            {filteredRepositories.map((repo) => (
-              <div key={repo.id} className="p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between">
-                  {/* Repository Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      {repo.owner.type === 'Organization' ? (
-                        <Building className="w-4 h-4 text-gray-600 flex-shrink-0" />
-                      ) : (
-                        <User className="w-4 h-4 text-gray-600 flex-shrink-0" />
-                      )}
-                      
-                      <div className="flex items-center gap-2 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">{repo.name}</h3>
-                        {repo.private && (
-                          <Lock className="w-3 h-3 text-gray-500" />
+            {filteredRepositories.map((repo) => {
+              const isImported = importedRepoIds.has(repo.id.toString())
+              
+              return (
+                <div key={repo.id} className={`p-4 transition-colors ${
+                  isImported 
+                    ? 'bg-gray-50 opacity-60' 
+                    : 'hover:bg-gray-50'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    {/* Repository Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2">
+                        {repo.owner.type === 'Organization' ? (
+                          <Building className={`w-4 h-4 flex-shrink-0 ${
+                            isImported ? 'text-gray-400' : 'text-gray-600'
+                          }`} />
+                        ) : (
+                          <User className={`w-4 h-4 flex-shrink-0 ${
+                            isImported ? 'text-gray-400' : 'text-gray-600'
+                          }`} />
                         )}
-                      </div>
-                      
-                      <div className="flex items-center gap-3 text-sm text-gray-500">
-                        {repo.language && (
+                        
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h3 className={`font-semibold truncate ${
+                            isImported ? 'text-gray-500' : 'text-gray-900'
+                          }`}>{repo.name}</h3>
+                          {repo.private && (
+                            <Lock className={`w-3 h-3 ${
+                              isImported ? 'text-gray-400' : 'text-gray-500'
+                            }`} />
+                          )}
+                          {isImported && (
+                            <Badge variant="outline" className="text-xs text-gray-500 border-gray-300">
+                              Imported
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className={`flex items-center gap-3 text-sm ${
+                          isImported ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          {repo.language && (
+                            <div className="flex items-center gap-1">
+                              <div className={`w-2 h-2 rounded-full ${
+                                isImported ? 'bg-gray-400' : 'bg-blue-500'
+                              }`} />
+                              {repo.language}
+                            </div>
+                          )}
                           <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 rounded-full bg-blue-500" />
-                            {repo.language}
+                            <Star className="w-3 h-3" />
+                            {repo.stargazers_count}
                           </div>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3" />
-                          {repo.stargazers_count}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <GitFork className="w-3 h-3" />
-                          {repo.forks_count}
-                        </div>
-                        {repo.open_issues_count > 0 && (
-                          <div className="flex items-center gap-1 text-orange-600">
-                            <AlertCircle className="w-3 h-3" />
-                            {repo.open_issues_count}
+                          <div className="flex items-center gap-1">
+                            <GitFork className="w-3 h-3" />
+                            {repo.forks_count}
                           </div>
-                        )}
+                          {repo.open_issues_count > 0 && (
+                            <div className={`flex items-center gap-1 ${
+                              isImported ? 'text-gray-400' : 'text-orange-600'
+                            }`}>
+                              <AlertCircle className="w-3 h-3" />
+                              {repo.open_issues_count}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <p className={`text-sm mb-2 ${
+                        isImported ? 'text-gray-400' : 'text-gray-600'
+                      }`}>{repo.full_name}</p>
+                      
+                      {repo.description && (
+                        <p className={`text-sm mb-2 line-clamp-2 ${
+                          isImported ? 'text-gray-400' : 'text-gray-700'
+                        }`}>{repo.description}</p>
+                      )}
+                      
+                      <div className={`flex items-center gap-4 text-xs ${
+                        isImported ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        <span>Updated {formatDate(repo.updated_at)}</span>
+                        <span>{formatSize(repo.size)}</span>
                       </div>
                     </div>
                     
-                    <p className="text-sm text-gray-600 mb-2">{repo.full_name}</p>
-                    
-                    {repo.description && (
-                      <p className="text-sm text-gray-700 mb-2 line-clamp-2">{repo.description}</p>
-                    )}
-                    
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Updated {formatDate(repo.updated_at)}</span>
-                      <span>{formatSize(repo.size)}</span>
-                    </div>
-                  </div>
-                  
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 ml-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(repo.html_url, '_blank')}
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => openImportDialog(repo)}
-                      disabled={importing === repo.id.toString()}
-                    >
-                      {importing === repo.id.toString() ? (
-                        <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 ml-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(repo.html_url, '_blank')}
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                      {isImported ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled
+                          className="opacity-50"
+                        >
+                          Already Imported
+                        </Button>
                       ) : (
-                        <Plus className="w-3 h-3 mr-1" />
+                        <Button
+                          size="sm"
+                          onClick={() => openImportDialog(repo)}
+                          disabled={importing === repo.id.toString()}
+                        >
+                          {importing === repo.id.toString() ? (
+                            <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                          ) : (
+                            <Plus className="w-3 h-3 mr-1" />
+                          )}
+                          Import
+                        </Button>
                       )}
-                      Import
-                    </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
