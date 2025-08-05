@@ -22,11 +22,11 @@ export default function AboutPage() {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-            AI-Native Business Formation Platform
+            Your Complete AI Development Team
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Maverick transforms business formation from a months-long ordeal into a streamlined, 
-            AI-powered experience. From idea to incorporation to your first product launch - all in one platform.
+            Maverick gives you an entire startup team of AI specialists who build your custom software. 
+            From idea to deployed application - no coding required.
           </p>
         </div>
 
@@ -36,29 +36,29 @@ export default function AboutPage() {
           
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-xl border border-blue-100">
-              <Building className="w-12 h-12 text-blue-600 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Business Formation</h3>
+              <Code className="w-12 h-12 text-blue-600 mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-3">AI Engineering Team</h3>
               <p className="text-gray-600">
-                Automated LLC and Corporation setup with legal documents, EIN registration, 
-                and compliance management. Get legally incorporated in days, not weeks.
+                AI developers write code, run tests, manage deployments, and handle GitHub repositories. 
+                Get enterprise-quality development without hiring developers.
               </p>
             </div>
 
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-xl border border-green-100">
               <Zap className="w-12 h-12 text-green-600 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Square Integration</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Product & Marketing</h3>
               <p className="text-gray-600">
-                Full Square ecosystem integration for payments, banking, point-of-sale, 
-                and business analytics. Start accepting payments immediately.
+                AI product managers organize features and roadmaps. AI marketing analysts 
+                optimize conversion funnels and provide growth recommendations.
               </p>
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-8 rounded-xl border border-purple-100">
               <Brain className="w-12 h-12 text-purple-600 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-3">AI App Generation</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Business Intelligence</h3>
               <p className="text-gray-600">
-                Custom business applications generated using AI. From simple websites 
-                to complex SaaS platforms - built and deployed automatically.
+                AI business analysts generate automated reports, track KPIs, and identify 
+                growth opportunities from your Square and application data.
               </p>
             </div>
           </div>
@@ -66,7 +66,7 @@ export default function AboutPage() {
 
         {/* How It Works */}
         <section className="mb-20">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">How It Works</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">How Your AI Team Works</h2>
           
           <div className="space-y-12">
             <div className="flex items-start gap-6">
@@ -74,10 +74,10 @@ export default function AboutPage() {
                 1
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Business Formation Wizard</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Describe Your App</h3>
                 <p className="text-gray-600">
-                  Our AI guides you through business formation with intelligent questions. 
-                  We handle LLC/Corp creation, EIN registration, operating agreements, and compliance setup.
+                  Tell us what you want to build in natural language. Your AI product manager 
+                  creates specifications and breaks down the work into manageable features.
                 </p>
               </div>
             </div>
@@ -87,10 +87,10 @@ export default function AboutPage() {
                 2
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Requirements Gathering</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">AI Team Builds</h3>
                 <p className="text-gray-600">
-                  AI-powered interviews understand your business needs and generate comprehensive 
-                  product requirements documents (PRDs) and technical specifications.
+                  Your AI engineering team writes code, runs tests, handles deployments, and manages 
+                  GitHub repositories. Watch your app come to life in real-time.
                 </p>
               </div>
             </div>
@@ -100,10 +100,10 @@ export default function AboutPage() {
                 3
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">AI App Generation</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Square Integration</h3>
                 <p className="text-gray-600">
-                  Custom applications generated using Claude Code and AI development tools. 
-                  Automatic GitHub repository creation with deployment pipelines.
+                  Automatic Square payment processing integration, plus business formation 
+                  if needed. Your app is ready to make money from day one.
                 </p>
               </div>
             </div>
@@ -113,10 +113,10 @@ export default function AboutPage() {
                 4
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Launch & Scale</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Ongoing Intelligence</h3>
                 <p className="text-gray-600">
-                  Integrated Square payment processing, business banking setup, 
-                  and ongoing development support. Your business is ready to operate.
+                  AI analysts generate reports, track performance, and suggest improvements. 
+                  Your team keeps optimizing and growing your business.
                 </p>
               </div>
             </div>
@@ -264,10 +264,10 @@ export default function AboutPage() {
         {/* CTA Section */}
         <section className="text-center">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 lg:p-12 text-white">
-            <h2 className="text-3xl font-bold mb-4">Ready to Launch Your Business?</h2>
+            <h2 className="text-3xl font-bold mb-4">Ready to Build Your App?</h2>
             <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
-              Join the future of business formation. Get incorporated, build your product, 
-              and start accepting payments - all in one platform.
+              Stop paying $50K+ for custom development. Get your complete AI team working today 
+              and bring your idea to market in days.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -276,7 +276,7 @@ export default function AboutPage() {
                 className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center justify-center gap-2"
               >
                 <Rocket className="w-5 h-5" />
-                Start Your Business
+                Build Your App
                 <ArrowRight className="w-4 h-4" />
               </Link>
               

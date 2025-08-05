@@ -9,12 +9,12 @@ export default function OpportunityPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            The AI-Native Business Formation
-            <span className="text-yellow-300"> Opportunity</span>
+            The AI-Native Software Development
+            <span className="text-yellow-300"> Revolution</span>
           </h1>
           <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-            Maverick represents a unique opportunity to transform how businesses are formed and operated, 
-            combining AI automation with Square's proven business infrastructure to capture a $50B+ market.
+            Maverick represents a unique opportunity to democratize custom software development, 
+            making $100K+ applications accessible to any business owner through AI automation.
           </p>
           <div className="grid md:grid-cols-3 gap-8 mt-12">
             <div className="text-center">
@@ -22,8 +22,8 @@ export default function OpportunityPage() {
               <div className="text-blue-100">Total Addressable Market</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-yellow-300">2M+</div>
-              <div className="text-blue-100">New Businesses Annually</div>
+              <div className="text-3xl font-bold text-yellow-300">32M+</div>
+              <div className="text-blue-100">Small Businesses in US</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-yellow-300">90%</div>
@@ -37,40 +37,40 @@ export default function OpportunityPage() {
       <section id="market-opportunity" className="py-16 px-4 sm:px-6 lg:px-8 bg-background-secondary">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-text-primary text-center mb-12">
-            Massive Market Opportunity
+            Massive Market Disruption
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-background-primary p-8 rounded-xl border border-border-subtle">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
-                <span className="text-2xl">🏢</span>
-              </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-4">Business Formation</h3>
-              <div className="text-2xl font-bold text-green-600 mb-2">$5B Market</div>
-              <p className="text-text-secondary">
-                Traditional providers charge $500-$2000+ for basic formation. 
-                Maverick delivers superior results for $99 with AI automation.
-              </p>
-            </div>
-            <div className="bg-background-primary p-8 rounded-xl border border-border-subtle">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-                <span className="text-2xl">⚖️</span>
-              </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-4">Legal Services</h3>
-              <div className="text-2xl font-bold text-blue-600 mb-2">$20B+ Market</div>
-              <p className="text-text-secondary">
-                Small businesses spend $20K+ annually on legal services. 
-                AI delivers most services at 10% of traditional cost.
-              </p>
-            </div>
             <div className="bg-background-primary p-8 rounded-xl border border-border-subtle">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
                 <span className="text-2xl">💻</span>
               </div>
               <h3 className="text-xl font-semibold text-text-primary mb-4">Custom Software</h3>
-              <div className="text-2xl font-bold text-purple-600 mb-2">$25B+ Market</div>
+              <div className="text-2xl font-bold text-purple-600 mb-2">$50B+ Market</div>
               <p className="text-text-secondary">
-                Enterprise development costs $100K-$1M+. 
-                Maverick delivers production-ready apps for $5K-$50K.
+                Custom development costs $100K-$1M+. Maverick delivers 
+                production-ready apps for $5K-$50K with AI automation.
+              </p>
+            </div>
+            <div className="bg-background-primary p-8 rounded-xl border border-border-subtle">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                <span className="text-2xl">👥</span>
+              </div>
+              <h3 className="text-xl font-semibold text-text-primary mb-4">Development Teams</h3>
+              <div className="text-2xl font-bold text-blue-600 mb-2">$300K+/year</div>
+              <p className="text-text-secondary">
+                Small dev teams cost $300K+/year. AI team provides same 
+                capabilities for $10K-$50K/year with 24/7 availability.
+              </p>
+            </div>
+            <div className="bg-background-primary p-8 rounded-xl border border-border-subtle">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
+                <span className="text-2xl">📊</span>
+              </div>
+              <h3 className="text-xl font-semibold text-text-primary mb-4">Business Intelligence</h3>
+              <div className="text-2xl font-bold text-green-600 mb-2">$25B+ Market</div>
+              <p className="text-text-secondary">
+                BI consultants charge $150K+/project. AI analysts provide 
+                continuous insights and reporting for fraction of the cost.
               </p>
             </div>
           </div>
@@ -98,21 +98,21 @@ export default function OpportunityPage() {
               Strategic Square Partnership
             </h2>
             <p className="text-lg text-text-secondary text-center mb-8">
-              Exclusive access to Square's 4M+ merchant ecosystem creates immediate distribution 
-              and recurring revenue opportunities through integrated business services.
+              Deep Square API integration creates immediate value for 4M+ merchants who need 
+              custom applications with built-in payment processing.
             </p>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <h4 className="font-semibold text-text-primary mb-2">🎯 Direct Market Access</h4>
-                <p className="text-text-secondary">4M+ Square merchants need business formation and custom software</p>
+                <p className="text-text-secondary">4M+ Square merchants need custom apps for loyalty, inventory, analytics, and more</p>
               </div>
               <div>
                 <h4 className="font-semibold text-text-primary mb-2">💰 Recurring Revenue</h4>
                 <p className="text-text-secondary">Payment processing, banking, and business services integration</p>
               </div>
               <div>
-                <h4 className="font-semibold text-text-primary mb-2">🚀 Customer Acquisition</h4>
-                <p className="text-text-secondary">Free Square app development creates trust and upsell opportunities</p>
+                <h4 className="font-semibold text-text-primary mb-2">🚀 Built-in Distribution</h4>
+                <p className="text-text-secondary">Every app comes with Square payments built-in, creating immediate value</p>
               </div>
               <div>
                 <h4 className="font-semibold text-text-primary mb-2">🏗️ Infrastructure</h4>

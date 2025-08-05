@@ -127,7 +127,9 @@ export default function SquarePartnershipPage() {
             
             <div className="text-center">
               <div className="w-16 h-16 bg-black rounded-xl flex items-center justify-center mx-auto mb-4">
-                <div className="w-6 h-6 bg-white rounded-sm"></div>
+                <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center">
+                  <div className="w-4 h-4 bg-black rounded-sm"></div>
+                </div>
               </div>
               <h3 className="text-lg font-semibold text-text-primary mb-2">Square Banking</h3>
               <p className="text-text-secondary text-sm">Business banking, debit cards, automatic setup</p>
@@ -135,10 +137,10 @@ export default function SquarePartnershipPage() {
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
-                </svg>
+              <div className="w-16 h-16 bg-black rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center">
+                  <div className="w-4 h-4 bg-black rounded-sm"></div>
+                </div>
               </div>
               <h3 className="text-lg font-semibold text-text-primary mb-2">Payment Processing</h3>
               <p className="text-text-secondary text-sm">Square Payments integration, online & in-person</p>
@@ -157,10 +159,10 @@ export default function SquarePartnershipPage() {
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h3v-8a1 1 0 011-1h4a1 1 0 011 1v8h3a1 1 0 001-1V7l-7-5z" clipRule="evenodd"/>
-                </svg>
+              <div className="w-16 h-16 bg-black rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center">
+                  <div className="w-4 h-4 bg-black rounded-sm"></div>
+                </div>
               </div>
               <h3 className="text-lg font-semibold text-text-primary mb-2">Business Growth</h3>
               <p className="text-text-secondary text-sm">Square ecosystem: POS, payroll, capital, marketing</p>
@@ -429,7 +431,7 @@ export default function SquarePartnershipPage() {
           <div className="space-y-8">
             <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold">Q1</span>
+                <span className="text-white font-bold">M1</span>
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-text-primary mb-2">Foundation & Integration</h3>
@@ -458,7 +460,7 @@ export default function SquarePartnershipPage() {
             
             <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold">Q2</span>
+                <span className="text-white font-bold">M2</span>
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-text-primary mb-2">Beta Launch & Optimization</h3>
@@ -487,7 +489,7 @@ export default function SquarePartnershipPage() {
             
             <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold">Q3</span>
+                <span className="text-white font-bold">M3</span>
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-text-primary mb-2">Market Launch & Scale</h3>
@@ -516,7 +518,7 @@ export default function SquarePartnershipPage() {
             
             <div className="flex items-start space-x-4">
               <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold">Q4</span>
+                <span className="text-white font-bold">M4</span>
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-text-primary mb-2">Advanced Features & Expansion</h3>
