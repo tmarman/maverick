@@ -35,6 +35,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Use SQL Server schema for Azure deployment
+        run: cp prisma/schema.sqlserver.prisma prisma/schema.prisma
+        
       - name: Generate Prisma client
         run: npx prisma generate
 
