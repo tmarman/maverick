@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import CockpitShell from '@/components/CockpitShell'
 import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
+import { SyncStatusBadge } from '@/components/SyncStatusBadge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -297,7 +298,7 @@ export default function ProjectDetailPage() {
     <CockpitShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="overview" />}>
       <div className="p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
             {project.description && (
@@ -331,6 +332,11 @@ export default function ProjectDetailPage() {
               Settings
             </Button>
           </div>
+        </div>
+
+        {/* Sync Status Bar */}
+        <div className="mb-8">
+          <SyncStatusBadge projectName={projectName} showDetails={true} onRefresh={loadProject} />
         </div>
 
         {/* VC-Style Executive Dashboard */}
