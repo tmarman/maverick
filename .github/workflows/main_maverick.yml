@@ -57,21 +57,47 @@ jobs:
           echo "Verifying npm start will work:"
           cat package.json | grep '"start"'
 
+      - name: Create production deployment package
+        run: |
+          echo "Creating deployment package..."
+          mkdir deployment-package
+          
+          # Copy essential runtime files
+          cp package.json deployment-package/
+          cp server.js deployment-package/
+          cp web.config deployment-package/
+          cp .deployment deployment-package/
+          
+          # Copy built Next.js application
+          if [ -d ".next" ]; then
+            cp -r .next deployment-package/
+            echo "✅ .next directory copied"
+          else
+            echo "❌ .next directory not found!"
+            exit 1
+          fi
+          
+          # Copy public assets
+          cp -r public deployment-package/
+          
+          # Copy Prisma schema
+          cp -r prisma deployment-package/
+          
+          # Copy only production node_modules (already pruned)
+          cp -r node_modules deployment-package/
+          
+          echo "Deployment package contents:"
+          ls -la deployment-package/
+          echo "Checking .next in package:"
+          ls -la deployment-package/.next/ | head -10 || echo "No .next found"
+          echo "Package size:"
+          du -sh deployment-package/
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: |
-            .
-            !coverage
-            !.git
-            !src
-            !**/*.test.*
-            !**/*.spec.*
-            !jest.config.*
-            !**/__tests__
-            !scripts
-            !project
+          path: deployment-package/
 
   deploy:
     runs-on: ubuntu-latest
