@@ -47,6 +47,12 @@ jobs:
           cp azure-startup.js deploy-package/server.js
           cp .deployment deploy-package/ || echo "No .deployment file"
           
+          # Install production dependencies for Azure runtime
+          echo "Installing production dependencies..."
+          cd deploy-package
+          npm ci --production --silent
+          cd ..
+          
           # Show what we're deploying
           echo "Deployment package contents:"
           ls -la deploy-package/

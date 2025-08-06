@@ -43,7 +43,13 @@
       "WebFetch(domain:openrouter.ai)",
       "Bash(chmod:*)",
       "Bash(tree:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(npm i:*)",
+      "Bash(timeout:*)",
+      "Bash(git checkout:*)",
+      "WebFetch(domain:learn.microsoft.com)",
+      "WebFetch(domain:www.reddit.com)",
+      "Bash(gtimeout 30s az webapp log tail --name maverick --resource-group maverick_group)"
     ],
     "deny": []
   }

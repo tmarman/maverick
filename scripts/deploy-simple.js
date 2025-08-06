@@ -64,15 +64,14 @@ function main() {
   }
   run(`mkdir ${deployDir}`);
   
-  // Copy essential files for Azure deployment (using production server)
+  // Copy only essential files for optimized deployment
   const filesToCopy = [
     '.next',
-    'node_modules',
     'prisma',
     'public',
-    'server.production.js',
-    'package.json', 
-    'web.config',
+    'azure-startup.js',
+    'package.json',
+    'package-lock.json',
     '.deployment'
   ];
   
@@ -87,18 +86,28 @@ function main() {
     }
   });
   
+  // Install production dependencies in deploy directory for Azure runtime
+  log('Installing production dependencies for Azure...');
+  const currentDir = process.cwd();
+  process.chdir(deployDir);
+  run('npm ci --production --silent'); // Install only production dependencies
+  process.chdir(currentDir);
+  log('✓ Production dependencies installed');
+  
   // SQL Server schema already switched during build
   log('✓ SQL Server schema already applied during build');
   
-  // Rename production server to server.js for Azure
-  if (fs.existsSync(`${deployDir}/server.production.js`)) {
-    run(`mv "${deployDir}/server.production.js" "${deployDir}/server.js"`);
-    log('✓ Production server renamed to server.js for Azure');
+  // Rename azure-startup.js to server.js for Azure (optimized for production)
+  if (fs.existsSync(`${deployDir}/azure-startup.js`)) {
+    run(`mv "${deployDir}/azure-startup.js" "${deployDir}/server.js"`);
+    log('✓ Azure startup server renamed to server.js for deployment');
   }
   
-  // Create .deployment file in deploy directory
+  // Create .deployment file in deploy directory (let Azure handle npm install)
   const deploymentConfig = `[config]
-command = node server.js`;
+SCM_DO_BUILD_DURING_DEPLOYMENT=true
+WEBSITE_NODE_DEFAULT_VERSION=22.17.0
+SCM_COMMAND_IDLE_TIMEOUT=1800`;
   fs.writeFileSync(`${deployDir}/.deployment`, deploymentConfig);
   
   // Create web.config for Azure if it doesn't exist

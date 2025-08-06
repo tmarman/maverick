@@ -1,0 +1,88 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy Node.js app to Azure Web App - maverick
+
+on:
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:  # Manual trigger only - disabled for testing simple workflow
+
+# Cancel previous runs when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js version
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.x'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Use SQL Server schema for Azure deployment
+        run: cp prisma/schema.sqlserver.prisma prisma/schema.prisma
+        
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Build application for production deployment
+        run: npm run build:production
+        env:
+          NODE_ENV: production
+
+      - name: Prepare Azure deployment package
+        run: |
+          # Use Azure production server for deployment (no WebSocket dependencies)
+          cp azure-startup.js server.js
+          echo "✓ Using Azure production server (WebSocket features disabled)"
+          
+          # Remove node_modules to let Azure handle fresh install
+          rm -rf node_modules
+          echo "✓ Removed node_modules - Azure will do fresh npm install"
+          
+          echo "Verifying .next directory exists:"
+          ls -la .next/ | head -5
+          
+          echo "Package contents:"
+          ls -la
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_A40E1068DD244D21A83F1020AA1406DC }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_AB55E2B457C44CC9A53E1F220838A0F5 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2FDD79C1286245E38F07B5D998099557 }}
+
+      - name: 'Deploy to Azure Web App'
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'maverick'
+          resource-group-name: 'maverick_group'
+          slot-name: 'Production'
+          package: .
+        timeout-minutes: 30
+        
+      - name: 'Wait for deployment to stabilize'
+        run: |
+          echo "Waiting 30 seconds for deployment to stabilize..."
+          sleep 30
+          echo "Checking app status..."
+          curl -I https://maverick-fcendrb4gte0dnf5.centralus-01.azurewebsites.net/ || echo "App may still be starting up"
+          
