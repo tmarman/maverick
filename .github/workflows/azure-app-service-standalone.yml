@@ -56,12 +56,10 @@ jobs:
         cp -r node_modules/.prisma/* deploy-standalone/node_modules/.prisma/
         cp -r node_modules/@prisma/client deploy-standalone/node_modules/@prisma/
         
-        # CRITICAL: Create symlink from @prisma/client location to .prisma for relative path resolution
-        # When @prisma/client/default.js does require('.prisma/client/default'), 
-        # it needs .prisma to be accessible from the @prisma/client directory
-        cd deploy-standalone/node_modules/@prisma/client
-        ln -sf ../../.prisma .prisma || echo "Symlink creation failed"
-        cd - || cd "$(pwd)"
+        # CRITICAL: Copy .prisma directory directly into @prisma/client directory
+        # This ensures require('.prisma/client/default') works from @prisma/client/default.js
+        mkdir -p deploy-standalone/node_modules/@prisma/client/.prisma
+        cp -r node_modules/.prisma/* deploy-standalone/node_modules/@prisma/client/.prisma/
         
         # Copy public files if they exist
         if [ -d "public" ]; then
@@ -133,11 +131,11 @@ jobs:
         ls -la deploy-standalone/node_modules/.prisma/ || echo "No .prisma directory"
         echo "Verifying @prisma/client:"
         ls -la deploy-standalone/node_modules/@prisma/client/ || echo "No @prisma/client directory"
-        echo "Verifying .prisma symlink from @prisma/client:"
-        ls -la deploy-standalone/node_modules/@prisma/client/.prisma || echo "No .prisma symlink"
-        echo "Testing relative path resolution:"
-        ls -la deploy-standalone/node_modules/@prisma/client/.prisma/client/ || echo "Symlink not working"
-        echo "Checking default.js content:"
+        echo "Verifying .prisma directory copied into @prisma/client:"
+        ls -la deploy-standalone/node_modules/@prisma/client/.prisma || echo "No .prisma directory in @prisma/client"
+        echo "Testing direct path resolution to default.js:"
+        ls -la deploy-standalone/node_modules/@prisma/client/.prisma/client/default.js || echo "Default.js not found at expected path"
+        echo "Checking @prisma/client default.js content:"
         head -5 deploy-standalone/node_modules/@prisma/client/default.js || echo "No default.js file"
         
         echo "Verifying .next structure:"
