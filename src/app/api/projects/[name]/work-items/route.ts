@@ -192,7 +192,7 @@ function parseWorkItemMarkdown(content: string, filename: string) {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ projectId: string }> }
+  { params }: { params: Promise<{ name: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -200,13 +200,13 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { projectId } = await params
+    const { name } = await params
     const body = await request.json()
 
     // Verify user has access to this project
     const project = await prisma.project.findFirst({
       where: {
-        id: projectId,
+        name: name,
         business: {
           OR: [
             { ownerId: session.user.id },
@@ -234,7 +234,7 @@ export async function POST(
     // Calculate order index for new item
     const maxOrderIndex = await prisma.workItem.findFirst({
       where: {
-        projectId: projectId,
+        projectId: project.id,
         parentId: body.parentId || null
       },
       orderBy: { orderIndex: 'desc' },
@@ -285,7 +285,7 @@ export async function POST(
         githubBranch,
         worktreeStatus: worktreeName ? 'PENDING' : null,
         estimatedEffort: body.estimatedEffort || null,
-        projectId: projectId,
+        projectId: project.id,
         assignedToId: body.assignedToId || null
       },
       include: {

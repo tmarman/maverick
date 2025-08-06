@@ -40,21 +40,37 @@ export default function ProjectTasksPage() {
     try {
       setLoading(true)
       setSetupError(null)
-      console.log('Loading project with name:', projectName)
+      
+      console.log('🔍 DEPLOYMENT DEBUG: Loading project with name:', projectName)
+      console.log('🔍 DEPLOYMENT DEBUG: Current pathname:', window.location.pathname)
+      console.log('🔍 DEPLOYMENT DEBUG: Route params:', params)
+      console.log('🔍 DEPLOYMENT DEBUG: Environment:', {
+        NODE_ENV: process.env.NODE_ENV,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent.substring(0, 50)
+      })
+      
       const response = await fetch(`/api/projects/${projectName}`)
       
-      console.log('API response status:', response.status)
+      console.log('🔍 DEPLOYMENT DEBUG: API response status:', response.status)
+      console.log('🔍 DEPLOYMENT DEBUG: API URL called:', `/api/projects/${projectName}`)
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Project data received:', data)
+        console.log('🔍 DEPLOYMENT DEBUG: Project data received:', data)
         setProject(data.project)
         
         // Check if this project needs setup by trying to load work items
         await checkProjectSetup(projectName)
       } else {
         const errorData = await response.json().catch(() => ({}))
-        console.error('Failed to load project:', response.status, errorData)
+        console.error('🔍 DEPLOYMENT DEBUG: Failed to load project:', response.status, errorData)
+        console.error('🔍 DEPLOYMENT DEBUG: Error details:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          errorData
+        })
         
         // If project not found, but we're looking for maverick, it might need setup
         if (response.status === 404 && projectName.toLowerCase() === 'maverick') {
@@ -71,7 +87,10 @@ export default function ProjectTasksPage() {
   const checkProjectSetup = async (projectName: string) => {
     // Try to load work items to see if project structure exists
     try {
+      console.log('🔍 DEPLOYMENT DEBUG: Checking project setup by loading work items')
       const workItemsResponse = await fetch(`/api/projects/${projectName}/work-items`)
+      
+      console.log('🔍 DEPLOYMENT DEBUG: Work items response status:', workItemsResponse.status)
       
       if (!workItemsResponse.ok) {
         const errorData = await workItemsResponse.json().catch(() => ({}))
