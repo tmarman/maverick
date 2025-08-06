@@ -53,11 +53,15 @@ jobs:
         # Copy Prisma generated client and @prisma/client package
         mkdir -p deploy-standalone/node_modules/.prisma
         mkdir -p deploy-standalone/node_modules/@prisma
-        mkdir -p deploy-standalone/.prisma
         cp -r node_modules/.prisma/* deploy-standalone/node_modules/.prisma/
         cp -r node_modules/@prisma/client deploy-standalone/node_modules/@prisma/
-        # Also copy .prisma to root level for path resolution
-        cp -r node_modules/.prisma/* deploy-standalone/.prisma/
+        
+        # CRITICAL: Create symlink from @prisma/client location to .prisma for relative path resolution
+        # When @prisma/client/default.js does require('.prisma/client/default'), 
+        # it needs .prisma to be accessible from the @prisma/client directory
+        cd deploy-standalone/node_modules/@prisma/client
+        ln -sf ../../.prisma .prisma
+        cd ../../../../..
         
         # Copy public files
         cp -r public deploy-standalone/
@@ -127,8 +131,10 @@ jobs:
         ls -la deploy-standalone/node_modules/.prisma/ || echo "No .prisma directory"
         echo "Verifying @prisma/client:"
         ls -la deploy-standalone/node_modules/@prisma/client/ || echo "No @prisma/client directory"
-        echo "Verifying root-level .prisma:"
-        ls -la deploy-standalone/.prisma/ || echo "No root .prisma directory"
+        echo "Verifying .prisma symlink from @prisma/client:"
+        ls -la deploy-standalone/node_modules/@prisma/client/.prisma || echo "No .prisma symlink"
+        echo "Testing relative path resolution:"
+        ls -la deploy-standalone/node_modules/@prisma/client/.prisma/client/ || echo "Symlink not working"
         echo "Checking default.js content:"
         head -5 deploy-standalone/node_modules/@prisma/client/default.js || echo "No default.js file"
         
