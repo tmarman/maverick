@@ -49,7 +49,11 @@
       "Bash(git checkout:*)",
       "WebFetch(domain:learn.microsoft.com)",
       "WebFetch(domain:www.reddit.com)",
-      "Bash(gtimeout 30s az webapp log tail --name maverick --resource-group maverick_group)"
+      "Bash(gtimeout 30s az webapp log tail --name maverick --resource-group maverick_group)",
+      "Bash(gh run watch:*)",
+      "Bash(gh secret set:*)",
+      "Bash(gh secret:*)",
+      "Bash(gtimeout 10s az webapp log tail --name maverick --resource-group maverick_group)"
     ],
     "deny": []
   }

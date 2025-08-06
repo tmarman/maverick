@@ -18,6 +18,11 @@ COPY prisma ./prisma/
 # Install all dependencies (including dev for build)
 RUN npm ci
 
+# Switch to SQL Server schema for production if it exists
+RUN if [ -f "prisma/schema.sqlserver.prisma" ]; then \
+      cp prisma/schema.sqlserver.prisma prisma/schema.prisma; \
+    fi
+
 # Generate Prisma client
 RUN npx prisma generate
 

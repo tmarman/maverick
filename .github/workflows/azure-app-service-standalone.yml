@@ -1,4 +1,4 @@
-name: Deploy to Azure App Service (Standalone)
+name: Deploy to Azure App Service (Docker)
 
 on:
   push:
@@ -12,148 +12,28 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
-        cache: 'npm'
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
     
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Switch to SQL Server schema
+    - name: Build Docker image
       run: |
-        if [ -f "prisma/schema.sqlserver.prisma" ]; then
-          cp prisma/schema.sqlserver.prisma prisma/schema.prisma
-          npx prisma generate
-        fi
-    
-    - name: Build Next.js application
-      run: npm run build
-      env:
-        NODE_ENV: production
-    
-    - name: Create standalone deployment package
-      run: |
-        # Create deployment directory
-        mkdir -p deploy-standalone
-        
-        # Copy standalone build output
-        cp -r .next/standalone/* deploy-standalone/
-        
-        # Copy complete .next directory structure
-        mkdir -p deploy-standalone/.next
-        cp -r .next/static deploy-standalone/.next/
-        cp -r .next/server deploy-standalone/.next/
-        cp .next/BUILD_ID deploy-standalone/.next/
-        cp .next/prerender-manifest.json deploy-standalone/.next/
-        cp .next/routes-manifest.json deploy-standalone/.next/
-        find .next -maxdepth 1 -type f -exec cp {} deploy-standalone/.next/ \; || true
-        
-        # Copy Prisma generated client and @prisma/client package
-        mkdir -p deploy-standalone/node_modules/.prisma
-        mkdir -p deploy-standalone/node_modules/@prisma
-        cp -r node_modules/.prisma/* deploy-standalone/node_modules/.prisma/
-        cp -r node_modules/@prisma/client deploy-standalone/node_modules/@prisma/
-        
-        # CRITICAL: Fix @prisma/client default.js to use absolute path
-        # Replace relative '.prisma/client/default' with absolute path to node_modules/.prisma/client/default
-        sed -i "s|require('\\.prisma/client/default')|require('/home/site/wwwroot/node_modules/.prisma/client/default')|g" deploy-standalone/node_modules/@prisma/client/default.js
-        
-        # Copy public files if they exist
-        if [ -d "public" ]; then
-          cp -r public deploy-standalone/
-        fi
-        
-        # Create minimal package.json for Azure
-        cat > deploy-standalone/package.json << EOF
-        {
-          "name": "maverick-standalone",
-          "version": "1.0.0",
-          "scripts": {
-            "start": "node server.js"
-          }
-        }
-        EOF
-        
-        # Create deployment config
-        cat > deploy-standalone/.deployment << EOF
-        [config]
-        SCM_DO_BUILD_DURING_DEPLOYMENT=false
-        WEBSITE_NODE_DEFAULT_VERSION=22.17.0
-        WEBSITE_RUN_FROM_PACKAGE=0
-        EOF
-        
-        # Create web.config for IIS
-        cat > deploy-standalone/web.config << 'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <configuration>
-          <system.webServer>
-            <handlers>
-              <add name="iisnode" path="server.js" verb="*" modules="iisnode"/>
-            </handlers>
-            <rewrite>
-              <rules>
-                <rule name="NodeInspector" patternSyntax="ECMAScript" stopProcessing="true">
-                  <match url="^server.js\\/debug[\\/]?" />
-                </rule>
-                <rule name="StaticContent">
-                  <action type="Rewrite" url="public{REQUEST_URI}"/>
-                </rule>
-                <rule name="DynamicContent">
-                  <conditions>
-                    <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="True"/>
-                  </conditions>
-                  <action type="Rewrite" url="server.js"/>
-                </rule>
-              </rules>
-            </rewrite>
-            <security>
-              <requestFiltering>
-                <hiddenSegments>
-                  <remove segment="bin"/>
-                </hiddenSegments>
-              </requestFiltering>
-            </security>
-            <httpErrors existingResponse="PassThrough" />
-            <iisnode watchedFiles="web.config;*.js"/>
-          </system.webServer>
-        </configuration>
-        EOF
-        
-        echo "Deployment package created:"
-        ls -la deploy-standalone/
-        echo "Package size:"
-        du -sh deploy-standalone/
-        
-        echo "Verifying Prisma client:"
-        ls -la deploy-standalone/node_modules/.prisma/ || echo "No .prisma directory"
-        echo "Verifying @prisma/client:"
-        ls -la deploy-standalone/node_modules/@prisma/client/ || echo "No @prisma/client directory"
-        echo "Checking modified @prisma/client default.js content:"
-        cat deploy-standalone/node_modules/@prisma/client/default.js || echo "No default.js file"
-        echo "Verifying .prisma/client/default.js exists at absolute path:"
-        ls -la deploy-standalone/node_modules/.prisma/client/default.js || echo "Default.js not found at absolute path"
-        
-        echo "Verifying .next structure:"
-        ls -la deploy-standalone/.next/
+        docker build -t maverick:latest .
     
     - name: Login to Azure
       uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
-    - name: Deploy to Azure App Service using CLI
-      run: |
-        cd deploy-standalone
-        az webapp up --name maverick --resource-group maverick_group --location centralus --runtime "NODE:22-lts"
-      env:
-        AZURE_CORE_OUTPUT: table
+    - name: Deploy Docker container to App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'maverick'
+        images: 'maverick:latest'
     
     - name: Verify deployment  
       run: |
-        echo "🚀 Deployment completed!"
+        echo "🚀 Docker deployment completed!"
         echo "App URL: https://maverick-fcendrb4gte0dnf5.centralus-01.azurewebsites.net"
-        echo "Waiting 30 seconds for startup..."
-        sleep 30
-        curl -I https://maverick-fcendrb4gte0dnf5.centralus-01.azurewebsites.net/ || echo "App still starting up"
+        echo "Waiting 60 seconds for container startup..."
+        sleep 60
+        curl -I https://maverick-fcendrb4gte0dnf5.centralus-01.azurewebsites.net/ || echo "Container still starting up"
