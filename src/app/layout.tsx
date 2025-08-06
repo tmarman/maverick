@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Providers } from '@/components/Providers'
+import { ApplicationInsightsScript } from '@/components/ApplicationInsightsScript'
 
 export const metadata: Metadata = {
   title: 'Maverick • AI-Native Founder Platform',
@@ -19,6 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        <ApplicationInsightsScript />
+      </head>
       <body className="h-full antialiased font-sans">
         <Providers>
           <div className="min-h-full bg-background-primary">

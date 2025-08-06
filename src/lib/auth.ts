@@ -6,6 +6,7 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from './prisma'
 import { withRetry } from './database-health'
 import bcrypt from 'bcryptjs'
+import * as Sentry from '@sentry/nextjs'
 
 declare module 'next-auth' {
   interface Session {
@@ -186,6 +187,17 @@ export const authOptions: NextAuthOptions = {
           })
           
           if (!response.ok) {
+            console.error('🚨 Square token exchange failed:', {
+              status: response.status,
+              statusText: response.statusText,
+              fullResponse: responseText,
+              requestBody: {
+                client_id: provider.clientId,
+                grant_type: 'authorization_code',
+                code: params.code?.slice(0, 20) + '...',
+                redirect_uri: params.redirect_uri
+              }
+            })
             throw new Error(`Square token exchange failed: ${response.status} ${response.statusText} - ${responseText}`)
           }
           
@@ -211,6 +223,12 @@ export const authOptions: NextAuthOptions = {
           })
           
           if (!response.ok) {
+            console.error('🚨 Square merchant info failed:', {
+              status: response.status,
+              statusText: response.statusText,
+              fullResponse: responseText,
+              accessToken: tokens.access_token?.slice(0, 20) + '...'
+            })
             throw new Error(`Square merchant info failed: ${response.status} - ${responseText}`)
           }
           

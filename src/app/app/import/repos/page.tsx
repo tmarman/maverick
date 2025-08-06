@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import CockpitShell from '@/components/CockpitShell'
 import { usePageTitle, PAGE_TITLES } from '@/hooks/use-page-title'
+import { useLogger, usePageTracking } from '@/hooks/use-logger'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -64,9 +65,11 @@ interface Business {
 }
 
 export default function RepositoriesPage() {
-  // Set page title
+  // Set page title and tracking
   usePageTitle(PAGE_TITLES.repositories)
-
+  usePageTracking('Import Repositories', { section: 'import' })
+  
+  const logger = useLogger('ImportRepositories')
   const { data: session } = useSession()
   const router = useRouter()
   const [repositories, setRepositories] = useState<GitHubRepository[]>([])
@@ -88,12 +91,21 @@ export default function RepositoriesPage() {
   const loadData = async () => {
     try {
       setLoading(true)
+      logger.info('Loading repositories and projects')
       
       // Load all repositories (no pagination)
-      const reposResponse = await fetch('/api/github/repositories?sort=updated')
+      const reposResponse = await logger.trackApiCall(
+        () => fetch('/api/github/repositories?sort=updated'),
+        'GetRepositories',
+        '/api/github/repositories'
+      )
       
       // Load existing projects to check for already imported repositories
-      const projectsResponse = await fetch('/api/projects')
+      const projectsResponse = await logger.trackApiCall(
+        () => fetch('/api/projects'),
+        'GetProjects', 
+        '/api/projects'
+      )
 
       if (reposResponse.ok) {
         const reposData = await reposResponse.json()
@@ -115,20 +127,23 @@ export default function RepositoriesPage() {
         }
       } else {
         const repoError = await reposResponse.json()
-        console.error('Failed to load repositories:', repoError)
+        logger.error('Failed to load repositories', new Error(repoError.error || 'Unknown error'), repoError)
         if (repoError.error === 'GitHub not connected') {
-          setGithubConnected(false)
-          setRepositories([])
+          // Redirect to GitHub connection page instead of showing error
+          logger.trackUserAction('redirect_to_github_connection', { from: 'repos_page' })
+          router.push('/app/link/github')
+          return
         }
       }
     } catch (error) {
-      console.error('Error loading data:', error)
+      logger.error('Error loading data', error as Error)
     } finally {
       setLoading(false)
     }
   }
 
   const refreshRepositories = () => {
+    logger.trackUserAction('refresh_repositories')
     setRepositories([])
     setImportedRepoIds(new Set())
     loadData()
@@ -247,7 +262,7 @@ export default function RepositoriesPage() {
         <p className="text-gray-600 mb-6">
           Connect your GitHub account to browse and import your repositories
         </p>
-        <Button onClick={() => router.push('/app/import/github')}>
+        <Button onClick={() => router.push('/app/link/github')}>
           <Github className="w-4 h-4 mr-2" />
           Connect GitHub
         </Button>
