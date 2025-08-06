@@ -56,10 +56,11 @@ jobs:
         cp -r node_modules/.prisma/* deploy-standalone/node_modules/.prisma/
         cp -r node_modules/@prisma/client deploy-standalone/node_modules/@prisma/
         
-        # CRITICAL: Copy .prisma directory directly into @prisma/client directory
-        # This ensures require('.prisma/client/default') works from @prisma/client/default.js
-        mkdir -p deploy-standalone/node_modules/@prisma/client/.prisma
-        cp -r node_modules/.prisma/* deploy-standalone/node_modules/@prisma/client/.prisma/
+        # CRITICAL: Fix @prisma/client default.js to use absolute path
+        # Replace relative '.prisma/client/default' with absolute path to node_modules/.prisma/client/default
+        cd deploy-standalone/node_modules/@prisma/client
+        sed -i "s|require('\\.prisma/client/default')|require('/home/site/wwwroot/node_modules/.prisma/client/default')|g" default.js
+        cd ../../../../..
         
         # Copy public files if they exist
         if [ -d "public" ]; then
@@ -131,12 +132,10 @@ jobs:
         ls -la deploy-standalone/node_modules/.prisma/ || echo "No .prisma directory"
         echo "Verifying @prisma/client:"
         ls -la deploy-standalone/node_modules/@prisma/client/ || echo "No @prisma/client directory"
-        echo "Verifying .prisma directory copied into @prisma/client:"
-        ls -la deploy-standalone/node_modules/@prisma/client/.prisma || echo "No .prisma directory in @prisma/client"
-        echo "Testing direct path resolution to default.js:"
-        ls -la deploy-standalone/node_modules/@prisma/client/.prisma/client/default.js || echo "Default.js not found at expected path"
-        echo "Checking @prisma/client default.js content:"
-        head -5 deploy-standalone/node_modules/@prisma/client/default.js || echo "No default.js file"
+        echo "Checking modified @prisma/client default.js content:"
+        cat deploy-standalone/node_modules/@prisma/client/default.js || echo "No default.js file"
+        echo "Verifying .prisma/client/default.js exists at absolute path:"
+        ls -la deploy-standalone/node_modules/.prisma/client/default.js || echo "Default.js not found at absolute path"
         
         echo "Verifying .next structure:"
         ls -la deploy-standalone/.next/
