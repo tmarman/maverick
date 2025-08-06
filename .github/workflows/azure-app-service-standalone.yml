@@ -58,9 +58,7 @@ jobs:
         
         # CRITICAL: Fix @prisma/client default.js to use absolute path
         # Replace relative '.prisma/client/default' with absolute path to node_modules/.prisma/client/default
-        cd deploy-standalone/node_modules/@prisma/client
-        sed -i "s|require('\\.prisma/client/default')|require('/home/site/wwwroot/node_modules/.prisma/client/default')|g" default.js
-        cd ../../../../..
+        sed -i "s|require('\\.prisma/client/default')|require('/home/site/wwwroot/node_modules/.prisma/client/default')|g" deploy-standalone/node_modules/@prisma/client/default.js
         
         # Copy public files if they exist
         if [ -d "public" ]; then
