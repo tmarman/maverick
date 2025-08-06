@@ -187,7 +187,7 @@ export const authOptions: NextAuthOptions = {
           })
           
           if (!response.ok) {
-            console.error('🚨 Square token exchange failed:', {
+            const errorData = {
               status: response.status,
               statusText: response.statusText,
               fullResponse: responseText,
@@ -197,7 +197,19 @@ export const authOptions: NextAuthOptions = {
                 code: params.code?.slice(0, 20) + '...',
                 redirect_uri: params.redirect_uri
               }
+            }
+            
+            console.error('🚨 Square token exchange failed:', errorData)
+            
+            // Report to Sentry with structured data
+            Sentry.captureException(new Error(`Square token exchange failed: ${response.status} ${response.statusText}`), {
+              tags: {
+                oauth_provider: 'square',
+                oauth_step: 'token_exchange'
+              },
+              extra: errorData
             })
+            
             throw new Error(`Square token exchange failed: ${response.status} ${response.statusText} - ${responseText}`)
           }
           
@@ -223,12 +235,24 @@ export const authOptions: NextAuthOptions = {
           })
           
           if (!response.ok) {
-            console.error('🚨 Square merchant info failed:', {
+            const errorData = {
               status: response.status,
               statusText: response.statusText,
               fullResponse: responseText,
               accessToken: tokens.access_token?.slice(0, 20) + '...'
+            }
+            
+            console.error('🚨 Square merchant info failed:', errorData)
+            
+            // Report to Sentry with structured data
+            Sentry.captureException(new Error(`Square merchant info failed: ${response.status}`), {
+              tags: {
+                oauth_provider: 'square',
+                oauth_step: 'merchant_info'
+              },
+              extra: errorData
             })
+            
             throw new Error(`Square merchant info failed: ${response.status} - ${responseText}`)
           }
           

@@ -8,7 +8,7 @@ const apiLogger = createApiLogger('TeamInvitesAPI')
 // Send team invitation
 export async function POST(
   request: NextRequest,
-  { params }: { params: { businessId: string } }
+  { params }: { params: Promise<{ businessId: string }> }
 ) {
   const startTime = Date.now()
   apiLogger.logRequest(request)
@@ -19,7 +19,7 @@ export async function POST(
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    const { businessId } = params
+    const { businessId } = await params
     const { email, role = 'MEMBER', message } = await request.json()
 
     if (!email || !businessId) {
@@ -135,17 +135,14 @@ export async function POST(
         message
       )
       
-      apiLogger.info('Team invitation email sent', {
+      console.log('Team invitation email sent', {
         businessId,
         invitedEmail: email,
         invitedBy: session.user.email,
         role
       })
     } catch (emailError) {
-      apiLogger.error('Failed to send invitation email', emailError as Error, {
-        businessId,
-        invitedEmail: email
-      })
+      console.error('Failed to send invitation email:', emailError)
       // Continue - the invitation is created, email failure shouldn't block
     }
 
@@ -180,7 +177,7 @@ export async function POST(
 // Get pending invitations for a business
 export async function GET(
   request: NextRequest,
-  { params }: { params: { businessId: string } }
+  { params }: { params: Promise<{ businessId: string }> }
 ) {
   const startTime = Date.now()
   apiLogger.logRequest(request)
@@ -191,7 +188,7 @@ export async function GET(
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    const { businessId } = params
+    const { businessId } = await params
     const { prisma } = await import('@/lib/prisma')
 
     // Verify user has access to this business
@@ -232,7 +229,7 @@ export async function GET(
     })
 
     // Get inviter names
-    const invitedByIds = [...new Set(invitations.map(i => i.invitedBy).filter(Boolean))]
+    const invitedByIds = Array.from(new Set(invitations.map(i => i.invitedBy).filter((id): id is string => id !== null)))
     const inviters = await prisma.user.findMany({
       where: { id: { in: invitedByIds } },
       select: { id: true, name: true, email: true }

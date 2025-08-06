@@ -8,7 +8,7 @@ const apiLogger = createApiLogger('InviteResponseAPI')
 // Accept or decline invitation
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { inviteId: string } }
+  { params }: { params: Promise<{ inviteId: string }> }
 ) {
   const startTime = Date.now()
   apiLogger.logRequest(request)
@@ -19,7 +19,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    const { inviteId } = params
+    const { inviteId } = await params
     const { action } = await request.json() // 'accept' or 'decline'
 
     if (!['accept', 'decline'].includes(action)) {
@@ -91,7 +91,7 @@ export async function PATCH(
           )
         }
       } catch (emailError) {
-        apiLogger.warn('Failed to send join notification email', emailError)
+        console.warn('Failed to send join notification email:', emailError)
       }
     }
 
@@ -126,13 +126,13 @@ export async function PATCH(
 // Get invitation details (for the invitation page)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { inviteId: string } }
+  { params }: { params: Promise<{ inviteId: string }> }
 ) {
   const startTime = Date.now()
   apiLogger.logRequest(request)
 
   try {
-    const { inviteId } = params
+    const { inviteId } = await params
     const { prisma } = await import('@/lib/prisma')
 
     // Find the invitation

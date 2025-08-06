@@ -79,7 +79,7 @@ export function usePageTracking(pageName: string, additionalData?: any) {
           pathname,
           loadTime: navigationTiming.loadEventEnd - navigationTiming.loadEventStart,
           domContentLoaded: navigationTiming.domContentLoadedEventEnd - navigationTiming.domContentLoadedEventStart,
-          totalTime: navigationTiming.loadEventEnd - navigationTiming.navigationStart,
+          totalTime: navigationTiming.loadEventEnd - navigationTiming.fetchStart,
           ...additionalData
         })
       }

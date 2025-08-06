@@ -60,3 +60,8 @@ scripts/*.PublishSettings
 /deploy/
 deployment.zip
 .azure/
+
+# Local configuration scripts with environment secrets
+scripts/configure-azure-env.sh
+# Sentry Config File
+.env.sentry-build-plugin
