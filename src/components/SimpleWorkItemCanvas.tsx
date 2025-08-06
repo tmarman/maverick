@@ -17,7 +17,8 @@ import {
   ArrowRight,
   ChevronDown,
   FileText,
-  Lightbulb
+  Lightbulb,
+  History
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { WorkItemDetailSidebar } from '@/components/WorkItemDetailSidebar'
@@ -85,6 +86,7 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [adviceChatOpen, setAdviceChatOpen] = useState(false)
   const [planningTaskId, setPlanningTaskId] = useState<string | null>(null)
+  const [generatingHistory, setGeneratingHistory] = useState(false)
 
   useEffect(() => {
     loadWorkItems()
@@ -536,6 +538,138 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
     setPlanningTaskId(null)
   }
 
+  const handleGenerateDevHistory = async () => {
+    setGeneratingHistory(true)
+    
+    const devHistoryItems = [
+      {
+        title: "Fixed projects API and GitHub token handling",
+        description: "Enhanced error handling in projects API route for better resilience with GitHub service integration",
+        type: 'FEATURE',
+        status: 'DONE',
+        priority: 'HIGH',
+        functionalArea: 'SOFTWARE',
+        estimatedEffort: '2-3 hours'
+      },
+      {
+        title: "Simplified project navigation to 4 core pages", 
+        description: "Streamlined ProjectTreeSidebar navigation to focus on essential project management features",
+        type: 'FEATURE',
+        status: 'DONE', 
+        priority: 'MEDIUM',
+        functionalArea: 'SOFTWARE',
+        estimatedEffort: '1-2 hours'
+      },
+      {
+        title: "Redesigned chat interface with sliding bottom-to-top UX",
+        description: "Enhanced user experience with modern sliding chat interface and improved accessibility", 
+        type: 'FEATURE',
+        status: 'DONE',
+        priority: 'MEDIUM', 
+        functionalArea: 'SOFTWARE',
+        estimatedEffort: '3-4 hours'
+      },
+      {
+        title: "Project routing now uses names instead of IDs",
+        description: "Improved URL structure by implementing name-based routing for better user experience and SEO",
+        type: 'FEATURE',
+        status: 'DONE',
+        priority: 'MEDIUM',
+        functionalArea: 'SOFTWARE', 
+        estimatedEffort: '2-3 hours'
+      },
+      {
+        title: "Built combined Team page with people + AI agents",
+        description: "Enhanced team management interface combining human team members and AI agents with actionable smart snippets",
+        type: 'FEATURE',
+        status: 'DONE',
+        priority: 'HIGH',
+        functionalArea: 'SOFTWARE',
+        estimatedEffort: '4-6 hours'
+      },
+      {
+        title: "Fixed task details sidebar text contrast and legibility",
+        description: "Improved accessibility by enhancing text contrast ratios and readability in task interface",
+        type: 'BUG',
+        status: 'DONE', 
+        priority: 'MEDIUM',
+        functionalArea: 'SOFTWARE',
+        estimatedEffort: '1 hour'
+      },
+      {
+        title: "Redesigned team page to be minimal with real agent data",
+        description: "Created cleaner UI design with actual agent data loading from .maverick/agents directory structure",
+        type: 'FEATURE', 
+        status: 'DONE',
+        priority: 'MEDIUM',
+        functionalArea: 'SOFTWARE',
+        estimatedEffort: '2-3 hours'
+      },
+      {
+        title: "Built markdown parser with smart snippets and contextual actions",
+        description: "Developed comprehensive maverick-markdown.ts parser supporting ::syntax for interactive smart snippets",
+        type: 'FEATURE',
+        status: 'DONE',
+        priority: 'HIGH', 
+        functionalArea: 'SOFTWARE',
+        estimatedEffort: '6-8 hours'
+      },
+      {
+        title: "Added contextual AI advice chat with comprehensive feature planning",
+        description: "Implemented major feature with Get Advice button, Plan Feature functionality, and detailed implementation planning with risk assessment",
+        type: 'FEATURE',
+        status: 'DONE',
+        priority: 'CRITICAL',
+        functionalArea: 'SOFTWARE', 
+        estimatedEffort: '8-12 hours'
+      },
+      {
+        title: "Fixed GitHub Actions build errors in deployment pipeline",
+        description: "Resolved module dependency issues and error handling in projects API for successful Azure deployments",
+        type: 'BUG',
+        status: 'DONE',
+        priority: 'HIGH',
+        functionalArea: 'SOFTWARE',
+        estimatedEffort: '1-2 hours'
+      }
+    ]
+
+    try {
+      let successCount = 0
+      for (const item of devHistoryItems) {
+        const response = await fetch(`/api/projects/${project.name}/work-items`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item)
+        })
+        
+        if (response.ok) {
+          successCount++
+        } else {
+          console.error('Failed to create work item:', item.title)
+        }
+      }
+      
+      toast({
+        title: 'Development history generated',
+        description: `Created ${successCount} work items from development history`
+      })
+      
+      // Reload work items to show the new ones
+      await loadWorkItems()
+      
+    } catch (error) {
+      console.error('Error generating development history:', error)
+      toast({
+        title: 'Failed to generate history',
+        description: 'Could not create development history work items',
+        variant: 'destructive'
+      })
+    } finally {
+      setGeneratingHistory(false)
+    }
+  }
+
   if (loading) {
     return (
       <Card className={className}>
@@ -610,6 +744,20 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
             >
               <Lightbulb className="w-4 h-4 mr-1" />
               Get Advice
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleGenerateDevHistory}
+              disabled={generatingHistory}
+              className="text-xs text-gray-600 hover:text-gray-900"
+              title="Generate development history work items"
+            >
+              {generatingHistory ? (
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600" />
+              ) : (
+                <History className="w-3 h-3" />
+              )}
             </Button>
             {(statusGroups.find(g => g.key === 'done')?.items.length || 0) > 0 && (
               <Button

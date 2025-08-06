@@ -5,7 +5,8 @@
 
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
-import remarkHtml from 'remark-html'
+import remarkRehype from 'remark-rehype'
+import rehypeStringify from 'rehype-stringify'
 
 // Smart snippet types
 export type SmartSnippetType = 
@@ -126,7 +127,8 @@ export class MaverickMarkdownParser {
     this.processor = unified()
       .use(remarkParse)
       .use(remarkMaverickSnippets)
-      .use(remarkHtml, { sanitize: false }) // We need HTML for our snippets
+      .use(remarkRehype)
+      .use(rehypeStringify)
   }
   
   async parse(markdown: string): Promise<ParsedMarkdown> {
