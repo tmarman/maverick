@@ -60,11 +60,13 @@ jobs:
         # When @prisma/client/default.js does require('.prisma/client/default'), 
         # it needs .prisma to be accessible from the @prisma/client directory
         cd deploy-standalone/node_modules/@prisma/client
-        ln -sf ../../.prisma .prisma
-        cd ../../../../..
+        ln -sf ../../.prisma .prisma || echo "Symlink creation failed"
+        cd - || cd "$(pwd)"
         
-        # Copy public files
-        cp -r public deploy-standalone/
+        # Copy public files if they exist
+        if [ -d "public" ]; then
+          cp -r public deploy-standalone/
+        fi
         
         # Create minimal package.json for Azure
         cat > deploy-standalone/package.json << EOF
