@@ -129,12 +129,12 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
-    - name: Deploy to Azure App Service
-      uses: azure/webapps-deploy@v3
-      with:
-        app-name: 'maverick'
-        slot-name: 'production'
-        package: './deploy-standalone'
+    - name: Deploy to Azure App Service using CLI
+      run: |
+        cd deploy-standalone
+        az webapp up --name maverick --resource-group maverick_group --location centralus --runtime "NODE:22-lts"
+      env:
+        AZURE_CORE_OUTPUT: table
     
     - name: Verify deployment
       run: |
