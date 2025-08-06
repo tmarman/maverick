@@ -538,33 +538,28 @@ What would you like to know or work on?`
         {/* Dashboard Content - shows when chat is not active */}
         <div className={`flex-1 overflow-auto p-6 ${!isChatActive ? 'pb-24' : ''}`}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
             {project.description && (
               <p className="text-text-secondary text-lg mt-2">{project.description}</p>
             )}
-            {project.workspacePath && (
-              <p className="text-sm text-text-muted mt-1">
-                <code className="bg-background-secondary px-2 py-1 rounded text-xs">{project.workspacePath}</code>
-              </p>
-            )}
-            <div className="flex items-center gap-2 mt-2">
-              <Badge className={getTypeColor(project.type)} variant="outline">
-                {project.type.replace('_', ' ')}
-              </Badge>
-              <Badge className={getStatusColor(project.status)} variant="outline">
-                {project.status.replace('_', ' ')}
-              </Badge>
-            </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {/* Compact Sync Status */}
+            <div className="group relative">
+              <div className="w-3 h-3 bg-green-500 rounded-full cursor-pointer hover:scale-110 transition-transform"></div>
+              <div className="absolute right-0 top-6 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                Synced • Last updated 2m ago
+              </div>
+            </div>
+            
             {project.repositoryUrl && (
               <Button variant="outline" size="sm">
                 <Github className="w-4 h-4 mr-2" />
                 <ExternalLink className="w-4 h-4 mr-2" />
-                View Repository
+                Repository
               </Button>
             )}
             <Button variant="outline" size="sm">
@@ -572,11 +567,6 @@ What would you like to know or work on?`
               Settings
             </Button>
           </div>
-        </div>
-
-        {/* Sync Status Bar */}
-        <div className="mb-8">
-          <SyncStatusBadge projectName={projectName} showDetails={true} onRefresh={loadProject} />
         </div>
 
         {/* VC-Style Executive Dashboard */}
@@ -648,127 +638,6 @@ What would you like to know or work on?`
             </Card>
           </div>
 
-          {/* Active AI Agents */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Bot className="w-5 h-5 text-blue-600" />
-                  <CardTitle>Active AI Agents</CardTitle>
-                  <Badge variant="secondary">{activeAgents.length} active</Badge>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.location.href = `/app/projects/${projectName}/agents`}
-                >
-                  View All Agents
-                </Button>
-              </div>
-              <CardDescription>
-                Autonomous agents working on features and improvements
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Quick Agent Start */}
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Describe what you want an AI agent to build..."
-                    value={newAgentRequirement}
-                    onChange={(e) => setNewAgentRequirement(e.target.value)}
-                    className="flex-1"
-                    onKeyPress={(e) => e.key === 'Enter' && startAgent()}
-                  />
-                  <Button
-                    onClick={startAgent}
-                    disabled={isStartingAgent || !newAgentRequirement.trim()}
-                  >
-                    {isStartingAgent ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                    ) : (
-                      <Play className="w-4 h-4" />
-                    )}
-                    Start Agent
-                  </Button>
-                </div>
-              </div>
-
-              {/* Active Agents List */}
-              {activeAgents.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium mb-2">No active agents</p>
-                  <p className="text-sm">Start an agent above to automate feature development</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {activeAgents.map((agent) => (
-                    <div key={agent.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Bot className="w-4 h-4 text-blue-600" />
-                            <h3 className="font-semibold">{agent.taskPlan.title}</h3>
-                            <Badge 
-                              className={
-                                agent.status === 'executing' ? 'bg-blue-100 text-blue-800' :
-                                agent.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                agent.status === 'failed' ? 'bg-red-100 text-red-800' :
-                                'bg-gray-100 text-gray-800'
-                              }
-                            >
-                              {agent.status}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-2">
-                            {agent.taskPlan.description}
-                          </p>
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {agent.taskPlan.totalEstimateMinutes}min estimated
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Zap className="w-3 h-3" />
-                              {agent.taskPlan.agentType}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {agent.status === 'executing' && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <span>Step {agent.currentStep} of {agent.taskPlan.steps.length}</span>
-                            <span>{Math.round((agent.currentStep / agent.taskPlan.steps.length) * 100)}%</span>
-                          </div>
-                          <Progress 
-                            value={(agent.currentStep / agent.taskPlan.steps.length) * 100} 
-                            className="h-2" 
-                          />
-                          {agent.currentStep > 0 && agent.currentStep <= agent.taskPlan.steps.length && (
-                            <p className="text-sm text-gray-600">
-                              Current: {agent.taskPlan.steps[agent.currentStep - 1]?.title}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      {agent.status === 'completed' && agent.artifacts.prUrl && (
-                        <div className="mt-3">
-                          <Button variant="outline" size="sm">
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            View Pull Request
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
           {/* Executive Summary Sections */}
           <div className="grid gap-6 lg:grid-cols-2">
@@ -981,35 +850,37 @@ What would you like to know or work on?`
         </div>
         </div>
 
-        {/* Bottom Chat Bar - contained within main panel */}
+        {/* Bottom Chat Bar - prominent blue background */}
         {!isChatActive && (
-          <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-border-standard shadow-lg">
+          <div className="absolute bottom-0 left-0 right-0 bg-blue-600 shadow-lg">
             <div className="p-4">
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-blue-100">
                   <MessageCircle className="w-4 h-4" />
                   <span>Ask your project assistant</span>
                 </div>
-                <Input
-                  placeholder="Ask about progress, create tasks, manage team..."
-                  value={currentMessage}
-                  onChange={(e) => setCurrentMessage(e.target.value)}
-                  onFocus={() => setIsChatActive(true)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      setIsChatActive(true)
-                      setTimeout(() => sendChatMessage(), 100)
-                    }
-                  }}
-                  className="flex-1 h-10"
-                />
+                <div className="flex-1 relative">
+                  <Input
+                    placeholder="Ask about progress, create tasks, manage team..."
+                    value={currentMessage}
+                    onChange={(e) => setCurrentMessage(e.target.value)}
+                    onFocus={() => setIsChatActive(true)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        setIsChatActive(true)
+                        setTimeout(() => sendChatMessage(), 100)
+                      }
+                    }}
+                    className="flex-1 h-10 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white focus:text-gray-900 focus:placeholder:text-gray-500 transition-colors"
+                  />
+                </div>
                 <Button 
                   onClick={() => {
                     setIsChatActive(true)
                     setTimeout(() => sendChatMessage(), 100)
                   }}
                   disabled={!currentMessage.trim()}
-                  className="h-10"
+                  className="h-10 bg-white text-blue-600 hover:bg-blue-50"
                   size="sm"
                 >
                   <Send className="w-4 h-4" />
