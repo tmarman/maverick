@@ -136,9 +136,9 @@ jobs:
       env:
         AZURE_CORE_OUTPUT: table
     
-    - name: Verify deployment
+    - name: Verify deployment  
       run: |
-        echo "Deployment completed!"
+        echo "🚀 Deployment completed!"
         echo "App URL: https://maverick-fcendrb4gte0dnf5.centralus-01.azurewebsites.net"
         echo "Waiting 30 seconds for startup..."
         sleep 30
