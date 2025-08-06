@@ -411,7 +411,13 @@ What would you like to know or work on?`
       <div className="flex flex-col h-full relative">
         {/* Chat Interface Overlay - slides up from bottom when active */}
         {isChatActive && (
-          <div className="absolute inset-0 bg-background-primary z-20 flex flex-col animate-in slide-in-from-bottom duration-300">
+          <div 
+            className="absolute inset-0 bg-background-primary z-20 flex flex-col transition-all duration-500 ease-out"
+            style={{
+              transform: isChatActive ? 'translateY(0)' : 'translateY(100%)',
+              opacity: isChatActive ? 1 : 0
+            }}
+          >
             {/* Chat Header */}
             <div className="border-b border-border-standard p-4 flex items-center justify-between bg-white">
               <div className="flex items-center gap-2">
@@ -431,7 +437,7 @@ What would you like to know or work on?`
 
             {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto p-4">
-              {chatMessages.length === 0 ? (
+              {chatMessages.length === 0 && !currentMessage ? (
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center text-text-muted max-w-md">
                     <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -439,25 +445,37 @@ What would you like to know or work on?`
                     <p className="text-sm mb-4">I can help you understand project status, create tasks, manage your team, or provide suggestions.</p>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <button
-                        onClick={() => setCurrentMessage("What's our current progress?")}
+                        onClick={() => {
+                          setCurrentMessage("What's our current progress?")
+                          setTimeout(() => sendChatMessage(), 100)
+                        }}
                         className="p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
                       >
                         📊 Check Progress
                       </button>
                       <button
-                        onClick={() => setCurrentMessage("Create a new task")}
+                        onClick={() => {
+                          setCurrentMessage("Create a new task")
+                          setTimeout(() => sendChatMessage(), 100)
+                        }}
                         className="p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
                       >
                         ✅ Create Task
                       </button>
                       <button
-                        onClick={() => setCurrentMessage("Who's on our team?")}
+                        onClick={() => {
+                          setCurrentMessage("Who's on our team?")
+                          setTimeout(() => sendChatMessage(), 100)
+                        }}
                         className="p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
                       >
                         👥 View Team
                       </button>
                       <button
-                        onClick={() => setCurrentMessage("What should we work on next?")}
+                        onClick={() => {
+                          setCurrentMessage("What should we work on next?")
+                          setTimeout(() => sendChatMessage(), 100)
+                        }}
                         className="p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
                       >
                         🎯 Get Suggestions
@@ -864,23 +882,33 @@ What would you like to know or work on?`
                     placeholder="Ask about progress, create tasks, manage team..."
                     value={currentMessage}
                     onChange={(e) => setCurrentMessage(e.target.value)}
-                    onFocus={() => setIsChatActive(true)}
+                    onFocus={() => {
+                      setIsChatActive(true)
+                    }}
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
-                        setIsChatActive(true)
-                        setTimeout(() => sendChatMessage(), 100)
+                        if (!isChatActive) {
+                          setIsChatActive(true)
+                          setTimeout(() => sendChatMessage(), 600) // Wait for animation
+                        } else {
+                          sendChatMessage()
+                        }
                       }
                     }}
-                    className="flex-1 h-10 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white focus:text-gray-900 focus:placeholder:text-gray-500 transition-colors"
+                    className="flex-1 h-10 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white focus:text-gray-900 focus:placeholder:text-gray-500 transition-all duration-300 ease-out"
                   />
                 </div>
                 <Button 
                   onClick={() => {
-                    setIsChatActive(true)
-                    setTimeout(() => sendChatMessage(), 100)
+                    if (!isChatActive) {
+                      setIsChatActive(true)
+                      setTimeout(() => sendChatMessage(), 600) // Wait for animation
+                    } else {
+                      sendChatMessage()
+                    }
                   }}
                   disabled={!currentMessage.trim()}
-                  className="h-10 bg-white text-blue-600 hover:bg-blue-50"
+                  className="h-10 bg-white text-blue-600 hover:bg-blue-50 transition-all duration-200"
                   size="sm"
                 >
                   <Send className="w-4 h-4" />
