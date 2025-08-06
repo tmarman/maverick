@@ -170,26 +170,46 @@ export async function GET(request: NextRequest) {
     // Import Prisma client
     const { prisma } = await import('@/lib/prisma')
     
-    // Get GitHub service to check repository access
-    const { getGitHubServiceForUser } = await import('@/lib/github-service')
-    const githubService = await getGitHubServiceForUser(session.user.email)
+    // Get GitHub service to check repository access (optional)
+    const { getGitHubServiceForUser, getGitHubConnectionStatus } = await import('@/lib/github-service')
+    let githubService = null
+    let githubConnectionStatus = null
+    try {
+      githubService = await getGitHubServiceForUser(session.user.email)
+      githubConnectionStatus = await getGitHubConnectionStatus(session.user.email)
+    } catch (error) {
+      console.log('GitHub service unavailable, continuing without repo verification:', error.message)
+    }
 
-    const userProjects = []
-
-    // Query database for projects where user is the business owner
-    const ownedProjects = await prisma.project.findMany({
+    // Query database for projects where user has business membership
+    const memberProjects = await prisma.project.findMany({
       where: {
         business: {
-          ownerId: session.user.id
+          members: {
+            some: {
+              userId: session.user.id,
+              status: 'ACCEPTED'
+            }
+          }
         }
       },
       include: {
-        business: true
+        business: {
+          include: {
+            members: {
+              where: {
+                userId: session.user.id
+              }
+            }
+          }
+        }
       }
     })
 
-    // Process owned projects and verify GitHub access
-    for (const project of ownedProjects) {
+    const userProjects = []
+
+    // Process member projects and verify GitHub access
+    for (const project of memberProjects) {
       let hasGitHubAccess = true
       let githubRepoData = null
 
@@ -287,7 +307,8 @@ export async function GET(request: NextRequest) {
 
     const response = NextResponse.json({
       projects: userProjects,
-      count: userProjects.length
+      count: userProjects.length,
+      githubConnection: githubConnectionStatus
     })
     
     apiLogger.logResponse(request, response, Date.now() - startTime)

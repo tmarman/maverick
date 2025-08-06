@@ -418,24 +418,47 @@ export const authOptions: NextAuthOptions = {
             include: { githubConnection: true }
           }))
           
-          if (existingUser && !existingUser.githubConnection) {
-            // User exists but doesn't have GitHub linked - this is an account linking scenario
-            console.log(`Linking GitHub account to existing user: ${user.email}`)
-            
-            // Link the GitHub account to the existing user
-            await withRetry(() => prisma.gitHubConnection.create({
-              data: {
-                userId: existingUser.id,
-                githubId: account.providerAccountId,
-                username: (profile as any)?.login || '',
-                accessToken: account.access_token!,
-                refreshToken: account.refresh_token || undefined,
-                expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : undefined,
-                scopes: JSON.stringify(account.scope?.split(' ') || [])
+          if (existingUser) {
+            if (existingUser.githubConnection) {
+              // Check if this is the same GitHub account - allow reauth for expired tokens
+              if (existingUser.githubConnection.githubId !== account.providerAccountId) {
+                console.error(`GitHub account mismatch: existing=${existingUser.githubConnection.githubId}, new=${account.providerAccountId}`)
+                throw new Error(`Account mismatch: This GitHub account (${(profile as any)?.login}) doesn't match your existing connection (${existingUser.githubConnection.username}). Please sign in with the correct GitHub account.`)
               }
-            }))
+              
+              console.log(`Updating GitHub connection for existing user: ${user.email}`)
+              
+              // Update existing connection with new tokens (for reauth scenarios)
+              await withRetry(() => prisma.gitHubConnection.update({
+                where: { id: existingUser.githubConnection!.id },
+                data: {
+                  accessToken: account.access_token!,
+                  refreshToken: account.refresh_token || existingUser.githubConnection!.refreshToken,
+                  expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : undefined,
+                  scopes: JSON.stringify(account.scope?.split(' ') || []),
+                  updatedAt: new Date()
+                }
+              }))
+              
+            } else {
+              // User exists but doesn't have GitHub linked - this is an account linking scenario
+              console.log(`Linking GitHub account to existing user: ${user.email}`)
+              
+              // Link the GitHub account to the existing user
+              await withRetry(() => prisma.gitHubConnection.create({
+                data: {
+                  userId: existingUser.id,
+                  githubId: account.providerAccountId,
+                  username: (profile as any)?.login || '',
+                  accessToken: account.access_token!,
+                  refreshToken: account.refresh_token || undefined,
+                  expiresAt: account.expires_at ? new Date(account.expires_at * 1000) : undefined,
+                  scopes: JSON.stringify(account.scope?.split(' ') || [])
+                }
+              }))
+            }
             
-            // Update the user object to reflect the new connection
+            // Update the user object to reflect the connection
             user.id = existingUser.id
             user.githubConnected = true
             user.githubUsername = (profile as any)?.login

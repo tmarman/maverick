@@ -44,6 +44,12 @@ function CockpitPageContent() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const [githubConnectionStatus, setGithubConnectionStatus] = useState<{
+    connected: boolean
+    expired: boolean
+    needsReauth: boolean
+    username?: string
+  } | null>(null)
   
   // Set dynamic page title based on selected project
   const selectedProjectData = projects.find(p => p.id === selectedProject)
@@ -68,6 +74,7 @@ function CockpitPageContent() {
       if (response.ok) {
         const data = await response.json()
         setProjects(data.projects || [])
+        setGithubConnectionStatus(data.githubConnection)
       } else {
         console.error('Failed to fetch projects')
         setProjects([])
@@ -126,6 +133,37 @@ function CockpitPageContent() {
           </button>
         </div>
       </div>
+
+      {/* GitHub Connection Status */}
+      {githubConnectionStatus?.connected && githubConnectionStatus.needsReauth && (
+        <div className="px-4 py-3 border-b border-border-standard">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  GitHub Connection Expired
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>Your GitHub token has expired. Please reconnect to access repositories.</p>
+                </div>
+                <div className="mt-3">
+                  <button
+                    onClick={() => router.push('/api/auth/signin/github')}
+                    className="text-sm bg-yellow-100 text-yellow-800 hover:bg-yellow-200 px-3 py-1 rounded-md transition-colors"
+                  >
+                    Reconnect GitHub
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Projects Navigation */}
       <nav className="flex-1 px-4 overflow-y-auto">

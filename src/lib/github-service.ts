@@ -262,6 +262,49 @@ export class GitHubService {
   }
 }
 
+// Get GitHub connection status for a user
+export async function getGitHubConnectionStatus(userEmail: string): Promise<{
+  connected: boolean
+  expired: boolean
+  needsReauth: boolean
+  username?: string
+  scopes?: string[]
+  expiresAt?: Date
+} | null> {
+  try {
+    const { prisma } = await import('./prisma')
+    
+    const user = await prisma.user.findUnique({
+      where: { email: userEmail },
+      include: { githubConnection: true },
+    })
+    
+    if (!user?.githubConnection) {
+      return {
+        connected: false,
+        expired: false,
+        needsReauth: false
+      }
+    }
+    
+    const connection = user.githubConnection
+    const isExpired = connection.expiresAt && new Date() > connection.expiresAt
+    const needsReauth = isExpired && !connection.refreshToken
+    
+    return {
+      connected: true,
+      expired: !!isExpired,
+      needsReauth,
+      username: connection.username,
+      scopes: connection.scopes ? JSON.parse(connection.scopes) : [],
+      expiresAt: connection.expiresAt
+    }
+  } catch (error) {
+    console.error('Failed to get GitHub connection status:', error)
+    return null
+  }
+}
+
 // Helper function to get GitHub service for a user
 export async function getGitHubServiceForUser(userEmail: string): Promise<GitHubService | null> {
   try {
@@ -279,27 +322,42 @@ export async function getGitHubServiceForUser(userEmail: string): Promise<GitHub
     const connection = user.githubConnection
     
     // Check if token is expired and refresh if needed
-    if (connection.expiresAt && new Date() > connection.expiresAt && connection.refreshToken) {
-      console.log('GitHub token expired, attempting refresh...')
-      
-      try {
-        const refreshedToken = await refreshGitHubToken(connection.refreshToken)
+    if (connection.expiresAt && new Date() > connection.expiresAt) {
+      if (connection.refreshToken) {
+        console.log('GitHub token expired, attempting refresh...')
         
-        // Update the connection with new token
-        await prisma.gitHubConnection.update({
-          where: { id: connection.id },
-          data: {
-            accessToken: refreshedToken.access_token,
-            expiresAt: new Date(Date.now() + (refreshedToken.expires_in || 3600) * 1000),
-            updatedAt: new Date(),
-          },
-        })
-        
-        console.log('GitHub token refreshed successfully')
-        return new GitHubService(refreshedToken.access_token)
-      } catch (refreshError) {
-        console.error('Failed to refresh GitHub token:', refreshError)
-        // Fall back to trying the existing token - it might still work
+        try {
+          const refreshedToken = await refreshGitHubToken(connection.refreshToken)
+          
+          // Update the connection with new token
+          await prisma.gitHubConnection.update({
+            where: { id: connection.id },
+            data: {
+              accessToken: refreshedToken.access_token,
+              refreshToken: refreshedToken.refresh_token || connection.refreshToken,
+              expiresAt: new Date(Date.now() + (refreshedToken.expires_in || 3600) * 1000),
+              updatedAt: new Date(),
+            },
+          })
+          
+          console.log('GitHub token refreshed successfully')
+          return new GitHubService(refreshedToken.access_token)
+        } catch (refreshError) {
+          console.error('GitHub token refresh failed:', refreshError)
+          // Mark connection as expired and requiring reauth
+          await prisma.gitHubConnection.update({
+            where: { id: connection.id },
+            data: {
+              // Keep connection but mark it as expired
+              updatedAt: new Date(),
+            },
+          })
+          // Return null to indicate authentication is needed
+          throw new Error('GitHub token expired and refresh failed. Re-authentication required.')
+        }
+      } else {
+        console.log('GitHub token expired and no refresh token available')
+        throw new Error('GitHub token expired. Please reconnect your GitHub account.')
       }
     }
     
