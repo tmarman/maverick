@@ -1,0 +1,141 @@
+name: Deploy to Azure App Service (Standalone)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Switch to SQL Server schema
+      run: |
+        if [ -f "prisma/schema.sqlserver.prisma" ]; then
+          cp prisma/schema.sqlserver.prisma prisma/schema.prisma
+          npx prisma generate
+        fi
+    
+    - name: Build Next.js application
+      run: npm run build
+      env:
+        NODE_ENV: production
+    
+    - name: Create standalone deployment package
+      run: |
+        # Create deployment directory
+        mkdir -p deploy-standalone
+        
+        # Copy standalone build output
+        cp -r .next/standalone/* deploy-standalone/
+        
+        # Copy complete .next directory structure
+        mkdir -p deploy-standalone/.next
+        cp -r .next/static deploy-standalone/.next/
+        cp -r .next/server deploy-standalone/.next/
+        cp .next/BUILD_ID deploy-standalone/.next/
+        cp .next/prerender-manifest.json deploy-standalone/.next/
+        cp .next/routes-manifest.json deploy-standalone/.next/
+        find .next -maxdepth 1 -type f -exec cp {} deploy-standalone/.next/ \; || true
+        
+        # Copy Prisma generated client
+        mkdir -p deploy-standalone/node_modules/.prisma
+        cp -r node_modules/.prisma/* deploy-standalone/node_modules/.prisma/
+        
+        # Copy public files
+        cp -r public deploy-standalone/
+        
+        # Create minimal package.json for Azure
+        cat > deploy-standalone/package.json << EOF
+        {
+          "name": "maverick-standalone",
+          "version": "1.0.0",
+          "scripts": {
+            "start": "node server.js"
+          }
+        }
+        EOF
+        
+        # Create deployment config
+        cat > deploy-standalone/.deployment << EOF
+        [config]
+        SCM_DO_BUILD_DURING_DEPLOYMENT=false
+        WEBSITE_NODE_DEFAULT_VERSION=22.17.0
+        WEBSITE_RUN_FROM_PACKAGE=0
+        EOF
+        
+        # Create web.config for IIS
+        cat > deploy-standalone/web.config << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <configuration>
+          <system.webServer>
+            <handlers>
+              <add name="iisnode" path="server.js" verb="*" modules="iisnode"/>
+            </handlers>
+            <rewrite>
+              <rules>
+                <rule name="NodeInspector" patternSyntax="ECMAScript" stopProcessing="true">
+                  <match url="^server.js\\/debug[\\/]?" />
+                </rule>
+                <rule name="StaticContent">
+                  <action type="Rewrite" url="public{REQUEST_URI}"/>
+                </rule>
+                <rule name="DynamicContent">
+                  <conditions>
+                    <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="True"/>
+                  </conditions>
+                  <action type="Rewrite" url="server.js"/>
+                </rule>
+              </rules>
+            </rewrite>
+            <security>
+              <requestFiltering>
+                <hiddenSegments>
+                  <remove segment="bin"/>
+                </hiddenSegments>
+              </requestFiltering>
+            </security>
+            <httpErrors existingResponse="PassThrough" />
+            <iisnode watchedFiles="web.config;*.js"/>
+          </system.webServer>
+        </configuration>
+        EOF
+        
+        echo "Deployment package created:"
+        ls -la deploy-standalone/
+        echo "Package size:"
+        du -sh deploy-standalone/
+        
+        echo "Verifying Prisma client:"
+        ls -la deploy-standalone/node_modules/.prisma/ || echo "No .prisma directory"
+        
+        echo "Verifying .next structure:"
+        ls -la deploy-standalone/.next/
+    
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: 'maverick'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: './deploy-standalone'
+    
+    - name: Verify deployment
+      run: |
+        echo "Deployment completed!"
+        echo "App URL: https://maverick-fcendrb4gte0dnf5.centralus-01.azurewebsites.net"
+        echo "Waiting 30 seconds for startup..."
+        sleep 30
+        curl -I https://maverick-fcendrb4gte0dnf5.centralus-01.azurewebsites.net/ || echo "App still starting up"
