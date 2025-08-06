@@ -50,9 +50,11 @@ jobs:
         cp .next/routes-manifest.json deploy-standalone/.next/
         find .next -maxdepth 1 -type f -exec cp {} deploy-standalone/.next/ \; || true
         
-        # Copy Prisma generated client
+        # Copy Prisma generated client and @prisma/client package
         mkdir -p deploy-standalone/node_modules/.prisma
+        mkdir -p deploy-standalone/node_modules/@prisma
         cp -r node_modules/.prisma/* deploy-standalone/node_modules/.prisma/
+        cp -r node_modules/@prisma/client deploy-standalone/node_modules/@prisma/
         
         # Copy public files
         cp -r public deploy-standalone/
@@ -120,6 +122,10 @@ jobs:
         
         echo "Verifying Prisma client:"
         ls -la deploy-standalone/node_modules/.prisma/ || echo "No .prisma directory"
+        echo "Verifying @prisma/client:"
+        ls -la deploy-standalone/node_modules/@prisma/client/ || echo "No @prisma/client directory"
+        echo "Checking default.js content:"
+        head -5 deploy-standalone/node_modules/@prisma/client/default.js || echo "No default.js file"
         
         echo "Verifying .next structure:"
         ls -la deploy-standalone/.next/
