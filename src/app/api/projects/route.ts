@@ -108,9 +108,12 @@ export async function GET(request: NextRequest) {
     }
 
     // TODO: Replace with actual database query
-    // For now, return mock projects including any that were imported
-    const mockProjects = [
-      {
+    // For now, only return projects that actually belong to this user
+    const userProjects = []
+    
+    // Only show Maverick project to the owner (tmarman)
+    if (session.user.email === 'tmarman@gmail.com' || session.user.email === 'tim@marmantech.com') {
+      userProjects.push({
         id: 'maverick',
         name: 'Maverick',
         description: 'AI-powered business development platform with .maverick workspace architecture',
@@ -136,12 +139,12 @@ export async function GET(request: NextRequest) {
         },
         createdAt: '2025-01-03T10:00:00Z',
         updatedAt: '2025-01-03T12:00:00Z'
-      }
-    ]
+      })
+    }
 
     return NextResponse.json({
-      projects: mockProjects,
-      count: mockProjects.length
+      projects: userProjects,
+      count: userProjects.length
     })
 
   } catch (error) {
