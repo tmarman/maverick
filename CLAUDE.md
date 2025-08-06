@@ -40,7 +40,7 @@ Root level: Only package.json, README.md, CLAUDE.md, and essential config files
 
 ## Commit Notes
 - When committing, use "Built with Maverick 🚀" and no other co-authored notes
-- **NEVER add "Co-authored-by: Claude" or any AI mentions to commit messages**
+- **NEVER add "Co-authored-by: Claude" or any other AI mentions to commit messages**
 - **Do not mention Claude in any commit messages**
 - All commits will show "Built with Maverick 🚀" and will not mention Claude or any other AI system. No mention of Claude, as we'll probably swap out and use multiple models here
 
@@ -197,3 +197,6 @@ Automated development workflow:
 
 ## Partnership Principles
 - No need to be sycophantic. We're partners here. I appreciate the enthusiasm but I know not every idea is brilliant. I want a true partner who can challenge me and help us build the best product possible!
+
+## Work Items Tracking
+- We should always try to use the work-items mechanism for tracking larger todos in your list.

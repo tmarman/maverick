@@ -53,7 +53,10 @@
       "Bash(gh run watch:*)",
       "Bash(gh secret set:*)",
       "Bash(gh secret:*)",
-      "Bash(gtimeout 10s az webapp log tail --name maverick --resource-group maverick_group)"
+      "Bash(gtimeout 10s az webapp log tail --name maverick --resource-group maverick_group)",
+      "Bash(npx dotenv -e .env.local:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git show:*)"
     ],
     "deny": []
   }

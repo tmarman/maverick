@@ -5,6 +5,78 @@ import { prisma } from '@/lib/prisma'
 import { projectContextService } from '@/lib/project-context-service'
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import { v4 as uuidv4 } from 'uuid'
+
+// Utility function to create markdown file with UUID frontmatter
+async function createWorkItemMarkdownFile(projectName: string, workItem: any, uuid: string) {
+  try {
+    // Create project working directory if it doesn't exist
+    const projectDir = path.join(process.cwd(), '.maverick', projectName.toLowerCase())
+    const tasksDir = path.join(projectDir, 'tasks')
+    
+    await fs.mkdir(tasksDir, { recursive: true })
+    
+    // Generate safe filename
+    const safeTitle = workItem.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .substring(0, 50)
+    
+    const filename = `${safeTitle}-${workItem.id}.md`
+    const filepath = path.join(tasksDir, filename)
+    
+    // Create markdown content with UUID frontmatter
+    const markdownContent = `---
+uuid: ${uuid}
+id: ${workItem.id}
+title: "${workItem.title}"
+type: ${workItem.type}
+status: ${workItem.status}
+priority: ${workItem.priority}
+functional_area: ${workItem.functionalArea}
+estimated_effort: "${workItem.estimatedEffort || ''}"
+created: ${new Date(workItem.createdAt).toISOString()}
+updated: ${new Date(workItem.updatedAt).toISOString()}
+---
+
+# ${workItem.title}
+
+## 📋 Description
+
+${workItem.description || 'No description provided.'}
+
+## 🎯 Acceptance Criteria
+
+- [ ] Define acceptance criteria for this work item
+
+## 📝 Implementation Notes
+
+*Add implementation details and notes here*
+
+## 🔗 Related Items
+
+*Link to related tasks, dependencies, or blocking items*
+
+## 📅 Progress Log
+
+- **${new Date().toISOString().split('T')[0]}**: Task created with UUID ${uuid}
+
+---
+*Task UUID: \`${uuid}\`*  
+*Database ID: \`${workItem.id}\`*  
+*Created: ${new Date(workItem.createdAt).toLocaleString()}*
+`
+    
+    await fs.writeFile(filepath, markdownContent, 'utf-8')
+    console.log(`📄 Created markdown file: ${filepath}`)
+    
+    return filepath
+  } catch (error) {
+    console.error('Failed to create markdown file:', error)
+    throw error
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -269,13 +341,16 @@ export async function POST(
       githubBranch = worktreeName
     }
 
+    // Generate UUID for this work item
+    const workItemUuid = uuidv4()
+    
     // Create the work item
     const workItem = await prisma.workItem.create({
       data: {
         title: body.title,
         description: body.description || null,
         type: body.type,
-        status: 'PLANNED',
+        status: body.status || 'PLANNED',
         priority: body.priority || 'MEDIUM',
         functionalArea: body.functionalArea || 'SOFTWARE',
         parentId: body.parentId || null,
@@ -298,6 +373,9 @@ export async function POST(
         }
       }
     })
+
+    // Create markdown file with UUID frontmatter
+    await createWorkItemMarkdownFile(project.name, workItem, workItemUuid)
 
     // Create worktree if requested and repository is configured
     let worktreeCreated = false

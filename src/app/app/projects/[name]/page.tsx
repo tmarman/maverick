@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { usePageTitle, PAGE_TITLES } from '@/hooks/use-page-title'
+import { MaverickMarkdownRenderer } from '@/components/MaverickMarkdownRenderer'
 import { 
   Settings, 
   Calendar,
@@ -35,7 +36,8 @@ import {
   ChevronUp,
   ChevronDown,
   MessageCircle,
-  FileText
+  FileText,
+  User
 } from 'lucide-react'
 
 interface Project {
@@ -119,6 +121,13 @@ export default function ProjectDetailPage() {
     content: string
     timestamp: Date
     type?: 'message' | 'task_suggestion' | 'task_created'
+    snippets?: Array<{
+      id: string
+      type: 'task' | 'agent' | 'team' | 'file'
+      text: string
+      action: string
+      metadata?: any
+    }>
     metadata?: any
   }>>([])
   const [currentMessage, setCurrentMessage] = useState('')
@@ -299,60 +308,248 @@ export default function ProjectDetailPage() {
     const input = userInput.toLowerCase()
     
     if (input.includes('status') || input.includes('progress')) {
-      return `## Project Status Update
+      return `Looking at **${proj?.name || 'your project'}** - here's the current status:
 
-**${proj?.name || 'Project'}** is currently **${proj?.status?.toLowerCase()}** with ${summary?.workItemStats.total || 0} total work items.
+**${proj?.status?.toLowerCase() || 'active'}** with ${summary?.workItemStats.total || 0} total work items tracked.
 
-### This Week's Progress
-- ✅ **${summary?.workItemStats.completed || 0}** items completed
-- 🔄 **${summary?.workItemStats.in_progress || 0}** items in progress  
-- 📋 **${summary?.workItemStats.planned || 0}** items planned
+**This Week's Progress:**
+- ✅ ${summary?.workItemStats.completed || 0} items completed  
+- 🔄 ${summary?.workItemStats.in_progress || 0} items in progress
+- 📋 ${summary?.workItemStats.planned || 0} items planned
 
-### Velocity
-Team is averaging **${summary?.teamVelocity || 0}** items per week.
+**Team Velocity:** ${summary?.teamVelocity || 0} items per week average
 
-${summary?.risks.length ? `⚠️ **Attention needed:** ${summary.risks.length} blocked/deferred items` : '✅ **All clear** - no blockers!'}`
+${summary?.risks.length ? `⚠️ **${summary.risks.length} items need attention** - blocked or deferred tasks requiring review` : '✅ **All clear** - no blockers, team operating smoothly'}`
     }
     
     if (input.includes('task') || input.includes('create') || input.includes('add')) {
-      return `I can help you create tasks! Here are some suggestions based on your project:
+      return `I can help create tasks! Here are some suggestions based on your project:
 
-## 📝 Suggested Tasks
+::task[Improve error handling]{priority="high", category="Infrastructure"}
+::task[Performance optimization]{priority="medium", category="Performance"}  
+::task[User documentation]{priority="low", category="Documentation"}
+::task[Testing coverage]{priority="high", category="Testing"}
 
-- [ ] **Improve error handling** - Add better error boundaries and user feedback
-- [ ] **Performance optimization** - Analyze and optimize slow queries/renders  
-- [ ] **User documentation** - Create getting started guide
-- [ ] **Testing coverage** - Add unit tests for core functionality
-
-Would you like me to create any of these tasks, or would you prefer to describe a specific task you have in mind?`
+These are just suggestions - describe any specific task you have in mind and I'll help you create it.`
     }
     
     if (input.includes('team') || input.includes('who')) {
-      return `## 👥 Current Team
+      return `Current team composition for **${proj?.name || 'your project'}**:
 
-Based on your project setup, I can see activity from the core team. 
+**Team Members:** Mix of humans and AI agents working together  
+**Active AI Agents:** ${activeAgents.length} currently running
 
-### Team Composition
-- **Humans:** Project members with various roles
-- **AI Agents:** ${activeAgents.length} currently active
+**Available Agent Types:**
+::add-agent[Frontend Developer]{specialization="React, TypeScript, UI/UX"}
+::add-agent[Backend Engineer]{specialization="APIs, Database, Server Logic"}  
+::add-agent[DevOps Specialist]{specialization="CI/CD, Infrastructure"}  
+::add-agent[Product Manager]{specialization="Requirements, User Stories"}
 
-### Available Agent Types
-- **Frontend Developer** - UI/UX and React components
-- **Backend Engineer** - API design and database work  
-- **DevOps Specialist** - Deployment and infrastructure
-- **Product Manager** - Requirements and user stories
+::invite-member[sarah@example.com]{role="contributor"}
 
-Would you like to invite someone or add an AI agent to help with specific tasks?`
+Would you like to add any of these to your team?`
     }
     
-    return `I'm here to help you manage **${proj?.name || 'your project'}**! I can:
+    return `I'm your project assistant for **${proj?.name || 'your project'}**. I can help with:
 
-- 📊 **Provide status updates** - Ask about progress, metrics, or team velocity
-- ✅ **Create and manage tasks** - Turn ideas into actionable work items  
-- 👥 **Help with team coordination** - Invite members or add AI agents
-- 🚀 **Suggest improvements** - Based on project analysis and best practices
+**📊 Status & Analytics** - Get progress updates, metrics, and team velocity
+**✅ Task Management** - Create work items, set priorities, track progress  
+**👥 Team Coordination** - Add AI agents, invite members, manage permissions
+**🚀 Project Optimization** - Suggest improvements and best practices
 
-What would you like to know or work on?`
+::smart-section[Project Health Analysis]{prompt="Analyze the current project status and identify potential risks or opportunities", body="Click to run an AI analysis of your project's current health, velocity trends, and recommendations for improvement."}
+
+What would you like to work on?`
+  }
+
+  // Parse message content for smart snippets
+  const parseMessageContent = (content: string) => {
+    let parsedContent = content
+    const snippets: Array<{
+      id: string
+      type: 'task' | 'agent' | 'team' | 'file'
+      text: string
+      action: string
+    }> = []
+
+    // Parse ::task[...] syntax
+    parsedContent = parsedContent.replace(/::task\[(.*?)\]/g, (match, taskText) => {
+      const snippetId = `snippet-${Date.now()}-${Math.random()}`
+      snippets.push({
+        id: snippetId,
+        type: 'task',
+        text: taskText,
+        action: 'create-task'
+      })
+      return `<div class="snippet-placeholder" data-snippet-id="${snippetId}"></div>`
+    })
+
+    // Parse ::agent[...] syntax  
+    parsedContent = parsedContent.replace(/::agent\[(.*?)\]/g, (match, agentText) => {
+      const snippetId = `snippet-${Date.now()}-${Math.random()}`
+      snippets.push({
+        id: snippetId,
+        type: 'agent',
+        text: agentText,
+        action: 'add-agent'
+      })
+      return `<div class="snippet-placeholder" data-snippet-id="${snippetId}"></div>`
+    })
+
+    // Parse ::team[...] syntax
+    parsedContent = parsedContent.replace(/::team\[(.*?)\]/g, (match, teamText) => {
+      const snippetId = `snippet-${Date.now()}-${Math.random()}`
+      snippets.push({
+        id: snippetId,
+        type: 'team',
+        text: teamText,
+        action: 'invite-member'
+      })
+      return `<div class="snippet-placeholder" data-snippet-id="${snippetId}"></div>`
+    })
+
+    return { parsedContent, snippets }
+  }
+
+  const handleSnippetAction = async (snippet: any) => {
+    try {
+      switch (snippet.type) {
+        case 'task':
+          // Create a new work item
+          const taskResponse = await fetch(`/api/projects/${projectName}/work-items`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: snippet.text,
+              type: 'TASK',
+              status: 'PLANNED'
+            })
+          })
+          
+          if (taskResponse.ok) {
+            // Add confirmation message to chat
+            const confirmationMessage = {
+              id: `system-${Date.now()}`,
+              role: 'assistant' as const,
+              content: `✅ **Task created**: ${snippet.text}\n\nThe task has been added to your project backlog and can be viewed in the Tasks section.`,
+              timestamp: new Date()
+            }
+            setChatMessages(prev => [...prev, confirmationMessage])
+          }
+          break
+          
+        case 'agent':
+          // Map agent names to template IDs
+          let agentTemplateId = ''
+          let specialization = ''
+          
+          if (snippet.text.includes('Frontend Developer')) {
+            agentTemplateId = 'frontend-dev'
+            specialization = 'React, TypeScript, UI/UX'
+          } else if (snippet.text.includes('Backend Engineer')) {
+            agentTemplateId = 'backend-dev'
+            specialization = 'APIs, Database, Server Logic'
+          } else if (snippet.text.includes('DevOps')) {
+            agentTemplateId = 'devops-engineer'
+            specialization = 'CI/CD, Infrastructure, Deployment'
+          } else if (snippet.text.includes('Product Manager')) {
+            agentTemplateId = 'product-manager'
+            specialization = 'Requirements, User Stories'
+          }
+          
+          if (agentTemplateId) {
+            const agentResponse = await fetch(`/api/projects/${projectName}/team/agents`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                agentType: agentTemplateId,
+                name: snippet.text,
+                specialization
+              })
+            })
+            
+            if (agentResponse.ok) {
+              const confirmationMessage = {
+                id: `system-${Date.now()}`,
+                role: 'assistant' as const,
+                content: `🤖 **Agent added**: ${snippet.text}\n\nThe AI agent has been added to your team and is ready to help with ${specialization.toLowerCase()}. You can view and manage agents in the Team section.`,
+                timestamp: new Date()
+              }
+              setChatMessages(prev => [...prev, confirmationMessage])
+            }
+          }
+          break
+          
+        case 'team':
+          // Navigate to team page for team management
+          const confirmationMessage = {
+            id: `system-${Date.now()}`,
+            role: 'assistant' as const,
+            content: `👥 **Team Management**: Let me take you to the team page where you can invite members, add AI agents, and manage permissions.\n\n[Go to Team Page](/app/projects/${projectName}/team)`,
+            timestamp: new Date()
+          }
+          setChatMessages(prev => [...prev, confirmationMessage])
+          
+          // Navigate to team page after a short delay
+          setTimeout(() => {
+            window.location.href = `/app/projects/${projectName}/team`
+          }, 1500)
+          break
+      }
+    } catch (error) {
+      console.error('Error handling snippet action:', error)
+      
+      const errorMessage = {
+        id: `system-${Date.now()}`,
+        role: 'assistant' as const,
+        content: `❌ **Error**: Failed to ${snippet.type === 'task' ? 'create task' : snippet.type === 'agent' ? 'add agent' : 'perform team action'}. Please try again or contact support if the issue persists.`,
+        timestamp: new Date()
+      }
+      setChatMessages(prev => [...prev, errorMessage])
+    }
+  }
+
+  const renderSmartSnippet = (snippet: any) => {
+    const baseClasses = "inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium cursor-pointer transition-all hover:scale-105 hover:shadow-sm"
+    
+    switch (snippet.type) {
+      case 'task':
+        return (
+          <button 
+            key={snippet.id}
+            className={`${baseClasses} bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100`}
+            onClick={() => handleSnippetAction(snippet)}
+          >
+            <span>✅</span>
+            <span>Create: {snippet.text}</span>
+          </button>
+        )
+      case 'agent':
+        return (
+          <button 
+            key={snippet.id}
+            className={`${baseClasses} bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100`}
+            onClick={() => handleSnippetAction(snippet)}
+          >
+            <span>🤖</span>
+            <span>{snippet.text}</span>
+            <span className="text-xs bg-purple-100 px-1 py-0.5 rounded">+</span>
+          </button>
+        )
+      case 'team':
+        return (
+          <button 
+            key={snippet.id}
+            className={`${baseClasses} bg-green-50 border-green-200 text-green-700 hover:bg-green-100`}
+            onClick={() => handleSnippetAction(snippet)}
+          >
+            <span>👥</span>
+            <span>{snippet.text}</span>
+          </button>
+        )
+      default:
+        return null
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -484,44 +681,74 @@ What would you like to know or work on?`
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4 max-w-4xl mx-auto">
-                  {chatMessages.map((message) => (
-                    <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-2xl px-4 py-3 rounded-xl ${
-                        message.role === 'user' 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-white border shadow-sm'
-                      }`}>
-                        {message.role === 'assistant' ? (
-                          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ 
-                            __html: message.content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                              .replace(/## (.*)/g, '<h3 class="text-base font-semibold mb-3 text-gray-900">$1</h3>')
-                              .replace(/### (.*)/g, '<h4 class="text-sm font-medium mb-2 text-gray-800">$1</h4>')
-                              .replace(/- \[ \] (.*)/g, '<div class="flex items-start gap-2 text-sm mb-2"><input type="checkbox" disabled class="mt-0.5"> <span>$1</span></div>')
-                              .replace(/- ✅ (.*)/g, '<div class="flex items-center gap-2 text-sm mb-1"><span class="text-green-600">✅</span> <span>$1</span></div>')
-                              .replace(/- 🔄 (.*)/g, '<div class="flex items-center gap-2 text-sm mb-1"><span class="text-blue-600">🔄</span> <span>$1</span></div>')
-                              .replace(/- 📋 (.*)/g, '<div class="flex items-center gap-2 text-sm mb-1"><span class="text-gray-600">📋</span> <span>$1</span></div>')
-                              .replace(/- (.*)/g, '<div class="flex items-start gap-2 text-sm mb-1"><span>•</span> <span>$1</span></div>')
-                          }} />
-                        ) : (
-                          <p className="text-sm">{message.content}</p>
-                        )}
-                        <p className="text-xs opacity-70 mt-2">
-                          {message.timestamp.toLocaleTimeString()}
-                        </p>
+                <div className="space-y-6 max-w-4xl mx-auto py-4">
+                  {chatMessages.map((message) => {
+                    const { parsedContent, snippets } = message.role === 'assistant' 
+                      ? parseMessageContent(message.content) 
+                      : { parsedContent: message.content, snippets: [] }
+                    
+                    return (
+                      <div key={message.id} className={`group ${message.role === 'user' ? 'ml-12' : ''}`}>
+                        {/* Message Header */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-r flex items-center justify-center text-xs font-medium">
+                            {message.role === 'user' ? (
+                              <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
+                                <User className="w-3 h-3 text-white" />
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center">
+                                <Bot className="w-3 h-3 text-white" />
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {message.role === 'user' ? 'You' : 'Assistant'}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+
+                        {/* Message Content */}
+                        <div className={`ml-8 ${message.role === 'user' ? 'text-gray-800' : 'text-gray-700'}`}>
+                          {message.role === 'assistant' ? (
+                            <MaverickMarkdownRenderer
+                              markdown={message.content}
+                              context={{
+                                projectName: project.name,
+                                userRole: 'admin'
+                              }}
+                              onSnippetAction={handleSnippetAction}
+                              className="prose prose-gray prose-sm max-w-none"
+                            />
+                          ) : (
+                            <div className="text-gray-800 leading-relaxed">
+                              {message.content}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
+                  
+                  {/* Typing Indicator */}
                   {isTyping && (
-                    <div className="flex justify-start">
-                      <div className="bg-white border shadow-sm px-4 py-3 rounded-xl">
-                        <div className="flex items-center gap-2">
+                    <div className="group">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center">
+                          <Bot className="w-3 h-3 text-white" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">Assistant</span>
+                      </div>
+                      <div className="ml-8">
+                        <div className="flex items-center gap-2 text-gray-500">
                           <div className="flex gap-1">
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
                           </div>
-                          <span className="text-sm text-gray-500">Thinking...</span>
+                          <span className="text-sm">Thinking...</span>
                         </div>
                       </div>
                     </div>

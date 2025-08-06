@@ -18,9 +18,11 @@ import {
   ChevronDown,
   FileText,
   Lightbulb,
-  History
+  History,
+  Database
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { v4 as uuidv4 } from 'uuid'
 import { WorkItemDetailSidebar } from '@/components/WorkItemDetailSidebar'
 import { WorkItemDetailView } from '@/components/WorkItemDetailView'
 import { SubtaskDetailView } from '@/components/SubtaskDetailView'
@@ -87,6 +89,7 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
   const [adviceChatOpen, setAdviceChatOpen] = useState(false)
   const [planningTaskId, setPlanningTaskId] = useState<string | null>(null)
   const [generatingHistory, setGeneratingHistory] = useState(false)
+  const [migratingUuids, setMigratingUuids] = useState(false)
 
   useEffect(() => {
     loadWorkItems()
@@ -541,7 +544,7 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
   const handleGenerateDevHistory = async () => {
     setGeneratingHistory(true)
     
-    const devHistoryItems = [
+    const devHistoryItemsBase = [
       {
         title: "Fixed projects API and GitHub token handling",
         description: "Enhanced error handling in projects API route for better resilience with GitHub service integration",
@@ -634,6 +637,12 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
       }
     ]
 
+    // Add UUIDs to each item
+    const devHistoryItems = devHistoryItemsBase.map(item => ({
+      ...item,
+      uuid: uuidv4()
+    }))
+
     try {
       let successCount = 0
       for (const item of devHistoryItems) {
@@ -667,6 +676,42 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
       })
     } finally {
       setGeneratingHistory(false)
+    }
+  }
+
+  const handleMigrateUuids = async () => {
+    setMigratingUuids(true)
+    
+    try {
+      const response = await fetch(`/api/projects/${project.name}/work-items/migrate-uuids`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        toast({
+          title: 'UUID Migration Complete',
+          description: `Migrated ${data.stats.migratedCount} work items with UUIDs and created markdown files`
+        })
+        console.log('🎉 UUID Migration Summary:', data)
+      } else {
+        const error = await response.json()
+        toast({
+          title: 'Migration failed',
+          description: error.message || 'Could not migrate work items to UUIDs',
+          variant: 'destructive'
+        })
+      }
+    } catch (error) {
+      console.error('UUID migration error:', error)
+      toast({
+        title: 'Migration failed',
+        description: 'Network error during UUID migration',
+        variant: 'destructive'
+      })
+    } finally {
+      setMigratingUuids(false)
     }
   }
 
@@ -757,6 +802,20 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600" />
               ) : (
                 <History className="w-3 h-3" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleMigrateUuids}
+              disabled={migratingUuids}
+              className="text-xs text-gray-600 hover:text-gray-900"
+              title="Migrate existing work items to include UUIDs"
+            >
+              {migratingUuids ? (
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600" />
+              ) : (
+                <Database className="w-3 h-3" />
               )}
             </Button>
             {(statusGroups.find(g => g.key === 'done')?.items.length || 0) > 0 && (
