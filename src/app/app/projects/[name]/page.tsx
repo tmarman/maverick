@@ -30,7 +30,12 @@ import {
   Rocket,
   Bot,
   Play,
-  Square
+  Square,
+  Send,
+  ChevronUp,
+  ChevronDown,
+  MessageCircle,
+  FileText
 } from 'lucide-react'
 
 interface Project {
@@ -106,6 +111,19 @@ export default function ProjectDetailPage() {
   const [activeAgents, setActiveAgents] = useState<any[]>([])
   const [newAgentRequirement, setNewAgentRequirement] = useState('')
   const [isStartingAgent, setIsStartingAgent] = useState(false)
+  
+  // Chat interface state
+  const [chatMessages, setChatMessages] = useState<Array<{
+    id: string
+    role: 'user' | 'assistant'
+    content: string
+    timestamp: Date
+    type?: 'message' | 'task_suggestion' | 'task_created'
+    metadata?: any
+  }>>([])
+  const [currentMessage, setCurrentMessage] = useState('')
+  const [isChatActive, setIsChatActive] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
 
   // Set page title
   usePageTitle(PAGE_TITLES.projectOverview(projectName))
@@ -243,6 +261,100 @@ export default function ProjectDetailPage() {
     }
   }
 
+  const sendChatMessage = async () => {
+    if (!currentMessage.trim()) return
+    
+    const userMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user' as const,
+      content: currentMessage.trim(),
+      timestamp: new Date()
+    }
+    
+    setChatMessages(prev => [...prev, userMessage])
+    setCurrentMessage('')
+    setIsTyping(true)
+    
+    try {
+      // Simulate AI response - in real implementation this would call your AI service
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      const assistantMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant' as const,
+        content: generateAIResponse(userMessage.content, projectSummary, project),
+        timestamp: new Date(),
+        type: userMessage.content.toLowerCase().includes('task') ? 'task_suggestion' as const : 'message' as const
+      }
+      
+      setChatMessages(prev => [...prev, assistantMessage])
+    } catch (error) {
+      console.error('Failed to send chat message:', error)
+    } finally {
+      setIsTyping(false)
+    }
+  }
+
+  const generateAIResponse = (userInput: string, summary: ProjectSummary | null, proj: Project | null) => {
+    const input = userInput.toLowerCase()
+    
+    if (input.includes('status') || input.includes('progress')) {
+      return `## Project Status Update
+
+**${proj?.name || 'Project'}** is currently **${proj?.status?.toLowerCase()}** with ${summary?.workItemStats.total || 0} total work items.
+
+### This Week's Progress
+- ✅ **${summary?.workItemStats.completed || 0}** items completed
+- 🔄 **${summary?.workItemStats.in_progress || 0}** items in progress  
+- 📋 **${summary?.workItemStats.planned || 0}** items planned
+
+### Velocity
+Team is averaging **${summary?.teamVelocity || 0}** items per week.
+
+${summary?.risks.length ? `⚠️ **Attention needed:** ${summary.risks.length} blocked/deferred items` : '✅ **All clear** - no blockers!'}`
+    }
+    
+    if (input.includes('task') || input.includes('create') || input.includes('add')) {
+      return `I can help you create tasks! Here are some suggestions based on your project:
+
+## 📝 Suggested Tasks
+
+- [ ] **Improve error handling** - Add better error boundaries and user feedback
+- [ ] **Performance optimization** - Analyze and optimize slow queries/renders  
+- [ ] **User documentation** - Create getting started guide
+- [ ] **Testing coverage** - Add unit tests for core functionality
+
+Would you like me to create any of these tasks, or would you prefer to describe a specific task you have in mind?`
+    }
+    
+    if (input.includes('team') || input.includes('who')) {
+      return `## 👥 Current Team
+
+Based on your project setup, I can see activity from the core team. 
+
+### Team Composition
+- **Humans:** Project members with various roles
+- **AI Agents:** ${activeAgents.length} currently active
+
+### Available Agent Types
+- **Frontend Developer** - UI/UX and React components
+- **Backend Engineer** - API design and database work  
+- **DevOps Specialist** - Deployment and infrastructure
+- **Product Manager** - Requirements and user stories
+
+Would you like to invite someone or add an AI agent to help with specific tasks?`
+    }
+    
+    return `I'm here to help you manage **${proj?.name || 'your project'}**! I can:
+
+- 📊 **Provide status updates** - Ask about progress, metrics, or team velocity
+- ✅ **Create and manage tasks** - Turn ideas into actionable work items  
+- 👥 **Help with team coordination** - Invite members or add AI agents
+- 🚀 **Suggest improvements** - Based on project analysis and best practices
+
+What would you like to know or work on?`
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PLANNING':
@@ -296,7 +408,135 @@ export default function ProjectDetailPage() {
 
   return (
     <CockpitShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="overview" />}>
-      <div className="p-6">
+      <div className="flex flex-col h-full relative">
+        {/* Chat Interface Overlay - slides up from bottom when active */}
+        {isChatActive && (
+          <div className="absolute inset-0 bg-background-primary z-10 flex flex-col animate-in slide-in-from-bottom duration-300">
+            {/* Chat Header */}
+            <div className="border-b border-border-standard p-4 flex items-center justify-between bg-white">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 text-blue-600" />
+                <h2 className="text-lg font-semibold">Project Assistant</h2>
+                <Badge variant="secondary" className="text-xs">AI</Badge>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsChatActive(false)}
+              >
+                <ChevronDown className="w-4 h-4" />
+                {chatMessages.length === 0 ? 'Close' : 'Minimize'}
+              </Button>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {chatMessages.length === 0 ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center text-text-muted max-w-md">
+                    <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">How can I help with {project.name}?</h3>
+                    <p className="text-sm mb-4">I can help you understand project status, create tasks, manage your team, or provide suggestions.</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <button
+                        onClick={() => setCurrentMessage("What's our current progress?")}
+                        className="p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+                      >
+                        📊 Check Progress
+                      </button>
+                      <button
+                        onClick={() => setCurrentMessage("Create a new task")}
+                        className="p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+                      >
+                        ✅ Create Task
+                      </button>
+                      <button
+                        onClick={() => setCurrentMessage("Who's on our team?")}
+                        className="p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+                      >
+                        👥 View Team
+                      </button>
+                      <button
+                        onClick={() => setCurrentMessage("What should we work on next?")}
+                        className="p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+                      >
+                        🎯 Get Suggestions
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 max-w-4xl mx-auto">
+                  {chatMessages.map((message) => (
+                    <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-2xl px-4 py-3 rounded-xl ${
+                        message.role === 'user' 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-white border shadow-sm'
+                      }`}>
+                        {message.role === 'assistant' ? (
+                          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ 
+                            __html: message.content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                              .replace(/## (.*)/g, '<h3 class="text-base font-semibold mb-3 text-gray-900">$1</h3>')
+                              .replace(/### (.*)/g, '<h4 class="text-sm font-medium mb-2 text-gray-800">$1</h4>')
+                              .replace(/- \[ \] (.*)/g, '<div class="flex items-start gap-2 text-sm mb-2"><input type="checkbox" disabled class="mt-0.5"> <span>$1</span></div>')
+                              .replace(/- ✅ (.*)/g, '<div class="flex items-center gap-2 text-sm mb-1"><span class="text-green-600">✅</span> <span>$1</span></div>')
+                              .replace(/- 🔄 (.*)/g, '<div class="flex items-center gap-2 text-sm mb-1"><span class="text-blue-600">🔄</span> <span>$1</span></div>')
+                              .replace(/- 📋 (.*)/g, '<div class="flex items-center gap-2 text-sm mb-1"><span class="text-gray-600">📋</span> <span>$1</span></div>')
+                              .replace(/- (.*)/g, '<div class="flex items-start gap-2 text-sm mb-1"><span>•</span> <span>$1</span></div>')
+                          }} />
+                        ) : (
+                          <p className="text-sm">{message.content}</p>
+                        )}
+                        <p className="text-xs opacity-70 mt-2">
+                          {message.timestamp.toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {isTyping && (
+                    <div className="flex justify-start">
+                      <div className="bg-white border shadow-sm px-4 py-3 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                          </div>
+                          <span className="text-sm text-gray-500">Thinking...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Chat Input - Fixed at bottom of chat overlay */}
+            <div className="border-t border-border-standard p-4 bg-white">
+              <div className="max-w-4xl mx-auto flex gap-3">
+                <Input
+                  placeholder="Ask about progress, create tasks, get suggestions..."
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
+                  className="flex-1 h-10"
+                  disabled={isTyping}
+                />
+                <Button 
+                  onClick={sendChatMessage}
+                  disabled={!currentMessage.trim() || isTyping}
+                  className="h-10"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dashboard Content - shows when chat is not active */}
+        <div className={`flex-1 overflow-auto p-6 ${!isChatActive ? 'pb-24' : ''}`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -739,6 +979,45 @@ export default function ProjectDetailPage() {
             </CardContent>
           </Card>
         </div>
+        </div>
+
+        {/* Fixed Bottom Chat Bar - shows when chat is not active */}
+        {!isChatActive && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-standard shadow-lg z-20">
+            <div className="max-w-4xl mx-auto p-4 pl-64"> {/* pl-64 to account for sidebar width */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Ask your project assistant</span>
+                </div>
+                <Input
+                  placeholder="Ask about progress, create tasks, manage team..."
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onFocus={() => setIsChatActive(true)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      setIsChatActive(true)
+                      setTimeout(() => sendChatMessage(), 100)
+                    }
+                  }}
+                  className="flex-1 h-10"
+                />
+                <Button 
+                  onClick={() => {
+                    setIsChatActive(true)
+                    setTimeout(() => sendChatMessage(), 100)
+                  }}
+                  disabled={!currentMessage.trim()}
+                  className="h-10"
+                  size="sm"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </CockpitShell>
   )
