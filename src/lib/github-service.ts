@@ -289,15 +289,15 @@ export async function getGitHubConnectionStatus(userEmail: string): Promise<{
     
     const connection = user.githubConnection
     const isExpired = connection.expiresAt && new Date() > connection.expiresAt
-    const needsReauth = isExpired && !connection.refreshToken
+    const needsReauth = !!isExpired && !connection.refreshToken
     
     return {
       connected: true,
       expired: !!isExpired,
-      needsReauth,
+      needsReauth: !!needsReauth,
       username: connection.username,
       scopes: connection.scopes ? JSON.parse(connection.scopes) : [],
-      expiresAt: connection.expiresAt
+      expiresAt: connection.expiresAt || undefined
     }
   } catch (error) {
     console.error('Failed to get GitHub connection status:', error)

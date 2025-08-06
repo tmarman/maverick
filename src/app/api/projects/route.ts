@@ -178,7 +178,7 @@ export async function GET(request: NextRequest) {
       githubService = await getGitHubServiceForUser(session.user.email)
       githubConnectionStatus = await getGitHubConnectionStatus(session.user.email)
     } catch (error) {
-      console.log('GitHub service unavailable, continuing without repo verification:', error.message)
+      console.log('GitHub service unavailable, continuing without repo verification:', error instanceof Error ? error.message : error)
     }
 
     // Query database for projects where user has business membership

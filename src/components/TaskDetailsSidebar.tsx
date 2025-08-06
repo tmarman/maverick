@@ -376,12 +376,12 @@ export function TaskDetailsSidebar({
                   handleUpdate({ title: localTodo.title })
                 }
               }}
-              className="text-lg font-medium"
+              className="text-lg font-semibold text-gray-900"
               autoFocus
             />
           ) : (
             <h3 
-              className="text-lg font-medium text-gray-900 cursor-pointer hover:bg-gray-50 p-2 rounded"
+              className="text-lg font-semibold text-gray-900 cursor-pointer hover:bg-gray-50 p-2 rounded leading-tight"
               onClick={() => setEditingTitle(true)}
             >
               {localTodo.title}
@@ -400,7 +400,7 @@ export function TaskDetailsSidebar({
               <PlayCircle className="w-4 h-4 mr-2" />
               Start Work in Worktree
             </Button>
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-gray-600 text-center font-medium">
               🤖 Assigns AI agent with screenshot/video capture
             </p>
           </div>
@@ -417,7 +417,7 @@ export function TaskDetailsSidebar({
               <GitBranch className="w-4 h-4 mr-2" />
               View Worktree Progress
             </Button>
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-gray-600 text-center font-medium">
               Monitor AI agent work in isolated branch
             </p>
           </div>
@@ -426,11 +426,11 @@ export function TaskDetailsSidebar({
         {/* Status & Priority */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label className="text-sm font-medium text-gray-600">Status</Label>
+            <Label className="text-sm font-semibold text-gray-800">Status</Label>
             <select
               value={localTodo.status}
               onChange={(e) => handleUpdate({ status: e.target.value as any })}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm transition-all duration-150 focus:border-blue-500 focus:shadow-sm hover:border-gray-400"
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white transition-all duration-150 focus:border-blue-500 focus:shadow-sm hover:border-gray-400"
               disabled={loading}
             >
               <option value="PLANNED">Planned</option>
@@ -442,11 +442,11 @@ export function TaskDetailsSidebar({
           </div>
           
           <div>
-            <Label className="text-sm font-medium text-gray-600">Priority</Label>
+            <Label className="text-sm font-semibold text-gray-800">Priority</Label>
             <select
               value={localTodo.priority}
               onChange={(e) => handleUpdate({ priority: e.target.value as any })}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm transition-all duration-150 focus:border-blue-500 focus:shadow-sm hover:border-gray-400"
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white transition-all duration-150 focus:border-blue-500 focus:shadow-sm hover:border-gray-400"
               disabled={loading}
             >
               <option value="LOW">Low</option>
@@ -461,11 +461,11 @@ export function TaskDetailsSidebar({
         {/* Type & Functional Area */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label className="text-sm font-medium text-gray-600">Type</Label>
+            <Label className="text-sm font-semibold text-gray-800">Type</Label>
             <select
               value={localTodo.type}
               onChange={(e) => handleUpdate({ type: e.target.value as any })}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white"
               disabled={loading}
             >
               <option value="TASK">Task</option>
@@ -478,11 +478,11 @@ export function TaskDetailsSidebar({
           </div>
           
           <div>
-            <Label className="text-sm font-medium text-gray-600">Area</Label>
+            <Label className="text-sm font-semibold text-gray-800">Area</Label>
             <select
               value={localTodo.functionalArea}
               onChange={(e) => handleUpdate({ functionalArea: e.target.value as any })}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white"
               disabled={loading}
             >
               <option value="SOFTWARE">Software</option>
@@ -495,11 +495,11 @@ export function TaskDetailsSidebar({
 
         {/* Estimated Effort */}
         <div>
-          <Label className="text-sm font-medium text-gray-600">Estimated Effort</Label>
+          <Label className="text-sm font-semibold text-gray-800">Estimated Effort</Label>
           <select
             value={localTodo.estimatedEffort || ''}
             onChange={(e) => handleUpdate({ estimatedEffort: e.target.value as any })}
-            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm transition-all duration-150 focus:border-blue-500 focus:shadow-sm hover:border-gray-400"
+            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-900 bg-white transition-all duration-150 focus:border-blue-500 focus:shadow-sm hover:border-gray-400"
             disabled={loading}
           >
             <option value="">Not specified</option>
@@ -515,7 +515,7 @@ export function TaskDetailsSidebar({
         {/* Parent Task */}
         {parentTask && (
           <div className="border-t border-gray-200 pt-4">
-            <Label className="text-sm font-medium text-gray-600">Parent Task</Label>
+            <Label className="text-sm font-semibold text-gray-800">Parent Task</Label>
             <div className="mt-2">
               <button
                 type="button"
@@ -554,7 +554,7 @@ export function TaskDetailsSidebar({
 
         {/* Description */}
         <div>
-          <Label className="text-sm font-medium text-gray-600">Description</Label>
+          <Label className="text-sm font-semibold text-gray-800">Description</Label>
           {editingDescription ? (
             <Textarea
               value={localTodo.description || ''}
@@ -564,16 +564,16 @@ export function TaskDetailsSidebar({
                 handleUpdate({ description: localTodo.description })
               }}
               placeholder="What is this task about?"
-              className="mt-1 min-h-[80px]"
+              className="mt-1 min-h-[80px] text-gray-900"
               autoFocus
             />
           ) : (
             <div
-              className="mt-1 min-h-[80px] p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 text-sm"
+              className="mt-1 min-h-[80px] p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 text-sm text-gray-900"
               onClick={() => setEditingDescription(true)}
             >
               {localTodo.description || (
-                <span className="text-gray-500">What is this task about?</span>
+                <span className="text-gray-500 font-medium">What is this task about?</span>
               )}
             </div>
           )}
@@ -585,7 +585,7 @@ export function TaskDetailsSidebar({
             <button
               type="button"
               onClick={() => setShowingSubtasks(!showingSubtasks)}
-              className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+              className="flex items-center gap-2 text-sm font-semibold text-gray-800 hover:text-gray-900"
             >
               {showingSubtasks ? (
                 <ChevronDown className="w-4 h-4" />
@@ -700,7 +700,7 @@ export function TaskDetailsSidebar({
             <button
               type="button"
               onClick={() => setShowChat(!showChat)}
-              className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+              className="flex items-center gap-2 text-sm font-semibold text-gray-800 hover:text-gray-900"
             >
               <MessageSquare className="w-4 h-4" />
               Task Chat
@@ -741,7 +741,7 @@ export function TaskDetailsSidebar({
         </div>
 
         {/* Metadata */}
-        <div className="pt-4 border-t border-gray-200 space-y-2 text-xs text-gray-500">
+        <div className="pt-4 border-t border-gray-200 space-y-2 text-xs text-gray-700 font-medium">
           <div>Created: {new Date(localTodo.createdAt).toLocaleDateString()}</div>
           <div>Updated: {new Date(localTodo.updatedAt).toLocaleDateString()}</div>
           {localTodo.depth > 0 && (

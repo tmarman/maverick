@@ -6,12 +6,7 @@ import {
   CheckSquare,
   FileText,
   Users,
-  BarChart,
-  Brain,
-  MapPin,
-  BookOpen,
-  Home,
-  Bot
+  Home
 } from 'lucide-react'
 
 interface Project {
@@ -37,63 +32,35 @@ interface ProjectTreeSidebarProps {
 
 export function ProjectTreeSidebar({ project, currentPage }: ProjectTreeSidebarProps) {
   
-  // Simple navigation items - no complex tree structure
+  // Simple navigation items - streamlined for chat-first approach
   const navItems: NavItem[] = [
     {
-      name: 'Overview',
+      name: 'Dashboard',
       path: 'overview',
       icon: Home,
       href: `/app/projects/${project.name}`,
-      description: 'Project summary and status'
+      description: 'Chat + project overview'
     },
     {
       name: 'Tasks',
       path: 'tasks',
       icon: CheckSquare,
       href: `/app/projects/${project.name}/tasks`,
-      description: 'Asana-style task management'
-    },
-    {
-      name: 'Vibe Chat',
-      path: 'vibe',
-      icon: Brain,
-      href: `/app/projects/${project.name}/vibe`,
-      description: 'AI chat with task creation'
-    },
-    {
-      name: 'AI Agents',
-      path: 'agents',
-      icon: Bot,
-      href: `/app/projects/${project.name}/agents`,
-      description: 'Autonomous development agents'
+      description: 'Work items and features'
     },
     {
       name: 'Team',
       path: 'team',
       icon: Users,
       href: `/app/projects/${project.name}/team`,
-      description: 'Team members and roles'
+      description: 'People and AI agents'
     },
     {
-      name: 'Analytics',
-      path: 'analytics',
-      icon: BarChart,
-      href: `/app/projects/${project.name}/analytics`,
-      description: 'Project metrics and insights'
-    },
-    {
-      name: 'Roadmap',
-      path: 'roadmap',
-      icon: MapPin,
-      href: `/app/projects/${project.name}/roadmap`,
-      description: 'Strategic planning and milestones'
-    },
-    {
-      name: 'Learnings',
-      path: 'learnings',
-      icon: BookOpen,
-      href: `/app/projects/${project.name}/learnings`,
-      description: 'Session notes and insights'
+      name: 'Reports',
+      path: 'reports',
+      icon: FileText,
+      href: `/app/projects/${project.name}/reports`,
+      description: 'AI-generated insights'
     }
   ]
 

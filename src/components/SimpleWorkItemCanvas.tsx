@@ -16,7 +16,8 @@ import {
   MoreHorizontal,
   ArrowRight,
   ChevronDown,
-  FileText
+  FileText,
+  Lightbulb
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { WorkItemDetailSidebar } from '@/components/WorkItemDetailSidebar'
@@ -24,6 +25,7 @@ import { WorkItemDetailView } from '@/components/WorkItemDetailView'
 import { SubtaskDetailView } from '@/components/SubtaskDetailView'
 import { TaskDetailsSidebar } from '@/components/TaskDetailsSidebar'
 import { TaskFullDetailView } from '@/components/TaskFullDetailView'
+import { ContextualAIChat } from '@/components/ContextualAIChat'
 import { HierarchicalTodo, hierarchicalTodoClientService } from '@/lib/hierarchical-todos-client'
 
 interface WorkItem {
@@ -81,6 +83,8 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
   const [hierarchicalSidebarOpen, setHierarchicalSidebarOpen] = useState(false)
   const [draggedItem, setDraggedItem] = useState<WorkItem | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [adviceChatOpen, setAdviceChatOpen] = useState(false)
+  const [planningTaskId, setPlanningTaskId] = useState<string | null>(null)
 
   useEffect(() => {
     loadWorkItems()
@@ -517,6 +521,21 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
     setHierarchicalSidebarOpen(false)
   }
 
+  const handleGetAdvice = () => {
+    setAdviceChatOpen(true)
+    setPlanningTaskId(null)
+  }
+
+  const handlePlanFeature = (taskId: string) => {
+    setPlanningTaskId(taskId)
+    setAdviceChatOpen(true)
+  }
+
+  const handleCloseAdviceChat = () => {
+    setAdviceChatOpen(false)
+    setPlanningTaskId(null)
+  }
+
   if (loading) {
     return (
       <Card className={className}>
@@ -583,6 +602,15 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
           <span>Project Canvas</span>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">{topLevelTasks.length} top-level items</Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGetAdvice}
+              className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 text-purple-700 hover:bg-gradient-to-r hover:from-purple-100 hover:to-blue-100"
+            >
+              <Lightbulb className="w-4 h-4 mr-1" />
+              Get Advice
+            </Button>
             {(statusGroups.find(g => g.key === 'done')?.items.length || 0) > 0 && (
               <Button
                 variant="ghost"
@@ -637,7 +665,7 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
               <div className="col-span-7">Task name</div>
               <div className="col-span-2">Priority</div>
               <div className="col-span-1">Effort</div>
-              <div className="col-span-1">File</div>
+              <div className="col-span-1">Actions</div>
             </div>
           </div>
 
@@ -745,8 +773,19 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
                   )}
                 </div>
 
-                {/* File Link */}
-                <div className="col-span-1">
+                {/* Actions */}
+                <div className="col-span-1 flex items-center gap-1">
+                  <button
+                    type="button"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-purple-100 rounded"
+                    title="Plan this feature"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handlePlanFeature(item.id)
+                    }}
+                  >
+                    <Lightbulb className="w-3 h-3 text-purple-600" />
+                  </button>
                   <button
                     type="button"
                     className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 rounded"
@@ -817,6 +856,18 @@ export function SimpleWorkItemCanvas({ project, className }: SimpleWorkItemCanva
           />
         </>
       )}
+
+      {/* Contextual AI Chat */}
+      <ContextualAIChat
+        context={{
+          type: planningTaskId ? 'single-task' : 'project-tasks',
+          projectName: project.name,
+          data: planningTaskId ? workItems.find(item => item.id === planningTaskId) : undefined,
+          workItems: planningTaskId ? undefined : workItems
+        }}
+        isOpen={adviceChatOpen}
+        onClose={handleCloseAdviceChat}
+      />
     </Card>
   )
 }
