@@ -52,7 +52,7 @@ function CockpitPageContent() {
   } | null>(null)
   
   // Set dynamic page title based on selected project
-  const selectedProjectData = projects.find(p => p.id === selectedProject)
+  const selectedProjectData = projects.find(p => p.name === selectedProject)
   const pageTitle = selectedProjectData 
     ? `${formatProjectTitle(selectedProjectData.name)} Project`
     : PAGE_TITLES.cockpit
@@ -173,12 +173,12 @@ function CockpitPageContent() {
           </div>
           
           {projects.map((project) => {
-            const isSelected = selectedProject === project.id
+            const isSelected = selectedProject === project.name
             
             return (
               <div key={project.id} className="relative">
                 <button
-                  onClick={() => setSelectedProject(project.id)}
+                  onClick={() => setSelectedProject(project.name)}
                   className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors group ${
                     isSelected
                       ? 'bg-accent-primary text-text-inverse'
