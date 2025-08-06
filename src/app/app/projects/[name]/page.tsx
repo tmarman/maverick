@@ -411,7 +411,7 @@ What would you like to know or work on?`
       <div className="flex flex-col h-full relative">
         {/* Chat Interface Overlay - slides up from bottom when active */}
         {isChatActive && (
-          <div className="absolute inset-0 bg-background-primary z-10 flex flex-col animate-in slide-in-from-bottom duration-300">
+          <div className="absolute inset-0 bg-background-primary z-20 flex flex-col animate-in slide-in-from-bottom duration-300">
             {/* Chat Header */}
             <div className="border-b border-border-standard p-4 flex items-center justify-between bg-white">
               <div className="flex items-center gap-2">
@@ -981,10 +981,10 @@ What would you like to know or work on?`
         </div>
         </div>
 
-        {/* Fixed Bottom Chat Bar - shows when chat is not active */}
+        {/* Bottom Chat Bar - contained within main panel */}
         {!isChatActive && (
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-standard shadow-lg z-20">
-            <div className="max-w-4xl mx-auto p-4 pl-64"> {/* pl-64 to account for sidebar width */}
+          <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-border-standard shadow-lg">
+            <div className="p-4">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <MessageCircle className="w-4 h-4" />
