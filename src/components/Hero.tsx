@@ -89,10 +89,10 @@ export function Hero() {
               <div className="flex justify-center mb-8">
                 <div className="rounded-md shadow-lg">
                   <Link
-                    href="/app"
+                    href="/waitlist"
                     className="flex items-center justify-center px-8 py-4 border border-transparent text-lg font-semibold rounded-md text-text-inverse bg-accent-primary hover:bg-accent-hover transition-all duration-200 transform hover:scale-105"
                   >
-                    🚀  Build Your App
+                    🚀  Join the Waitlist
                   </Link>
                 </div>
               </div>

@@ -83,10 +83,10 @@ export default function Home() {
             {/* Call to Action */}
             <div className="text-center">
               <a 
-                href="/app" 
+                href="/waitlist" 
                 className="inline-flex items-center px-8 py-4 bg-accent-primary text-white rounded-lg hover:bg-accent-hover font-bold text-lg shadow-xl transform hover:scale-105 transition-all duration-200"
               >
-                🚀 Build Your App →
+                🚀 Join the Waitlist →
               </a>
             </div>
           </div>
@@ -96,16 +96,16 @@ export default function Home() {
         <section className="py-24 bg-accent-primary">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-4xl font-bold text-white mb-6">
-              Ready to Build Your App?
+              Ready to Join the Revolution?
             </h2>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Stop paying $50K+ for custom development. Get your AI team working today.
+              Be among the first to experience AI-native development. Join our waitlist for exclusive early access.
             </p>
             <a 
-              href="/app" 
+              href="/waitlist" 
               className="inline-flex items-center px-8 py-4 bg-white text-accent-primary rounded-lg hover:bg-gray-100 font-bold text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
             >
-              🚀 Build Your App →
+              🚀 Join the Waitlist →
             </a>
           </div>
         </section>

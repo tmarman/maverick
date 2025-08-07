@@ -33,22 +33,10 @@ export function Navigation() {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               <Link 
-                href="/about" 
-                className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
-              >
-                About
-              </Link>
-              <Link 
                 href="/opportunity" 
                 className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
               >
                 Opportunity
-              </Link>
-              <Link 
-                href="/square-partnership" 
-                className="text-text-secondary hover:text-text-primary px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Square Partnership
               </Link>
               <Link 
                 href="/pricing" 
@@ -70,10 +58,10 @@ export function Navigation() {
                   Sign In
                 </Link>
                 <Link 
-                  href="/app"
+                  href="/waitlist"
                   className="bg-accent-primary hover:bg-accent-hover text-text-inverse px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
-                  🚀 Start Your Business
+                  🚀 Join Waitlist
                 </Link>
               </>
             ) : (
@@ -113,22 +101,10 @@ export function Navigation() {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-border-subtle mt-4">
               <Link 
-                href="/about" 
-                className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
-              >
-                About
-              </Link>
-              <Link 
                 href="/opportunity" 
                 className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
               >
                 Opportunity
-              </Link>
-              <Link 
-                href="/square-partnership" 
-                className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
-              >
-                Square Partnership
               </Link>
               <Link 
                 href="/pricing" 
@@ -146,10 +122,10 @@ export function Navigation() {
                       Sign In
                     </Link>
                     <Link 
-                      href="/app"
+                      href="/waitlist"
                       className="bg-accent-primary hover:bg-accent-hover text-text-inverse block px-3 py-2 rounded-lg text-base font-medium transition-colors mt-2"
                     >
-                      🚀 Start Your Business
+                      🚀 Join Waitlist
                     </Link>
                   </>
                 ) : (

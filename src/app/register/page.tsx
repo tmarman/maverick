@@ -7,16 +7,58 @@ import { Navigation } from '@/components/Navigation'
 
 export default function Register() {
   const [formData, setFormData] = useState({
+    inviteCode: '',
     email: '',
     password: '',
     confirmPassword: ''
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [inviteCodeValidated, setInviteCodeValidated] = useState(false)
+  const [isValidatingCode, setIsValidatingCode] = useState(false)
+
+  const validateInviteCode = async () => {
+    if (!formData.inviteCode.trim()) {
+      setErrors({ inviteCode: 'Invite code is required' })
+      return false
+    }
+
+    setIsValidatingCode(true)
+    setErrors({})
+
+    try {
+      const response = await fetch('/api/invite-codes/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: formData.inviteCode
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.valid) {
+        setInviteCodeValidated(true)
+        return true
+      } else {
+        setErrors({ inviteCode: result.error || 'Invalid invite code' })
+        return false
+      }
+    } catch (error) {
+      console.error('Invite code validation error:', error)
+      setErrors({ inviteCode: 'Failed to validate invite code. Please try again.' })
+      return false
+    } finally {
+      setIsValidatingCode(false)
+    }
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
+    if (!inviteCodeValidated) newErrors.inviteCode = 'Please validate your invite code first'
     if (!formData.email.trim()) newErrors.email = 'Email is required'
     if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Please enter a valid email address'
     if (!formData.password) newErrors.password = 'Password is required'
@@ -75,6 +117,11 @@ export default function Register() {
   }
 
   const handleOAuthSignup = async (provider: 'github' | 'square') => {
+    if (!inviteCodeValidated) {
+      setErrors({ inviteCode: 'Please validate your invite code first' })
+      return
+    }
+
     setIsLoading(true)
     
     try {
@@ -113,11 +160,65 @@ export default function Register() {
                 Sign in here
               </Link>
             </p>
+            <p className="mt-1 text-center text-xs text-text-muted">
+              Don't have an invite code? <Link href="/invite-required" className="text-accent-primary hover:underline">Get one here</Link>
+            </p>
           </div>
           
           <div className="bg-background-secondary rounded-2xl p-8 border border-border-subtle">
+            {/* Invite Code Section */}
+            <div className="mb-6">
+              <label htmlFor="inviteCode" className="block text-sm font-medium text-text-primary mb-2">
+                Invite Code <span className="text-red-500">*</span>
+              </label>
+              <div className="flex space-x-2">
+                <input
+                  id="inviteCode"
+                  type="text"
+                  required
+                  value={formData.inviteCode}
+                  onChange={(e) => {
+                    setFormData({ ...formData, inviteCode: e.target.value })
+                    setInviteCodeValidated(false)
+                    if (errors.inviteCode) {
+                      const newErrors = { ...errors }
+                      delete newErrors.inviteCode
+                      setErrors(newErrors)
+                    }
+                  }}
+                  className={`flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary bg-background-primary transition-colors ${
+                    errors.inviteCode ? 'border-red-500' : inviteCodeValidated ? 'border-green-500' : 'border-border-standard'
+                  }`}
+                  placeholder="Enter your invite code"
+                  disabled={inviteCodeValidated}
+                />
+                <button
+                  type="button"
+                  onClick={validateInviteCode}
+                  disabled={isValidatingCode || inviteCodeValidated || !formData.inviteCode.trim()}
+                  className={`px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                    inviteCodeValidated 
+                      ? 'bg-green-600 text-white cursor-not-allowed'
+                      : 'bg-accent-primary text-text-inverse hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed'
+                  }`}
+                >
+                  {isValidatingCode ? (
+                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                  ) : inviteCodeValidated ? (
+                    '✓ Valid'
+                  ) : (
+                    'Verify'
+                  )}
+                </button>
+              </div>
+              {errors.inviteCode && <p className="text-red-500 text-xs mt-1">{errors.inviteCode}</p>}
+              {inviteCodeValidated && (
+                <p className="text-green-600 text-xs mt-1">✓ Invite code verified! You can now create your account.</p>
+              )}
+            </div>
+
             {/* OAuth Signup Buttons */}
-            <div className="space-y-3 mb-6">
+            <div className={`space-y-3 mb-6 ${!inviteCodeValidated ? 'opacity-50 pointer-events-none' : ''}`}>
               {/* GitHub Signup Button */}
               <button
                 onClick={() => handleOAuthSignup('github')}
@@ -160,7 +261,7 @@ export default function Register() {
               </div>
             </div>
 
-            <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
+            <form className={`mt-6 space-y-6 ${!inviteCodeValidated ? 'opacity-50 pointer-events-none' : ''}`} onSubmit={handleSubmit}>
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-text-primary">
