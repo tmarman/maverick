@@ -1,5 +1,5 @@
-// SQL Server Schema for Azure deployment
-// Copy this over schema.prisma when deploying to Azure with SQL Server
+// SQL Server Schema with Organization model (migrated from Business)
+// Updated schema with Business → Organization terminology alignment
 
 generator client {
   provider = "prisma-client-js"
@@ -54,14 +54,14 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations
+  // Relations - Updated to Organization terminology
   accounts         Account[]
   sessions         Session[]
   squareConnection SquareConnection?
   githubConnection GitHubConnection?
   claudeConnection ClaudeConnection?
-  ownedBusinesses  Business[]        @relation("BusinessOwner")
-  businessMemberships BusinessMember[]
+  ownedOrganizations Organization[]     @relation("OrganizationOwner")
+  organizationMemberships OrganizationMember[]
   chatSessions     ChatSession[]
   documentsCreated Document[]        @relation("DocumentCreator")
   featuresAssigned Feature[]
@@ -79,7 +79,7 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Maverick-specific models
+// External service connections (unchanged)
 model SquareConnection {
   id           String    @id @default(cuid())
   userId       String    @unique
@@ -130,13 +130,14 @@ model ClaudeConnection {
   @@map("claude_connections")
 }
 
-model Business {
+// MAIN MODEL: Organization (formerly Business)
+model Organization {
   id              String    @id @default(cuid())
-  ownerId         String    // Business owner (creator)
+  ownerId         String    // Organization owner (creator)
   name            String
   description     String?
   industry        String?
-  businessType    String?   // Valid values: 'online', 'physical', 'hybrid', 'service'
+  organizationType String?  // Valid values: 'online', 'physical', 'hybrid', 'service'
   location        String?
   legalStructure  String?   // Valid values: 'llc', 'corp', 's-corp'
   state           String?   // Incorporation state
@@ -145,10 +146,10 @@ model Business {
   appType         String?   // Valid values: 'website', 'ecommerce', 'booking', etc.
   appFeatures     String    @db.Text // JSON string of selected app features array
   
-  // Repository Integration (Company as Root Repo)
-  githubRepoId    String?   // GitHub repository ID for the company
-  repositoryUrl   String?   // Company repository URL
-  defaultBranch   String?   @default("main") // Default branch for company repo
+  // Repository Integration (Organization as Root Repo - GitHub Organization equivalent)
+  githubRepoId    String?   // GitHub repository ID for the organization
+  repositoryUrl   String?   // Organization repository URL (root monorepo)
+  defaultBranch   String?   @default("main") // Default branch for organization repo
   
   // Subscription and billing
   subscriptionPlan String?  // founder, growth, enterprise
@@ -159,41 +160,42 @@ model Business {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  // Relations
-  owner           User              @relation("BusinessOwner", fields: [ownerId], references: [id], onDelete: NoAction)
-  members         BusinessMember[]
+  // Relations - Updated references
+  owner           User              @relation("OrganizationOwner", fields: [ownerId], references: [id], onDelete: NoAction)
+  members         OrganizationMember[]
   formations      BusinessFormation[]
   projects        Project[]
 
-  @@map("businesses")
+  @@map("organizations")
 }
 
-// Business team membership model
-model BusinessMember {
-  id          String    @id @default(cuid())
-  businessId  String
-  userId      String
-  role        String    @default("MEMBER") // Valid values: OWNER, ADMIN, MEMBER, VIEWER
-  permissions String?   @db.Text // JSON string for specific permissions
-  invitedBy   String?   // User ID of who invited this member
-  invitedAt   DateTime? 
-  joinedAt    DateTime?
-  status      String    @default("PENDING") // PENDING, ACCEPTED, DECLINED, REMOVED
+// Organization team membership model (formerly BusinessMember)
+model OrganizationMember {
+  id             String    @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String    @default("MEMBER") // Valid values: OWNER, ADMIN, MEMBER, VIEWER
+  permissions    String?   @db.Text // JSON string for specific permissions
+  invitedBy      String?   // User ID of who invited this member
+  invitedAt      DateTime? 
+  joinedAt       DateTime?
+  status         String    @default("PENDING") // PENDING, ACCEPTED, DECLINED, REMOVED
   
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   // Relations
-  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@unique([businessId, userId]) // User can only be a member once per business
-  @@map("business_members")
+  @@unique([organizationId, userId]) // User can only be a member once per organization
+  @@map("organization_members")
 }
 
+// Business formation process model
 model BusinessFormation {
   id                String    @id @default(cuid())
-  businessId        String
+  organizationId    String
   workflowId        String?   // Temporal workflow ID
   status            String    @default("INITIATED") // Valid values: INITIATED, DOCUMENTS_GENERATED, LEGAL_REVIEW, STATE_FILING, EIN_ASSIGNED, BANKING_SETUP, APP_GENERATION, COMPLETED, FAILED
   currentStep       String?
@@ -209,9 +211,9 @@ model BusinessFormation {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  @@map("business_formations")
+  @@map("organization_formations")
 }
 
 model ChatSession {
@@ -228,18 +230,19 @@ model ChatSession {
   @@map("chat_sessions")
 }
 
-// Project Management Models
+// Project Management Models - Updated to reference Organization
 model Project {
   id          String    @id @default(cuid())
+  uuid        String?   @unique // UUID for Cosmos DB integration
   name        String
   description String?
   type        String    // Valid values: SOFTWARE, MARKETING, OPERATIONS, LEGAL, FINANCIAL, RESEARCH, CONTENT
   status      String    @default("PLANNING") // Valid values: PLANNING, ACTIVE, ON_HOLD, COMPLETED, ARCHIVED, CANCELLED
   
-  // Repository Integration (Project as Submodule)
+  // Repository Integration (Project as Submodule within Organization repo)
   githubRepoId     String?   // GitHub repository ID for this project
-  repositoryUrl    String?   // Project repository URL (will be submodule in company repo)
-  submodulePath    String?   // Path within company repo where this project is mounted
+  repositoryUrl    String?   // Project repository URL (submodule in organization repo)
+  submodulePath    String?   // Path within organization repo where this project is mounted
   defaultBranch    String?   @default("main") // Default branch for project repo
   
   // JSON fields converted to Text for SQL Server compatibility
@@ -247,15 +250,16 @@ model Project {
   aiAgentConfig    String?   @db.Text // JSON string for AI agents to use, preferences
   metadata         String?   @db.Text // JSON string for project-specific flexible data
   
-  // Relationships
-  business    Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  businessId  String
-  documents   Document[]
-  workItems   WorkItem[] // Renamed from features to support features AND bugs
+  // Relationships - Updated to Organization
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId   String?
+  documents        Document[]
+  workItems        WorkItem[] // Renamed from features to support features AND bugs
   
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
   
+  @@unique([organizationId, name], name: "unique_project_name_per_org")
   @@map("projects")
 }
 
@@ -273,7 +277,7 @@ model Document {
   // Collaboration mode
   collaborationMode String @default("HYBRID") // Valid values: CANVAS, CHAT, HYBRID, DOCUMENT
   
-  // Relationships
+  // Relationships (unchanged)
   project     Project   @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   projectId   String
   
@@ -287,9 +291,10 @@ model Document {
   @@map("documents")
 }
 
-// Hierarchical Work Item Model (Features & Bugs)
+// Hierarchical Work Item Model (Features & Bugs) - unchanged
 model WorkItem {
   id              String    @id @default(cuid())
+  uuid            String?   @unique // UUID for Cosmos DB integration
   title           String
   description     String?
   type            String    // Valid values: FEATURE, BUG, EPIC, STORY, TASK, SUBTASK
@@ -321,7 +326,7 @@ model WorkItem {
   stagingDeployedAt    DateTime? // When this item was deployed to staging
   productionDeployedAt DateTime? // When this item was deployed to production
   
-  // Relationships
+  // Relationships (unchanged)
   project         Project   @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   projectId       String
   
@@ -332,18 +337,18 @@ model WorkItem {
   parent          WorkItem? @relation("WorkItemHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children        WorkItem[] @relation("WorkItemHierarchy")
   
-  
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  createdBy       String?   // User ID of creator (for rehydration tracking)
   
   @@index([projectId, parentId]) // For efficient tree queries
   @@index([type, status]) // For filtering
   @@index([worktreeName]) // For worktree management
+  @@index([uuid]) // For Cosmos DB sync
   @@map("work_items")
 }
 
-
-// Legacy Feature model - keeping for migration compatibility
+// Legacy Feature model - keeping for migration compatibility (unchanged)
 model Feature {
   id              String    @id @default(cuid())
   title           String
@@ -373,6 +378,7 @@ model Feature {
   @@map("features")
 }
 
+// AI and recommendation models (unchanged)
 model AIAgent {
   id              String   @id @default(cuid())
   name            String   @unique // "product_expert", "lawyer", "developer"
@@ -420,13 +426,13 @@ model Recommendation {
 }
 
 // Enums converted to String fields with validation comments for SQL Server compatibility
-// BusinessStatus: DRAFT, IN_FORMATION, FORMED, ACTIVE, SUSPENDED
+// OrganizationStatus: DRAFT, IN_FORMATION, FORMED, ACTIVE, SUSPENDED (formerly BusinessStatus)
 // FormationStatus: INITIATED, DOCUMENTS_GENERATED, LEGAL_REVIEW, STATE_FILING, EIN_ASSIGNED, BANKING_SETUP, APP_GENERATION, COMPLETED, FAILED
 // ProjectType: SOFTWARE, MARKETING, OPERATIONS, LEGAL, FINANCIAL, RESEARCH, CONTENT
 // ProjectStatus: PLANNING, ACTIVE, ON_HOLD, COMPLETED, ARCHIVED, CANCELLED
 // DocumentType: PRD (Product Requirements Document), CANVAS (Business Model Canvas, etc.), CHAT (Chat conversations with AI), SPEC (Technical specifications), CODE_REVIEW (Code review discussions), MEETING_NOTES (Meeting notes and decisions), STRATEGY (Business strategy documents), RESEARCH (Market research, user research), WIREFRAME (UI/UX wireframes and mockups), LEGAL (Legal documents and contracts)
 // DocumentStatus: DRAFT, IN_REVIEW, APPROVED, PUBLISHED, ARCHIVED
 // CollaborationMode: CANVAS (Visual canvas mode), CHAT (Chat-based collaboration), HYBRID (Both canvas and chat), DOCUMENT (Traditional document editing)
-// FeatureStatus: PLANNED, IN_PROGRESS, IN_REVIEW, TESTING, DONE, CANCELLED, BLOCKED
-// Priority: LOW, MEDIUM, HIGH, URGENT
+// WorkItemStatus: PLANNED, IN_PROGRESS, IN_REVIEW, TESTING, DONE, CANCELLED, BLOCKED
+// Priority: LOW, MEDIUM, HIGH, URGENT, CRITICAL
 // RecommendationSource: EXPERT_KNOWLEDGE (Curated by experts), USER_GENERATED (Created by users), AI_GENERATED (Generated by AI), COMMUNITY (Community-contributed)

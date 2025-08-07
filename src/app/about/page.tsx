@@ -131,7 +131,7 @@ export default function AboutPage() {
             {[
               {
                 icon: <Code className="w-6 h-6" />,
-                title: "Claude Code Integration",
+                title: "AI Development Environment",
                 description: "Built-in AI development environment with real-time coding assistance"
               },
               {

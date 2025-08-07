@@ -11,7 +11,7 @@ export async function GET(
   try {
     const projects = await prisma.project.findMany({
       where: {
-        businessId: businessId
+        organizationId: businessId
       },
       include: {
         _count: {
@@ -51,7 +51,7 @@ export async function POST(
         name: data.name,
         description: data.description,
         type: data.type,
-        businessId: businessId,
+        organizationId: businessId,
         githubConfig: data.githubConfig ? JSON.stringify(data.githubConfig) : null,
         aiAgentConfig: data.aiAgentConfig ? JSON.stringify(data.aiAgentConfig) : null,
         metadata: null

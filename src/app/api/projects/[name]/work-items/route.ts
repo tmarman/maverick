@@ -91,11 +91,50 @@ export async function GET(
     const resolvedParams = await params
     const projectName = resolvedParams.name.toLowerCase()
     
-    // TODO: Verify user has access to this project
-    // For now, simple email-based access check
-    
-    // Load work items from current project context (active worktree)
-    const workItems = await projectContextService.loadWorkItems(projectName)
+    // Find user's accessible organizations first
+    const userOrganizations = await prisma.organization.findMany({
+      where: {
+        OR: [
+          { ownerId: session.user.id },
+          {
+            members: {
+              some: {
+                userId: session.user.id,
+                status: 'ACCEPTED',
+                role: { in: ['ADMIN', 'MEMBER'] }
+              }
+            }
+          }
+        ]
+      }
+    })
+
+    if (userOrganizations.length === 0) {
+      return NextResponse.json({ error: 'No accessible organizations found' }, { status: 403 })
+    }
+
+    // Find project by name within user's accessible organizations
+    const project = await prisma.project.findFirst({
+      where: {
+        name: projectName,
+        organizationId: { in: userOrganizations.map(org => org.id) }
+      }
+    })
+
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 })
+    }
+
+    // Load work items from SQL Server
+    const workItems = await prisma.workItem.findMany({
+      where: {
+        projectId: project.id
+      },
+      orderBy: [
+        { orderIndex: 'asc' },
+        { createdAt: 'asc' }
+      ]
+    })
 
     return NextResponse.json({ workItems })
   } catch (error) {
@@ -279,7 +318,7 @@ export async function POST(
     const project = await prisma.project.findFirst({
       where: {
         name: name,
-        business: {
+        organization: {
           OR: [
             { ownerId: session.user.id },
             {
@@ -295,7 +334,7 @@ export async function POST(
         }
       },
       include: {
-        business: true
+        organization: true
       }
     })
 

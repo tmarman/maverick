@@ -31,10 +31,10 @@ export async function PATCH(
     const { prisma } = await import('@/lib/prisma')
 
     // Find the invitation
-    const invitation = await prisma.businessMember.findUnique({
+    const invitation = await prisma.organizationMember.findUnique({
       where: { id: inviteId },
       include: {
-        business: true,
+        organization: true,
         user: true
       }
     })
@@ -57,7 +57,7 @@ export async function PATCH(
     }
 
     // Update the invitation status
-    const updatedInvitation = await prisma.businessMember.update({
+    const updatedInvitation = await prisma.organizationMember.update({
       where: { id: inviteId },
       data: {
         status: action === 'accept' ? 'ACCEPTED' : 'DECLINED',
@@ -67,7 +67,7 @@ export async function PATCH(
         userId: session.user.id
       },
       include: {
-        business: true,
+        organization: true,
         user: true
       }
     })
@@ -75,18 +75,18 @@ export async function PATCH(
     // If accepted, send notification to business owner
     if (action === 'accept') {
       try {
-        // Find business owner
-        const businessOwner = await prisma.user.findUnique({
-          where: { id: updatedInvitation.business.ownerId }
+        // Find organization owner
+        const organizationOwner = await prisma.user.findUnique({
+          where: { id: updatedInvitation.organization.ownerId }
         })
 
-        if (businessOwner && businessOwner.email !== session.user.email) {
+        if (organizationOwner && organizationOwner.email !== session.user.email) {
           const { azureEmailService } = await import('@/lib/azure-email')
           
           await azureEmailService.sendTeamJoinNotificationEmail(
-            businessOwner.email,
+            organizationOwner.email,
             session.user.name || session.user.email,
-            updatedInvitation.business.name,
+            updatedInvitation.organization.name,
             updatedInvitation.role
           )
         }
@@ -100,12 +100,12 @@ export async function PATCH(
       invitation: {
         id: updatedInvitation.id,
         status: updatedInvitation.status,
-        businessName: updatedInvitation.business.name,
+        organizationName: updatedInvitation.organization.name,
         role: updatedInvitation.role,
         joinedAt: updatedInvitation.joinedAt
       },
       message: action === 'accept' 
-        ? `Welcome to ${updatedInvitation.business.name}!`
+        ? `Welcome to ${updatedInvitation.organization.name}!`
         : 'Invitation declined'
     })
 
@@ -136,10 +136,10 @@ export async function GET(
     const { prisma } = await import('@/lib/prisma')
 
     // Find the invitation
-    const invitation = await prisma.businessMember.findUnique({
+    const invitation = await prisma.organizationMember.findUnique({
       where: { id: inviteId },
       include: {
-        business: true,
+        organization: true,
         user: {
           select: {
             email: true,
@@ -166,8 +166,8 @@ export async function GET(
     const response = NextResponse.json({
       invitation: {
         id: invitation.id,
-        businessName: invitation.business.name,
-        businessDescription: invitation.business.description,
+        organizationName: invitation.organization.name,
+        organizationDescription: invitation.organization.description,
         role: invitation.role,
         status: invitation.status,
         invitedEmail: invitation.user.email,

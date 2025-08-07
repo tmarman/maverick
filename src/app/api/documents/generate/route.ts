@@ -9,57 +9,57 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions)
     const body = await request.json()
 
-    const { businessId, documentTypes } = body
+    const { organizationId, documentTypes } = body
 
-    if (!businessId) {
+    if (!organizationId) {
       return NextResponse.json(
         { error: 'Business ID is required' },
         { status: 400 }
       )
     }
 
-    // Get business information from database
+    // Get organization information from database
     const prisma = await getDatabase()
-    const business = await withRetry(() => prisma.business.findUnique({
-      where: { id: businessId },
+    const organization = await withRetry(() => prisma.organization.findUnique({
+      where: { id: organizationId },
       include: {
         owner: true
       }
     }))
 
-    if (!business) {
+    if (!organization) {
       return NextResponse.json(
         { error: 'Business not found' },
         { status: 404 }
       )
     }
 
-    // Check authorization (business owner or member)
-    if (session?.user?.id !== business.ownerId) {
-      // TODO: Check if user is a business member
+    // Check authorization (organization owner or member)
+    if (session?.user?.id !== organization.ownerId) {
+      // TODO: Check if user is a organization member
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 403 }
       )
     }
 
-    // Map business data to document generator format
-    const businessInfo: BusinessInfo = {
-      businessName: business.name,
-      businessType: business.legalStructure as 'LLC' | 'C-Corp' | 'S-Corp',
-      state: business.state || 'DE',
-      founderName: business.owner.name || 'Business Owner',
-      founderEmail: business.owner.email,
-      industry: business.industry || 'General Business',
-      description: business.description || 'Business operations',
-      formationDate: business.createdAt
+    // Map organization data to document generator format
+    const organizationInfo: BusinessInfo = {
+      organizationName: organization.name,
+      organizationType: organization.legalStructure as 'LLC' | 'C-Corp' | 'S-Corp',
+      state: organization.state || 'DE',
+      founderName: organization.owner.name || 'Business Owner',
+      founderEmail: organization.owner.email,
+      industry: organization.industry || 'General Business',
+      description: organization.description || 'Business operations',
+      formationDate: organization.createdAt
     }
 
-    // Validate business information
-    const validationErrors = validateBusinessInfo(businessInfo)
+    // Validate organization information
+    const validationErrors = validateBusinessInfo(organizationInfo)
     if (validationErrors.length > 0) {
       return NextResponse.json(
-        { error: 'Invalid business information', details: validationErrors },
+        { error: 'Invalid organization information', details: validationErrors },
         { status: 400 }
       )
     }
@@ -72,19 +72,19 @@ export async function POST(request: NextRequest) {
         try {
           switch (docType) {
             case 'privacy-policy':
-              documents.push(LegalDocumentGenerator.generatePrivacyPolicy(businessInfo))
+              documents.push(LegalDocumentGenerator.generatePrivacyPolicy(organizationInfo))
               break
             case 'terms-of-service':
-              documents.push(LegalDocumentGenerator.generateTermsOfService(businessInfo))
+              documents.push(LegalDocumentGenerator.generateTermsOfService(organizationInfo))
               break
             case 'operating-agreement':
-              if (businessInfo.businessType === 'LLC') {
-                documents.push(LegalDocumentGenerator.generateOperatingAgreement(businessInfo))
+              if (organizationInfo.organizationType === 'LLC') {
+                documents.push(LegalDocumentGenerator.generateOperatingAgreement(organizationInfo))
               }
               break
             case 'articles-of-incorporation':
-              if (businessInfo.businessType !== 'LLC') {
-                documents.push(LegalDocumentGenerator.generateArticlesOfIncorporation(businessInfo))
+              if (organizationInfo.organizationType !== 'LLC') {
+                documents.push(LegalDocumentGenerator.generateArticlesOfIncorporation(organizationInfo))
               }
               break
             default:
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         }
       }
     } else {
-      documents = LegalDocumentGenerator.generateAllDocuments(businessInfo)
+      documents = LegalDocumentGenerator.generateAllDocuments(organizationInfo)
     }
 
     // Store generated documents in database for future reference
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
         markdown: LegalDocumentGenerator.exportToMarkdown(doc)
       })),
       stored: documentRecords.length,
-      message: `Generated ${documents.length} legal document(s) for ${businessInfo.businessName}`
+      message: `Generated ${documents.length} legal document(s) for ${organizationInfo.organizationName}`
     })
 
   } catch (error) {
@@ -151,9 +151,9 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions) 
     const { searchParams } = new URL(request.url)
-    const businessId = searchParams.get('businessId')
+    const organizationId = searchParams.get('organizationId')
 
-    if (!businessId) {
+    if (!organizationId) {
       return NextResponse.json(
         { error: 'Business ID is required' },
         { status: 400 }
@@ -162,9 +162,9 @@ export async function GET(request: NextRequest) {
 
     const prisma = await getDatabase()
     
-    // Get existing documents for the business
-    const business = await withRetry(() => prisma.business.findUnique({
-      where: { id: businessId },
+    // Get existing documents for the organization
+    const organization = await withRetry(() => prisma.organization.findUnique({
+      where: { id: organizationId },
       include: {
         projects: {
           include: {
@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
       }
     }))
 
-    if (!business) {
+    if (!organization) {
       return NextResponse.json(
         { error: 'Business not found' },
         { status: 404 }
@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check authorization
-    if (session?.user?.id !== business.ownerId) {
+    if (session?.user?.id !== organization.ownerId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 403 }
@@ -197,7 +197,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Flatten documents from all projects
-    const legalDocuments = business.projects.flatMap(project => 
+    const legalDocuments = organization.projects.flatMap(project => 
       project.documents.map(doc => ({
         id: doc.id,
         title: doc.title,
@@ -210,7 +210,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      businessName: business.name,
+      organizationName: organization.name,
       documents: legalDocuments
     })
 

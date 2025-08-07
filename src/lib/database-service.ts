@@ -4,11 +4,11 @@
 import { PrismaClient } from '@prisma/client'
 
 // Type definitions for the new models (portable across databases)
-export interface CreateBusinessData {
+export interface CreateOrganizationData {
   name: string
   description?: string
   industry?: string
-  businessType?: string
+  organizationType?: string
   location?: string
   legalStructure?: string
   state?: string
@@ -21,7 +21,7 @@ export interface CreateProjectData {
   name: string
   description?: string
   type: 'SOFTWARE' | 'MARKETING' | 'OPERATIONS' | 'LEGAL' | 'FINANCIAL' | 'RESEARCH' | 'CONTENT'
-  businessId: string
+  organizationId: string
   githubConfig?: {
     repoUrl?: string
     defaultBranch?: string
@@ -137,13 +137,13 @@ export class DatabaseService {
   }
 
   // Business operations
-  async createBusiness(userId: string, data: CreateBusinessData) {
-    return this.prisma.business.create({
+  async createBusiness(userId: string, data: CreateOrganizationData) {
+    return this.prisma.organization.create({
       data: {
         name: data.name,
         description: data.description,
         industry: data.industry,
-        businessType: data.businessType,
+        organizationType: data.organizationType,
         location: data.location,
         legalStructure: data.legalStructure,
         state: data.state,
@@ -161,9 +161,9 @@ export class DatabaseService {
     })
   }
 
-  async getBusinessWithProjects(businessId: string) {
-    return this.prisma.business.findUnique({
-      where: { id: businessId },
+  async getOrganizationWithProjects(organizationId: string) {
+    return this.prisma.organization.findUnique({
+      where: { id: organizationId },
       include: {
         owner: true,
         projects: {
@@ -183,14 +183,14 @@ export class DatabaseService {
         name: data.name,
         description: data.description,
         type: data.type,
-        businessId: data.businessId,
+        organizationId: data.organizationId,
         // Convert objects to JSON strings for SQL Server
         githubConfig: data.githubConfig ? JSON.stringify(data.githubConfig) : null,
         aiAgentConfig: data.aiAgentConfig ? JSON.stringify(data.aiAgentConfig) : null,
         metadata: null
       },
       include: {
-        business: true,
+        organization: true,
         documents: true,
         workItems: true
       }
@@ -201,7 +201,7 @@ export class DatabaseService {
     return this.prisma.project.findUnique({
       where: { id: projectId },
       include: {
-        business: true,
+        organization: true,
         documents: {
           include: {
             createdBy: true
@@ -313,9 +313,9 @@ export class DatabaseService {
   }
 
   // Analytics and insights
-  async getBusinessOverview(businessId: string) {
-    const business = await this.prisma.business.findUnique({
-      where: { id: businessId },
+  async getOrganizationOverview(organizationId: string) {
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
       include: {
         projects: {
           include: {
@@ -326,16 +326,16 @@ export class DatabaseService {
       }
     })
 
-    if (!business) return null
+    if (!organization) return null
 
     return {
-      business,
+      organization,
       stats: {
-        totalProjects: business.projects.length,
-        activeProjects: business.projects.filter(p => p.status === 'ACTIVE').length,
-        totalDocuments: business.projects.reduce((sum, p) => sum + p.documents.length, 0),
-        totalWorkItems: business.projects.reduce((sum, p) => sum + p.workItems.length, 0),
-        completedWorkItems: business.projects.reduce((sum, p) => 
+        totalProjects: organization.projects.length,
+        activeProjects: organization.projects.filter(p => p.status === 'ACTIVE').length,
+        totalDocuments: organization.projects.reduce((sum, p) => sum + p.documents.length, 0),
+        totalWorkItems: organization.projects.reduce((sum, p) => sum + p.workItems.length, 0),
+        completedWorkItems: organization.projects.reduce((sum, p) => 
           sum + p.workItems.filter(f => f.status === 'DONE').length, 0
         )
       }
@@ -371,7 +371,7 @@ export class DatabaseService {
       const userWithBusinesses = await this.prisma.user.findUnique({
         where: { email: userEmail },
         include: {
-          ownedBusinesses: {
+          ownedOrganizations: {
             include: {
               projects: {
                 include: {
@@ -385,10 +385,10 @@ export class DatabaseService {
               }
             }
           },
-          businessMemberships: {
+          organizationMemberships: {
             where: { status: 'ACCEPTED' },
             include: {
-              business: {
+              organization: {
                 include: {
                   projects: {
                     include: {
@@ -409,19 +409,19 @@ export class DatabaseService {
 
       if (!userWithBusinesses) return []
 
-      // Combine owned businesses and member businesses
-      const allBusinesses = [
-        ...userWithBusinesses.ownedBusinesses,
-        ...userWithBusinesses.businessMemberships.map(m => m.business)
+      // Combine owned organizations and member organizations
+      const allOrganizations = [
+        ...userWithBusinesses.ownedOrganizations,
+        ...userWithBusinesses.organizationMemberships.map(m => m.organization)
       ]
 
       // Transform to the expected format
-      return allBusinesses.map(business => ({
-        id: business.id,
-        name: business.name,
-        description: business.description,
+      return allOrganizations.map(organization => ({
+        id: organization.id,
+        name: organization.name,
+        description: organization.description,
         repositoryUrl: null, // This will come from GitHub integration
-        products: business.projects.map(project => ({
+        products: organization.projects.map(project => ({
           id: project.id,
           name: project.name,
           description: project.description,
@@ -439,9 +439,9 @@ export class DatabaseService {
     }
   }
 
-  // User's businesses and projects
+  // User's organizations and projects
   async getUserBusinesses(userId: string) {
-    return this.prisma.business.findMany({
+    return this.prisma.organization.findMany({
       where: { ownerId: userId },
       include: {
         projects: {

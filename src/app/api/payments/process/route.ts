@@ -114,14 +114,14 @@ export async function POST(request: NextRequest) {
       userId = user.id
     }
 
-    // Create business record
-    const business = await withRetry(() => prisma.business.create({
+    // Create organization record
+    const organization = await withRetry(() => prisma.organization.create({
       data: {
         ownerId: userId,
         name: businessData.businessName,
         description: businessData.description,
         industry: businessData.industry,
-        businessType: businessData.businessType,
+        organizationType: businessData.businessType,
         legalStructure: businessData.businessType,
         state: businessData.state,
         status: 'IN_FORMATION',
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
     // Create business formation record
     const formation = await withRetry(() => prisma.businessFormation.create({
       data: {
-        businessId: business.id,
+        organizationId: organization.id,
         status: 'INITIATED',
         currentStep: 'PAYMENT_RECEIVED',
         completedSteps: JSON.stringify(['PAYMENT_RECEIVED']),
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
         description: `Main ${businessData.businessName} application`,
         type: 'SOFTWARE',
         status: 'PLANNING',
-        businessId: business.id,
+        organizationId: organization.id,
         githubConfig: JSON.stringify({
           repositoryUrl: `https://github.com/user/${businessData.businessName.toLowerCase().replace(/\s+/g, '-')}`,
           autoDeployment: true
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
 
     const formationOrder = {
       id: formation.id,
-      businessId: business.id,
+      businessId: organization.id,
       userId: userId,
       businessName: businessData.businessName,
       businessType: businessData.businessType,

@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       name: data.name,
       description: data.description,
       industry: data.industry,
-      businessType: data.businessType,
+      organizationType: data.organizationType,
       location: data.location,
       legalStructure: data.legalStructure,
       state: data.state,

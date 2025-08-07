@@ -26,14 +26,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'No business found for user' }, { status: 400 })
       }
 
-      const businessId = companies[0].id
+      const organizationId = companies[0].id
 
       // Create the project in the database
       const project = await db.createProject({
         name: projectData.name,
         description: projectData.description,
         type: projectData.type || 'SOFTWARE',
-        businessId
+        organizationId
       })
 
       // Generate comprehensive documents using Claude Code

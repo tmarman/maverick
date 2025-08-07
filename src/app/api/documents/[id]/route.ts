@@ -21,7 +21,7 @@ export async function GET(
       where: {
         id: id,
         project: {
-          business: {
+          organization: {
             ownerId: session.user.id
           }
         }
@@ -29,7 +29,7 @@ export async function GET(
       include: {
         project: {
           include: {
-            business: true
+            organization: true
           }
         }
       }
@@ -69,7 +69,7 @@ export async function PUT(
       where: {
         id: id,
         project: {
-          business: {
+          organization: {
             ownerId: session.user.id
           }
         }
@@ -118,7 +118,7 @@ export async function DELETE(
       where: {
         id: id,
         project: {
-          business: {
+          organization: {
             ownerId: session.user.id
           }
         }

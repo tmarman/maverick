@@ -64,7 +64,7 @@ export default function PricingPage() {
                     <li>• <strong>500 AI messages/month</strong></li>
                     <li>• Unlimited personal projects</li>
                     <li>• 2 collaborators per project</li>
-                    <li>• Claude Code integration</li>
+                    <li>• Integrated AI development</li>
                     <li>• GitHub auto-commit</li>
                     <li>• Custom domains</li>
                   </ul>
@@ -201,7 +201,7 @@ export default function PricingPage() {
                   <td className="text-center py-3 px-4 bg-accent-primary/5">✅</td>
                 </tr>
                 <tr className="border-b border-border-subtle">
-                  <td className="py-3 px-4 font-medium">Claude Code Integration</td>
+                  <td className="py-3 px-4 font-medium">AI Development Environment</td>
                   <td className="text-center py-3 px-4">❌</td>
                   <td className="text-center py-3 px-4">❌</td>
                   <td className="text-center py-3 px-4 bg-accent-primary/5">✅</td>

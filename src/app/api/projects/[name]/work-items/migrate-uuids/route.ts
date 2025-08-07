@@ -23,7 +23,7 @@ export async function POST(
     const project = await prisma.project.findFirst({
       where: {
         name: name,
-        business: {
+        organization: {
           OR: [
             { ownerId: session.user.id },
             {

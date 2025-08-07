@@ -56,7 +56,9 @@
       "Bash(gtimeout 10s az webapp log tail --name maverick --resource-group maverick_group)",
       "Bash(npx dotenv -e .env.local:*)",
       "Bash(npx tsc:*)",
-      "Bash(git show:*)"
+      "Bash(git show:*)",
+      "WebFetch(domain:developer.squareup.com)",
+      "WebFetch(domain:authjs.dev)"
     ],
     "deny": []
   }

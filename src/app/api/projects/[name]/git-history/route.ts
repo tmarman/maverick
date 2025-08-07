@@ -6,7 +6,7 @@ import { getGitHubServiceForUser } from '@/lib/github-service'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ projectId: string }> }
+  { params }: { params: Promise<{ name: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { projectId } = await params
+    const { name } = await params
     const { searchParams } = new URL(request.url)
     const branch = searchParams.get('branch') || 'main'
     const limit = parseInt(searchParams.get('limit') || '50')
@@ -22,8 +22,8 @@ export async function GET(
     // Get project with repository information
     const project = await prisma.project.findFirst({
       where: {
-        id: projectId,
-        business: {
+        name: name,
+        organization: {
           OR: [
             { ownerId: session.user.id },
             {
@@ -81,7 +81,7 @@ export async function GET(
     const analyzedHistory = await analyzeProjectHistory(commits, project.workItems)
 
     // Get project milestones (deployments, major features, etc.)
-    const milestones = await getProjectMilestones(projectId)
+    const milestones = await getProjectMilestones(project.id)
 
     return NextResponse.json({
       project: {

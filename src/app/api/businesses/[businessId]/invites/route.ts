@@ -30,22 +30,22 @@ export async function POST(
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Verify the current user is an owner or admin of the business
-    const currentUserMembership = await prisma.businessMember.findFirst({
+    // Verify the current user is an owner or admin of the organization
+    const currentUserMembership = await prisma.organizationMember.findFirst({
       where: {
-        businessId,
+        organizationId: businessId,
         userId: session.user.id,
         status: 'ACCEPTED',
         role: { in: ['OWNER', 'ADMIN'] }
       },
       include: {
-        business: true
+        organization: true
       }
     })
 
     if (!currentUserMembership) {
       return NextResponse.json({ 
-        error: 'You do not have permission to invite members to this business' 
+        error: 'You do not have permission to invite members to this organization' 
       }, { status: 403 })
     }
 
@@ -66,10 +66,10 @@ export async function POST(
     }
 
     // Check if there's already a pending or accepted invitation
-    const existingInvite = await prisma.businessMember.findUnique({
+    const existingInvite = await prisma.organizationMember.findUnique({
       where: {
-        businessId_userId: {
-          businessId,
+        organizationId_userId: {
+          organizationId: businessId,
           userId: invitedUser.id
         }
       }
@@ -78,7 +78,7 @@ export async function POST(
     if (existingInvite) {
       if (existingInvite.status === 'ACCEPTED') {
         return NextResponse.json({ 
-          error: 'User is already a member of this business' 
+          error: 'User is already a member of this organization' 
         }, { status: 400 })
       }
       
@@ -90,15 +90,15 @@ export async function POST(
     }
 
     // Create or update the invitation
-    const invitation = await prisma.businessMember.upsert({
+    const invitation = await prisma.organizationMember.upsert({
       where: {
-        businessId_userId: {
-          businessId,
+        organizationId_userId: {
+          organizationId: businessId,
           userId: invitedUser.id
         }
       },
       create: {
-        businessId,
+        organizationId: businessId,
         userId: invitedUser.id,
         role,
         status: 'PENDING',
@@ -113,7 +113,7 @@ export async function POST(
         invitedAt: new Date(),
       },
       include: {
-        business: true,
+        organization: true,
         user: true
       }
     })
@@ -123,20 +123,20 @@ export async function POST(
       const { azureEmailService } = await import('@/lib/azure-email')
       
       const inviteUrl = `${process.env.NEXTAUTH_URL || 'https://beta.flywithmaverick.com'}/app/invites/${invitation.id}`
-      const businessName = currentUserMembership.business.name
+      const organizationName = currentUserMembership.organization.name
       const inviterName = session.user.name || session.user.email
       
       await azureEmailService.sendTeamInvitationEmail(
         email,
         inviterName,
-        businessName,
+        organizationName,
         role,
         inviteUrl,
         message
       )
       
       console.log('Team invitation email sent', {
-        businessId,
+        organizationId: businessId,
         invitedEmail: email,
         invitedBy: session.user.email,
         role
@@ -191,10 +191,10 @@ export async function GET(
     const { businessId } = await params
     const { prisma } = await import('@/lib/prisma')
 
-    // Verify user has access to this business
-    const userMembership = await prisma.businessMember.findFirst({
+    // Verify user has access to this organization
+    const userMembership = await prisma.organizationMember.findFirst({
       where: {
-        businessId,
+        organizationId: businessId,
         userId: session.user.id,
         status: 'ACCEPTED'
       }
@@ -202,14 +202,14 @@ export async function GET(
 
     if (!userMembership) {
       return NextResponse.json({ 
-        error: 'You do not have access to this business' 
+        error: 'You do not have access to this organization' 
       }, { status: 403 })
     }
 
-    // Get all invitations for this business
-    const invitations = await prisma.businessMember.findMany({
+    // Get all invitations for this organization
+    const invitations = await prisma.organizationMember.findMany({
       where: {
-        businessId,
+        organizationId: businessId,
         status: { in: ['PENDING', 'ACCEPTED', 'DECLINED'] }
       },
       include: {

@@ -4,8 +4,8 @@
  */
 
 export interface BusinessInfo {
-  businessName: string
-  businessType: 'LLC' | 'C-Corp' | 'S-Corp'
+  organizationName: string
+  organizationType: 'LLC' | 'C-Corp' | 'S-Corp'
   state: string
   founderName: string
   founderEmail: string
@@ -26,7 +26,7 @@ export class LegalDocumentGenerator {
 
   static generatePrivacyPolicy(businessInfo: BusinessInfo): DocumentTemplate {
     const content = `
-# Privacy Policy for ${businessInfo.businessName}
+# Privacy Policy for ${businessInfo.organizationName}
 
 **Effective Date:** ${new Date().toLocaleDateString()}
 
@@ -98,7 +98,7 @@ We may update this Privacy Policy from time to time. We will notify you of any c
 
 If you have any questions about this Privacy Policy, please contact us at:
 
-**${businessInfo.businessName}**
+**${businessInfo.organizationName}**
 Email: ${businessInfo.founderEmail}
 
 ---
@@ -108,7 +108,7 @@ Email: ${businessInfo.founderEmail}
 
     return {
       type: 'privacy-policy',
-      title: `Privacy Policy - ${businessInfo.businessName}`,
+      title: `Privacy Policy - ${businessInfo.organizationName}`,
       content,
       lastUpdated: new Date()
     }
@@ -116,17 +116,17 @@ Email: ${businessInfo.founderEmail}
 
   static generateTermsOfService(businessInfo: BusinessInfo): DocumentTemplate {
     const content = `
-# Terms of Service for ${businessInfo.businessName}
+# Terms of Service for ${businessInfo.organizationName}
 
 **Effective Date:** ${new Date().toLocaleDateString()}
 
 ## 1. Acceptance of Terms
 
-By accessing and using the services provided by ${businessInfo.businessName} ("Company," "we," "us," or "our"), you accept and agree to be bound by these Terms of Service ("Terms").
+By accessing and using the services provided by ${businessInfo.organizationName} ("Company," "we," "us," or "our"), you accept and agree to be bound by these Terms of Service ("Terms").
 
 ## 2. Description of Service
 
-${businessInfo.businessName} provides ${businessInfo.description} in the ${businessInfo.industry} industry. Our services are subject to these Terms and any additional terms and conditions that may apply to specific features or services.
+${businessInfo.organizationName} provides ${businessInfo.description} in the ${businessInfo.industry} industry. Our services are subject to these Terms and any additional terms and conditions that may apply to specific features or services.
 
 ## 3. User Accounts
 
@@ -152,7 +152,7 @@ You agree not to use our services to:
 ## 5. Intellectual Property
 
 ### Our Content
-All content, features, and functionality of our services are owned by ${businessInfo.businessName} and are protected by copyright, trademark, and other intellectual property laws.
+All content, features, and functionality of our services are owned by ${businessInfo.organizationName} and are protected by copyright, trademark, and other intellectual property laws.
 
 ### User Content
 You retain ownership of content you submit to our services, but grant us a license to use, modify, and display such content in connection with providing our services.
@@ -180,11 +180,11 @@ Your privacy is important to us. Please review our Privacy Policy, which governs
 - We reserve the right to modify or discontinue services at any time
 
 ### Limitation of Liability
-To the maximum extent permitted by law, ${businessInfo.businessName} shall not be liable for any indirect, incidental, special, or consequential damages arising out of your use of our services.
+To the maximum extent permitted by law, ${businessInfo.organizationName} shall not be liable for any indirect, incidental, special, or consequential damages arising out of your use of our services.
 
 ## 9. Indemnification
 
-You agree to indemnify and hold harmless ${businessInfo.businessName} from any claims, damages, or expenses arising out of your use of our services or violation of these Terms.
+You agree to indemnify and hold harmless ${businessInfo.organizationName} from any claims, damages, or expenses arising out of your use of our services or violation of these Terms.
 
 ## 10. Termination
 
@@ -202,7 +202,7 @@ We may update these Terms from time to time. We will notify you of any material 
 
 If you have any questions about these Terms, please contact us at:
 
-**${businessInfo.businessName}**
+**${businessInfo.organizationName}**
 Email: ${businessInfo.founderEmail}
 
 ---
@@ -212,19 +212,19 @@ Email: ${businessInfo.founderEmail}
 
     return {
       type: 'terms-of-service',
-      title: `Terms of Service - ${businessInfo.businessName}`,
+      title: `Terms of Service - ${businessInfo.organizationName}`,
       content,
       lastUpdated: new Date()
     }
   }
 
   static generateOperatingAgreement(businessInfo: BusinessInfo): DocumentTemplate {
-    if (businessInfo.businessType !== 'LLC') {
+    if (businessInfo.organizationType !== 'LLC') {
       throw new Error('Operating Agreement is only applicable for LLC entities')
     }
 
     const content = `
-# Operating Agreement for ${businessInfo.businessName}
+# Operating Agreement for ${businessInfo.organizationName}
 
 **Formation Date:** ${businessInfo.formationDate?.toLocaleDateString() || new Date().toLocaleDateString()}
 **State of Formation:** ${businessInfo.state}
@@ -232,7 +232,7 @@ Email: ${businessInfo.founderEmail}
 ## 1. Formation and Purpose
 
 ### 1.1 Formation
-${businessInfo.businessName} ("Company") is a Limited Liability Company formed under the laws of ${businessInfo.state}.
+${businessInfo.organizationName} ("Company") is a Limited Liability Company formed under the laws of ${businessInfo.state}.
 
 ### 1.2 Purpose
 The purpose of the Company is to engage in ${businessInfo.description} and any other lawful business activities.
@@ -329,24 +329,24 @@ Member
 
     return {
       type: 'operating-agreement',
-      title: `Operating Agreement - ${businessInfo.businessName}`,
+      title: `Operating Agreement - ${businessInfo.organizationName}`,
       content,
       lastUpdated: new Date()
     }
   }
 
   static generateArticlesOfIncorporation(businessInfo: BusinessInfo): DocumentTemplate {
-    if (businessInfo.businessType === 'LLC') {
+    if (businessInfo.organizationType === 'LLC') {
       throw new Error('Articles of Incorporation are not applicable for LLC entities. Use Articles of Organization instead.')
     }
 
     const content = `
-# Articles of Incorporation for ${businessInfo.businessName}
+# Articles of Incorporation for ${businessInfo.organizationName}
 
 **Filed with the Secretary of State of ${businessInfo.state}**
 
 ## Article I - Name
-The name of the corporation is ${businessInfo.businessName}.
+The name of the corporation is ${businessInfo.organizationName}.
 
 ## Article II - Purpose
 The purpose of the corporation is to engage in ${businessInfo.description} and any other lawful business activities permitted under the laws of ${businessInfo.state}.
@@ -358,10 +358,10 @@ The address of the registered office and the name of the registered agent are as
 ## Article IV - Capital Stock
 
 ### 4.1 Authorized Shares
-The corporation is authorized to issue ${businessInfo.businessType === 'S-Corp' ? '10,000,000' : '100,000,000'} shares of common stock, par value $0.001 per share.
+The corporation is authorized to issue ${businessInfo.organizationType === 'S-Corp' ? '10,000,000' : '100,000,000'} shares of common stock, par value $0.001 per share.
 
 ### 4.2 Classes of Stock
-${businessInfo.businessType === 'C-Corp' ? 
+${businessInfo.organizationType === 'C-Corp' ? 
   'The corporation may issue multiple classes of stock with different rights, preferences, and restrictions as determined by the Board of Directors.' :
   'The corporation is authorized to issue only one class of common stock.'
 }
@@ -410,7 +410,7 @@ Date: ${new Date().toLocaleDateString()}
 
     return {
       type: 'articles-of-incorporation',
-      title: `Articles of Incorporation - ${businessInfo.businessName}`,
+      title: `Articles of Incorporation - ${businessInfo.organizationName}`,
       content,
       lastUpdated: new Date()
     }
@@ -424,7 +424,7 @@ Date: ${new Date().toLocaleDateString()}
     documents.push(this.generateTermsOfService(businessInfo))
 
     // Generate entity-specific documents
-    if (businessInfo.businessType === 'LLC') {
+    if (businessInfo.organizationType === 'LLC') {
       documents.push(this.generateOperatingAgreement(businessInfo))
     } else {
       documents.push(this.generateArticlesOfIncorporation(businessInfo))
@@ -455,8 +455,8 @@ ${document.content}
 export function validateBusinessInfo(businessInfo: Partial<BusinessInfo>): string[] {
   const errors: string[] = []
 
-  if (!businessInfo.businessName) errors.push('Business name is required')
-  if (!businessInfo.businessType) errors.push('Business type is required')
+  if (!businessInfo.organizationName) errors.push('Organization name is required')
+  if (!businessInfo.organizationType) errors.push('Organization type is required')
   if (!businessInfo.state) errors.push('State is required')
   if (!businessInfo.founderName) errors.push('Founder name is required')
   if (!businessInfo.founderEmail) errors.push('Founder email is required')

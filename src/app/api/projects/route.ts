@@ -68,21 +68,21 @@ export async function POST(request: NextRequest) {
     // Import Prisma client
     const { prisma } = await import('@/lib/prisma')
     
-    // Find or create a business for this user
-    // TODO: In the future, users might select which business to add the project to
-    let business = await prisma.business.findFirst({
+    // Find or create a organization for this user
+    // TODO: In the future, users might select which organization to add the project to
+    let organization = await prisma.organization.findFirst({
       where: {
         ownerId: session.user.id
       }
     })
 
-    if (!business) {
-      // Create a default personal business for the user
-      business = await prisma.business.create({
+    if (!organization) {
+      // Create a default personal organization for the user
+      organization = await prisma.organization.create({
         data: {
-          name: `${session.user.name || session.user.email.split('@')[0]}'s Business`,
+          name: `${session.user.name || session.user.email.split('@')[0]}'s Organization`,
           ownerId: session.user.id,
-          businessType: 'online',
+          organizationType: 'online',
           status: 'ACTIVE',
           squareServices: JSON.stringify([]),
           appFeatures: JSON.stringify([])
@@ -90,35 +90,90 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Check if project name already exists in this organization
+    const existingProject = await prisma.project.findFirst({
+      where: {
+        organizationId: organization.id,
+        name: name.trim()
+      }
+    })
+
+    if (existingProject) {
+      return NextResponse.json(
+        { error: `Project "${name.trim()}" already exists in this organization. Please choose a different name.` },
+        { status: 409 } // Conflict status code
+      )
+    }
+
     // Use project name as ID (clean, URL-friendly)
     const projectId = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
     
-    // Create project in database
-    const project = await prisma.project.create({
-      data: {
-        id: projectId,
-        name: name.trim(),
-        description: description?.trim() || null,
-        type: 'SOFTWARE', // Map GITHUB_REPOSITORY to SOFTWARE
-        status: status || 'ACTIVE',
-        businessId: business.id,
-        githubRepoId: githubRepoId,
-        repositoryUrl,
-        submodulePath: projectId, // Use project ID as submodule path
-        defaultBranch: defaultBranch || 'main',
-        githubConfig: JSON.stringify(githubConfig),
-        aiAgentConfig: JSON.stringify({
-          hasStructure: false,
-          templateUsed: null,
-          customTheme: null,
-          aiInstructions: null
-        }),
-        metadata: JSON.stringify({
-          importedAt: new Date().toISOString(),
-          importedBy: session.user.email
-        })
+    // Create project in database with UUID
+    const projectUuid = randomUUID()
+    let project
+    try {
+      project = await prisma.project.create({
+        data: {
+          id: projectId,
+          name: name.trim(),
+          description: description?.trim() || null,
+          type: 'SOFTWARE', // Map GITHUB_REPOSITORY to SOFTWARE
+          status: status || 'ACTIVE',
+          organizationId: organization.id,
+          githubRepoId: githubRepoId,
+          repositoryUrl,
+          submodulePath: projectId, // Use project ID as submodule path
+          defaultBranch: defaultBranch || 'main',
+          githubConfig: JSON.stringify(githubConfig),
+          aiAgentConfig: JSON.stringify({
+            hasStructure: false,
+            templateUsed: null,
+            customTheme: null,
+            aiInstructions: null
+          }),
+          metadata: JSON.stringify({
+            importedAt: new Date().toISOString(),
+            importedBy: session.user.email,
+            cosmosProjectId: projectUuid
+          })
+        }
+      })
+    } catch (error: any) {
+      // Handle unique constraint violation
+      if (error.code === 'P2002' && error.meta?.target?.includes('unique_project_name_per_org')) {
+        return NextResponse.json(
+          { error: `Project "${name.trim()}" already exists in this organization. Please choose a different name.` },
+          { status: 409 }
+        )
       }
-    })
+      throw error // Re-throw other errors
+    }
+
+    // Rehydrate Cosmos DB from .maverick/ directory if it exists
+    try {
+      const { getRehydrationService } = await import('@/lib/rehydration-service')
+      const rehydrationService = getRehydrationService()
+      
+      // Construct project path based on workspace structure
+      const projectPath = `/repositories/${session.user.email.split('@')[0]}/${projectId}`
+      
+      console.log(`🔄 Starting rehydration for project: ${name}`)
+      const rehydrationResult = await rehydrationService.rehydrateProject(
+        projectPath,
+        name.trim(),
+        session.user.id,
+        organization.id
+      )
+      
+      if (rehydrationResult.success) {
+        console.log(`✅ Rehydration completed: ${rehydrationResult.workItemsProcessed} work items, ${rehydrationResult.agentsProcessed} agents`)
+      } else {
+        console.warn(`⚠️ Rehydration partially failed: ${rehydrationResult.errors.join(', ')}`)
+      }
+    } catch (rehydrationError) {
+      console.error('❌ Rehydration failed:', rehydrationError)
+      // Don't fail project creation if rehydration fails - user can manually trigger it later
+    }
 
     const response = NextResponse.json({
       success: true,
@@ -181,10 +236,10 @@ export async function GET(request: NextRequest) {
       console.log('GitHub service unavailable, continuing without repo verification:', error instanceof Error ? error.message : error)
     }
 
-    // Query database for projects where user has business membership
+    // Query database for projects where user has organization membership
     const memberProjects = await prisma.project.findMany({
       where: {
-        business: {
+        organization: {
           members: {
             some: {
               userId: session.user.id,
@@ -194,7 +249,7 @@ export async function GET(request: NextRequest) {
         }
       },
       include: {
-        business: {
+        organization: {
           include: {
             members: {
               where: {
@@ -274,7 +329,7 @@ export async function GET(request: NextRequest) {
           userProjects.push({
             id: 'maverick',
             name: 'Maverick',
-            description: 'AI-powered business development platform with .maverick workspace architecture',
+            description: 'AI-powered organization development platform with .maverick workspace architecture',
             type: 'AI_PLATFORM',
             status: 'ACTIVE',
             owner: session.user.email,

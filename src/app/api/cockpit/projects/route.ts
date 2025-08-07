@@ -10,22 +10,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { name, description, type, businessId } = await request.json()
+    const { name, description, type, organizationId } = await request.json()
 
-    if (!name || !type || !businessId) {
+    if (!name || !type || !organizationId) {
       return NextResponse.json(
-        { error: 'Name, type, and business ID are required' },
+        { error: 'Name, type, and organization ID are required' },
         { status: 400 }
       )
     }
 
-    // Validate that user has access to this business
+    // Validate that user has access to this organization
     const user = await db.getUserCompanies(session.user.email)
-    const business = user.find(b => b.id === businessId)
+    const organization = user.find(b => b.id === organizationId)
     
-    if (!business) {
+    if (!organization) {
       return NextResponse.json(
-        { error: 'Access denied to this business' },
+        { error: 'Access denied to this organization' },
         { status: 403 }
       )
     }
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       name,
       description: description || undefined,
       type: type as 'SOFTWARE' | 'MARKETING' | 'OPERATIONS' | 'LEGAL',
-      businessId
+      organizationId
     }
 
     const project = await db.createProject(projectData)
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       description: project.description,
       type: project.type,
       status: project.status,
-      businessId: project.businessId,
+      organizationId: project.organizationId,
       createdAt: project.createdAt,
       message: 'Project created successfully'
     })
