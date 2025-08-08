@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import CockpitShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/CockpitShell'
 import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 import { AgentDashboard } from '@/components/AgentDashboard'
 
@@ -57,17 +57,17 @@ export default function ProjectAgentsPage() {
 
   if (!project) {
     return (
-      <CockpitShell>
+      <ProjectShell>
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Project not found</h2>
           <p className="text-gray-600">The project you're looking for doesn't exist or you don't have access to it.</p>
         </div>
-      </CockpitShell>
+      </ProjectShell>
     )
   }
 
   return (
-    <CockpitShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="agents" />}>
+    <ProjectShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="agents" />}>
       <div className="p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">AI Agents</h1>
@@ -81,6 +81,6 @@ export default function ProjectAgentsPage() {
         
         <AgentDashboard projectName={projectName} />
       </div>
-    </CockpitShell>
+    </ProjectShell>
   )
 }

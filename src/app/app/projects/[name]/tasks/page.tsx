@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import CockpitShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/CockpitShell'
 import { SimpleWorkItemCanvas } from '@/components/SimpleWorkItemCanvas'
 import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 import ProjectSetupLoader from '@/components/ProjectSetupLoader'
@@ -150,12 +150,12 @@ export default function ProjectTasksPage() {
 
   if (!project) {
     return (
-      <CockpitShell>
+      <ProjectShell>
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Project not found</h2>
           <p className="text-gray-600">The project you're looking for doesn't exist or you don't have access to it.</p>
         </div>
-      </CockpitShell>
+      </ProjectShell>
     )
   }
 
@@ -168,7 +168,7 @@ export default function ProjectTasksPage() {
         onComplete={() => setIsSettingUp(false)}
       />
       
-      <CockpitShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="tasks" />}>
+      <ProjectShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="tasks" />}>
         <div className="h-full p-6">
           {setupError && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -185,7 +185,7 @@ export default function ProjectTasksPage() {
           )}
           <SimpleWorkItemCanvas project={project} className="h-full" />
         </div>
-      </CockpitShell>
+      </ProjectShell>
     </>
   )
 }

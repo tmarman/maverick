@@ -135,37 +135,12 @@ export default function WaitlistPage() {
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
-            Join the <span className="text-accent-primary">AI Revolution</span>
+            Be one of the first to <span className="text-accent-primary">fly with Maverick</span>
           </h1>
-          <p className="text-xl text-text-secondary mb-12 max-w-3xl mx-auto">
-            Be among the first to experience AI-native software development. 
-            Get exclusive early access to Maverick and watch your ideas become reality in days, not months.
+          <p className="text-xl text-text-secondary mb-16 max-w-3xl mx-auto">
+            Get exclusive early access to AI-native software development. 
+            Watch your ideas become reality in days, not months.
           </p>
-
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Users className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="text-2xl font-bold text-text-primary">2,000+</div>
-              <div className="text-text-secondary text-sm">Developers waiting</div>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Clock className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="text-2xl font-bold text-text-primary">Days</div>
-              <div className="text-text-secondary text-sm">Not months to build</div>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Zap className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="text-2xl font-bold text-text-primary">AI Team</div>
-              <div className="text-text-secondary text-sm">Working 24/7 for you</div>
-            </div>
-          </div>
         </div>
       </section>
 

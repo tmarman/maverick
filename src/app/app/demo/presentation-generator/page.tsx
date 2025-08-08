@@ -1,7 +1,7 @@
 'use client'
 
 import PresentationGenerator from '@/components/PresentationGenerator'
-import CockpitShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/CockpitShell'
 
 const PITCH_DECK_MARKDOWN = `# Goose + Maverick: The Self-Evolving Business Development Platform
 
@@ -284,7 +284,7 @@ User Need → AI Response → Platform Evolution → Template Creation → Commu
 
 export default function PresentationGeneratorPage() {
   return (
-    <CockpitShell title="Presentation Generator Demo">
+    <ProjectShell title="Presentation Generator Demo">
       <div className="p-6 space-y-6">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
@@ -320,6 +320,6 @@ export default function PresentationGeneratorPage() {
           </div>
         </div>
       </div>
-    </CockpitShell>
+    </ProjectShell>
   )
 }

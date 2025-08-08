@@ -73,7 +73,7 @@ export function Navigation() {
                   href="/app"
                   className="bg-accent-primary hover:bg-accent-hover text-text-inverse px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
-                  🚀 Cockpit
+                  🚀 Launch
                 </Link>
               </>
             )}
@@ -137,7 +137,7 @@ export function Navigation() {
                       href="/app"
                       className="bg-accent-primary hover:bg-accent-hover text-text-inverse block px-3 py-2 rounded-lg text-base font-medium transition-colors mt-2"
                     >
-                      🚀 Cockpit
+                      🚀 Launch
                     </Link>
                   </>
                 )}

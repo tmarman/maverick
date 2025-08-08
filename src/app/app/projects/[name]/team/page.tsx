@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import CockpitShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/CockpitShell'
 import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 import { WorkspaceTeamManager } from '@/components/WorkspaceTeamManager'
 
@@ -46,33 +46,33 @@ export default function TeamPage() {
 
   if (loading) {
     return (
-      <CockpitShell sidebarContent={project ? <ProjectTreeSidebar project={project} currentPage="team" /> : undefined}>
+      <ProjectShell sidebarContent={project ? <ProjectTreeSidebar project={project} currentPage="team" /> : undefined}>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
-      </CockpitShell>
+      </ProjectShell>
     )
   }
 
   if (!project) {
     return (
-      <CockpitShell>
+      <ProjectShell>
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Project not found</h2>
           <p className="text-gray-600">The project you're looking for doesn't exist or you don't have access to it.</p>
         </div>
-      </CockpitShell>
+      </ProjectShell>
     )
   }
 
   return (
-    <CockpitShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="team" />}>
+    <ProjectShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="team" />}>
       <div className="p-6">
         <WorkspaceTeamManager 
           projectName={project.name}
           currentUserRole="admin"
         />
       </div>
-    </CockpitShell>
+    </ProjectShell>
   )
 }
