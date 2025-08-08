@@ -131,10 +131,10 @@ export default function FormationPage() {
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
-                  href="/cockpit"
+                  href="/app"
                   className="bg-accent-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-accent-hover transition-colors"
                 >
-                  🚀 Enter Cockpit
+                  🚀 Launch Projects
                 </a>
                 <a
                   href="/"

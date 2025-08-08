@@ -87,7 +87,7 @@ export default function DocsPage() {
             <div className="flex items-center space-x-4">
               <Badge variant="outline">Documentation</Badge>
               <Link href="/app" className="text-sm text-text-secondary hover:text-text-primary">
-                ← Back to Cockpit
+                ← Back to Projects
               </Link>
             </div>
           </div>
@@ -232,7 +232,7 @@ export default function DocsPage() {
                 href="/app"
                 className="px-6 py-3 bg-white text-accent-primary rounded-lg hover:bg-gray-100 transition-colors font-medium"
               >
-                Open Cockpit
+                Open Projects
               </Link>
               <Link
                 href="/docs/quickstart"

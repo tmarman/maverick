@@ -36,7 +36,7 @@ interface Project {
 
 type ViewMode = 'dashboard' | 'board' | 'list' | 'chat'
 
-function CockpitPageContent() {
+function ProjectsPageContent() {
   const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -261,7 +261,7 @@ function CockpitPageContent() {
                 </div>
               </>
             ) : (
-              <h1 className="text-lg font-semibold text-gray-900">Cockpit</h1>
+              <h1 className="text-lg font-semibold text-gray-900">Projects</h1>
             )}
           </div>
           
@@ -434,14 +434,14 @@ function CockpitPageContent() {
   )
 }
 
-export default function CockpitPage() {
+export default function ProjectsPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     }>
-      <CockpitPageContent />
+      <ProjectsPageContent />
     </Suspense>
   )
 }
