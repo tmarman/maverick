@@ -64,7 +64,7 @@ export function Navigation() {
                   🚀 Join Waitlist
                 </Link>
               </>
-            ) : (
+            ) : session?.user ? (
               <>
                 <span className="text-text-secondary text-sm">
                   Hi, {session?.user?.name?.split(' ')[0] || session?.user?.email}
@@ -74,6 +74,21 @@ export function Navigation() {
                   className="bg-accent-primary hover:bg-accent-hover text-text-inverse px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   🚀 Launch
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link 
+                  href="/login"
+                  className="text-text-secondary hover:text-text-primary px-4 py-2 text-sm font-medium transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link 
+                  href="/waitlist"
+                  className="bg-accent-primary hover:bg-accent-hover text-text-inverse px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  🚀 Join Waitlist
                 </Link>
               </>
             )}
@@ -128,7 +143,7 @@ export function Navigation() {
                       🚀 Join Waitlist
                     </Link>
                   </>
-                ) : (
+                ) : session?.user ? (
                   <>
                     <div className="text-text-secondary px-3 py-2 text-base">
                       Hi, {session?.user?.name?.split(' ')[0] || session?.user?.email}
@@ -138,6 +153,21 @@ export function Navigation() {
                       className="bg-accent-primary hover:bg-accent-hover text-text-inverse block px-3 py-2 rounded-lg text-base font-medium transition-colors mt-2"
                     >
                       🚀 Launch
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link 
+                      href="/login"
+                      className="text-text-secondary hover:text-text-primary block px-3 py-2 text-base font-medium transition-colors"
+                    >
+                      Sign In
+                    </Link>
+                    <Link 
+                      href="/waitlist"
+                      className="bg-accent-primary hover:bg-accent-hover text-text-inverse block px-3 py-2 rounded-lg text-base font-medium transition-colors mt-2"
+                    >
+                      🚀 Join Waitlist
                     </Link>
                   </>
                 )}
