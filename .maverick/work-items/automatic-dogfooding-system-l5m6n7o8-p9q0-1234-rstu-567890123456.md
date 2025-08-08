@@ -1,20 +1,13 @@
 ---
-id: automatic-dogfooding-system-l5m6n7o8-p9q0-1234-rstu-567890123456
-title: "Automatic Work Item Creation for Development Sessions"
-type: FEATURE
-status: PLANNED
-priority: CRITICAL
-functionalArea: SOFTWARE
-effortLevel: "M"
-scopeSize: "STANDARD"
-category: "Development Workflow"
-businessImpact: "Ensures every feature discussion becomes a trackable work item automatically"
-createdAt: 2025-08-03T08:42:00.000Z
-updatedAt: 2025-08-03T08:42:00.000Z
-userRequested: true
-aiCredits: 75
-confidence: 80
+smartCategory:
+  id: auth-security
+  name: Authentication & Security
+  team: Authentication & Security
+  color: #F59E0B
+  categorizedAt: 2025-08-07T06:55:45.359Z
 ---
+
+
 
 # Automatic Work Item Creation for Development Sessions
 

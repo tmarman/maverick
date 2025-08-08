@@ -1,17 +1,13 @@
 ---
-id: background-feature-analysis-ui-c3d4e5f6-g7h8-9012-cdef-345678901234
-title: "Background Feature Analysis with UI Integration"
-type: FEATURE
-status: PLANNED
-priority: HIGH
-functionalArea: SOFTWARE
-estimatedEffort: "1w"
-category: "UI & Background Processing"
-businessImpact: "Enables seamless feature analysis without timeout constraints through background processing"
-createdAt: 2025-08-03T07:30:00.000Z
-updatedAt: 2025-08-03T07:30:00.000Z
-parentId: automatic-feature-extraction-b2c3d4e5-f6g7-8901-bcde-f23456789012
+smartCategory:
+  id: ui-ux
+  name: User Interface & Experience
+  team: User Interface & Experience
+  color: #3B82F6
+  categorizedAt: 2025-08-07T06:55:46.234Z
 ---
+
+
 
 # Background Feature Analysis with UI Integration
 

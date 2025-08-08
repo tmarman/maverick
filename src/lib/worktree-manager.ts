@@ -83,8 +83,18 @@ export class WorktreeManager {
     const errors: string[] = []
     const suggestions: string[] = []
 
-    // Valid prefixes
-    const validPrefixes = ['main', 'feat', 'fix', 'refactor', 'docs', 'test', 'chore']
+    // Valid prefixes (including smart worktree team names)
+    const validPrefixes = [
+      'main', 'feat', 'fix', 'refactor', 'docs', 'test', 'chore',
+      // Smart worktree team-based names
+      'frontend-ui-improvements',
+      'backend-api-enhancements', 
+      'auth-security-features',
+      'database-optimizations',
+      'infrastructure-devops',
+      'marketing-content-updates',
+      'testing-quality-assurance'
+    ]
     
     // Basic validation
     if (!branchName || branchName.trim().length === 0) {
@@ -99,10 +109,15 @@ export class WorktreeManager {
       .replace(/^-+|-+$/g, '')
       .replace(/-+/g, '-')
 
-    // Check prefix
-    const hasValidPrefix = validPrefixes.some(prefix => 
-      normalized === prefix || normalized.startsWith(prefix + '-')
-    )
+    // Check prefix (exact match for smart worktree names, or prefix match for traditional names)
+    const hasValidPrefix = validPrefixes.some(prefix => {
+      // Exact match for smart worktree team names
+      if (prefix.includes('-') && prefix.length > 10) {
+        return normalized === prefix
+      }
+      // Traditional prefix matching for feat-, fix-, etc.
+      return normalized === prefix || normalized.startsWith(prefix + '-')
+    })
 
     if (!hasValidPrefix && normalized !== 'main') {
       // Try to suggest a prefix
@@ -259,8 +274,9 @@ export class WorktreeManager {
     }
 
     try {
-      // Create the worktree using git worktree add (run from main repo)
-      await this.runGitCommand(['worktree', 'add', worktreePath, baseBranch], mainRepoPath)
+      // Create the worktree with a new branch based on baseBranch (run from main repo)
+      // This avoids the conflict of trying to checkout a branch that's already checked out
+      await this.runGitCommand(['worktree', 'add', '-b', normalizedBranch, worktreePath, baseBranch], mainRepoPath)
 
       // Initialize .maverick structure if it doesn't exist
       const maverickPath = path.join(worktreePath, '.maverick')

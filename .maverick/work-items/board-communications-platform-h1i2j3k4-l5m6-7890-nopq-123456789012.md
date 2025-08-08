@@ -1,18 +1,13 @@
 ---
-id: board-communications-platform-h1i2j3k4-l5m6-7890-nopq-123456789012
-title: "Board Communications Platform"
-type: EPIC
-status: PLANNED
-priority: LOW
-functionalArea: BUSINESS_OPERATIONS
-estimatedEffort: "3m"
-category: "Corporate Governance"
-businessImpact: "Streamlines board communications and corporate governance processes"
-createdAt: 2025-08-03T08:25:00.000Z
-updatedAt: 2025-08-03T08:25:00.000Z
-roadmapQuarter: "2025-Q4"
-strategicTheme: "business-operations-platform"
+smartCategory:
+  id: ui-ux
+  name: User Interface & Experience
+  team: User Interface & Experience
+  color: #3B82F6
+  categorizedAt: 2025-08-07T06:55:46.664Z
 ---
+
+
 
 # Board Communications Platform
 

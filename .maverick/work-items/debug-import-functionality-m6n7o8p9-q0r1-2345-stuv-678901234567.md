@@ -1,20 +1,13 @@
 ---
-id: debug-import-functionality-m6n7o8p9-q0r1-2345-stuv-678901234567
-title: "Debug Import Functionality Issue"
-type: BUG
-status: IN_PROGRESS
-priority: HIGH
-functionalArea: SOFTWARE
-effortLevel: "S"
-scopeSize: "FOCUSED"
-category: "Bug Investigation"
-businessImpact: "Import functionality is not working, blocking user onboarding"
-createdAt: 2025-08-03T08:50:00.000Z
-updatedAt: 2025-08-03T08:50:00.000Z
-userRequested: true
-aiCredits: 30
-confidence: 90
+smartCategory:
+  id: infrastructure-devops
+  name: Infrastructure & DevOps
+  team: Infrastructure & DevOps
+  color: #EF4444
+  categorizedAt: 2025-08-07T06:55:50.027Z
 ---
+
+
 
 # Debug Import Functionality Issue
 

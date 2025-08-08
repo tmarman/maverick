@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import CockpitShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/ProjectShell'
 import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 import { SyncStatusBadge } from '@/components/SyncStatusBadge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -594,17 +594,17 @@ What would you like to work on?`
 
   if (!project) {
     return (
-      <CockpitShell>
+      <ProjectShell>
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Project not found</h2>
           <p className="text-gray-600">The project you're looking for doesn't exist or you don't have access to it.</p>
         </div>
-      </CockpitShell>
+      </ProjectShell>
     )
   }
 
   return (
-    <CockpitShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="overview" />}>
+    <ProjectShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="overview" />}>
       <div className="flex flex-col h-full relative">
         {/* Chat Interface Overlay - slides up from bottom when active */}
         {isChatActive && (
@@ -1106,45 +1106,34 @@ What would you like to work on?`
                 </div>
                 <div className="flex-1 relative">
                   <Input
-                    placeholder="Ask about progress, create tasks, manage team..."
+                    placeholder="Chat with Claude about your project..."
                     value={currentMessage}
                     onChange={(e) => setCurrentMessage(e.target.value)}
                     onFocus={() => {
-                      setIsChatActive(true)
+                      window.location.href = `/app/projects/${projectName}/bootstrap`
                     }}
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
-                        if (!isChatActive) {
-                          setIsChatActive(true)
-                          setTimeout(() => sendChatMessage(), 600) // Wait for animation
-                        } else {
-                          sendChatMessage()
-                        }
+                        window.location.href = `/app/projects/${projectName}/bootstrap`
                       }
                     }}
-                    className="flex-1 h-10 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white focus:text-gray-900 focus:placeholder:text-gray-500 transition-all duration-300 ease-out"
+                    className="flex-1 h-10 bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white focus:text-gray-900 focus:placeholder:text-gray-500 transition-all duration-300 ease-out cursor-pointer"
                   />
                 </div>
                 <Button 
                   onClick={() => {
-                    if (!isChatActive) {
-                      setIsChatActive(true)
-                      setTimeout(() => sendChatMessage(), 600) // Wait for animation
-                    } else {
-                      sendChatMessage()
-                    }
+                    window.location.href = `/app/projects/${projectName}/bootstrap`
                   }}
-                  disabled={!currentMessage.trim()}
                   className="h-10 bg-white text-blue-600 hover:bg-blue-50 transition-all duration-200"
                   size="sm"
                 >
-                  <Send className="w-4 h-4" />
+                  <MessageCircle className="w-4 h-4" />
                 </Button>
               </div>
             </div>
           </div>
         )}
       </div>
-    </CockpitShell>
+    </ProjectShell>
   )
 }

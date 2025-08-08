@@ -1,17 +1,13 @@
 ---
-id: executive-project-overview-g0h1i2j3-k4l5-6789-mnop-012345678901
-title: "Executive-Level Project Overview Dashboard"
-type: FEATURE
-status: PLANNED
-priority: HIGH
-functionalArea: SOFTWARE
-estimatedEffort: "1w"
-category: "Executive Dashboard"
-businessImpact: "Provides high-level project insights for sponsors, executives, and investors"
-createdAt: 2025-08-03T08:20:00.000Z
-updatedAt: 2025-08-03T08:20:00.000Z
-userRequested: true
+smartCategory:
+  id: frontend-ui
+  name: frontend-ui-improvements
+  team: Frontend
+  color: #3B82F6
+  categorizedAt: 2025-08-07T03:45:01.010Z
 ---
+
+
 
 # Executive-Level Project Overview Dashboard
 

@@ -38,6 +38,20 @@ export interface HierarchicalTodo {
   // File reference
   filename?: string
   filePath?: string
+
+  // Worktree integration
+  worktreeName?: string
+  worktreePath?: string
+  worktreeStatus?: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+  
+  // Smart categorization
+  smartCategory?: {
+    id: string
+    name: string
+    team: string
+    color: string
+    categorizedAt: string
+  }
 }
 
 export class HierarchicalTodoService {
@@ -344,7 +358,13 @@ dueDate: ${todo.dueDate || 'null'}
 createdAt: ${todo.createdAt}
 updatedAt: ${todo.updatedAt}
 projectName: ${todo.projectName}
-tags: [${todo.tags?.map(tag => `"${tag}"`).join(', ') || ''}]
+tags: [${todo.tags?.map(tag => `"${tag}"`).join(', ') || ''}]${todo.smartCategory ? `
+smartCategory:
+  id: ${todo.smartCategory.id}
+  name: ${todo.smartCategory.name}
+  team: ${todo.smartCategory.team}
+  color: ${todo.smartCategory.color}
+  categorizedAt: ${todo.smartCategory.categorizedAt}` : ''}
 ---
 
 # ${todo.title}
@@ -403,22 +423,54 @@ _Add notes and updates here_
       
       // Parse frontmatter
       const frontmatter: any = {}
+      let currentObject: any = frontmatter
+      let currentKey: string | null = null
+      
       for (let i = frontmatterStart + 1; i < frontmatterEnd; i++) {
-        const line = lines[i].trim()
-        if (line && line.includes(':')) {
-          const [key, ...valueParts] = line.split(':')
+        const line = lines[i]
+        const trimmed = line.trim()
+        
+        // Skip empty lines
+        if (!trimmed) continue
+        
+        // Check if this is a nested property (starts with spaces)
+        if (line.startsWith('  ') && currentKey) {
+          // This is a nested property
+          if (!currentObject[currentKey]) {
+            currentObject[currentKey] = {}
+          }
+          const [key, ...valueParts] = trimmed.split(':')
           let value: any = valueParts.join(':').trim().replace(/^["']|["']$/g, '')
           
           // Handle special values
           if (value === 'null') {
             value = undefined
-          } else if (key.trim() === 'depth' || key.trim() === 'orderIndex') {
+          }
+          
+          currentObject[currentKey][key.trim()] = value
+        } else if (trimmed.includes(':')) {
+          // This is a top-level property
+          const [key, ...valueParts] = trimmed.split(':')
+          const keyName = key.trim()
+          let value: any = valueParts.join(':').trim().replace(/^["']|["']$/g, '')
+          
+          // Handle special values
+          if (value === 'null') {
+            value = undefined
+          } else if (keyName === 'depth' || keyName === 'orderIndex') {
             value = parseInt(value) || 0
-          } else if (key.trim() === 'tags') {
+          } else if (keyName === 'tags') {
             value = value ? value.slice(1, -1).split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, '')) : []
           }
           
-          frontmatter[key.trim()] = value
+          // If value is empty, this might be a parent for nested properties
+          if (!value) {
+            currentKey = keyName
+            currentObject = frontmatter
+          } else {
+            frontmatter[keyName] = value
+            currentKey = null
+          }
         }
       }
       
@@ -455,6 +507,7 @@ _Add notes and updates here_
         createdAt: frontmatter.createdAt,
         updatedAt: frontmatter.updatedAt,
         projectName: frontmatter.projectName,
+        smartCategory: frontmatter.smartCategory,
         filename: path.basename(filePath),
         filePath
       }

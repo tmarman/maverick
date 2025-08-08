@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import CockpitShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/ProjectShell'
 import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 import { VibeChat } from '@/components/VibeChat'
 import { Badge } from '@/components/ui/badge'
@@ -58,17 +58,17 @@ export default function VibePage() {
 
   if (loading) {
     return (
-      <CockpitShell>
+      <ProjectShell>
         <div className="flex items-center justify-center h-full">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
         </div>
-      </CockpitShell>
+      </ProjectShell>
     )
   }
 
   if (!project) {
     return (
-      <CockpitShell>
+      <ProjectShell>
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-gray-900">Project not found</h2>
@@ -78,12 +78,12 @@ export default function VibePage() {
             </Link>
           </div>
         </div>
-      </CockpitShell>
+      </ProjectShell>
     )
   }
 
   return (
-    <CockpitShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="vibe" />}>
+    <ProjectShell sidebarContent={<ProjectTreeSidebar project={project} currentPage="vibe" />}>
       <div className="h-full flex flex-col">
         {/* Header */}
         <div className="border-b border-gray-200 bg-white px-6 py-4 flex-shrink-0">
@@ -138,6 +138,6 @@ export default function VibePage() {
           <VibeChat project={project} className="h-full" />
         </div>
       </div>
-    </CockpitShell>
+    </ProjectShell>
   )
 }

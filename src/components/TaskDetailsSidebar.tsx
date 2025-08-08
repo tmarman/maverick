@@ -32,6 +32,7 @@ import {
 import { HierarchicalTodo, hierarchicalTodoClientService } from '@/lib/hierarchical-todos-client'
 import { toast } from '@/hooks/use-toast'
 import { ContextualChat, type ChatScope } from '@/components/ContextualChat'
+import AsyncTaskProgress from './AsyncTaskProgress'
 
 interface TaskDetailsSidebarProps {
   todo: HierarchicalTodo | null
@@ -61,6 +62,7 @@ export function TaskDetailsSidebar({
   const [breadcrumbs, setBreadcrumbs] = useState<HierarchicalTodo[]>([])
   const [parentTask, setParentTask] = useState<HierarchicalTodo | null>(null)
   const [showChat, setShowChat] = useState(false)
+  const [showAsyncProgress, setShowAsyncProgress] = useState(false)
 
   // Local state for editing
   const [localTodo, setLocalTodo] = useState<HierarchicalTodo | null>(todo)
@@ -236,13 +238,11 @@ export function TaskDetailsSidebar({
         const data = await response.json()
         console.log('API response data:', data)
         
+        // Show async progress modal immediately
+        setShowAsyncProgress(true)
+        
         // Update task status to IN_PROGRESS
         await handleUpdate({ status: 'IN_PROGRESS' })
-        
-        toast({
-          title: '🤖 Agent Work Started!',
-          description: `AI agent assigned with screenshot/video capture enabled`
-        })
       } else {
         const error = await response.json()
         console.error('API error response:', error)
@@ -749,6 +749,27 @@ export function TaskDetailsSidebar({
           )}
         </div>
       </div>
+
+      {/* Async Progress Modal */}
+      <AsyncTaskProgress
+        taskId={localTodo.id}
+        projectName={projectName}
+        isVisible={showAsyncProgress}
+        onComplete={(success) => {
+          if (success) {
+            toast({
+              title: '🤖 Agent Work Started!',
+              description: `AI agent assigned with smart worktree organization`
+            })
+            // Refresh the todo to get latest status
+            if (onUpdate && localTodo) {
+              onUpdate({ ...localTodo, status: 'IN_PROGRESS' })
+            }
+          }
+          setShowAsyncProgress(false)
+        }}
+        onClose={() => setShowAsyncProgress(false)}
+      />
     </div>
   )
 }

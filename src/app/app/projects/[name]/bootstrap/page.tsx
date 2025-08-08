@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
-import ProjectShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/ProjectShell'
 import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

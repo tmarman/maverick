@@ -1,18 +1,13 @@
 ---
-id: workspace-team-management-001
-title: Workspace Team Management System Overhaul
-type: FEATURE
-status: DONE
-priority: HIGH
-category: Team Collaboration
-functionalArea: Project Management
-estimatedEffort: 4 hours
-createdAt: 2025-08-03T20:00:00Z
-completedAt: 2025-08-03T21:45:00Z
-tags: [team-management, collaboration, workspace, user-management]
-assignedTo: @tim
-mentionedUsers: []
+smartCategory:
+  id: content-marketing
+  name: Content & Marketing
+  team: Content & Marketing
+  color: #EC4899
+  categorizedAt: 2025-08-07T06:56:01.230Z
 ---
+
+
 
 # Workspace Team Management System Overhaul
 

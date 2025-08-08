@@ -1,17 +1,13 @@
 ---
-id: hierarchical-worktree-system
-title: "Hierarchical Git Worktree Management System"
-type: FEATURE
-status: PLANNED
-priority: HIGH
-functionalArea: DEVELOPMENT_INFRASTRUCTURE
-estimatedEffort: "3w"
-category: "Git Integration & Workflow"
-businessImpact: "Enables scalable parallel development with clean project organization and consistent branch naming"
-createdAt: 2025-08-04T17:30:00.000Z
-updatedAt: 2025-08-04T17:30:00.000Z
-aiGenerated: true
+smartCategory:
+  id: frontend-ui
+  name: frontend-ui-improvements
+  team: Frontend
+  color: #3B82F6
+  categorizedAt: 2025-08-07T03:45:01.011Z
 ---
+
+
 
 # Hierarchical Git Worktree Management System
 

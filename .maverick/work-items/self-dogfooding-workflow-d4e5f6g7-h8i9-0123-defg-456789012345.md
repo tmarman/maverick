@@ -1,17 +1,13 @@
 ---
-id: self-dogfooding-workflow-d4e5f6g7-h8i9-0123-defg-456789012345
-title: "Self-Dogfooding Development Workflow"
-type: EPIC
-status: ACTIVE
-priority: CRITICAL
-functionalArea: SOFTWARE
-estimatedEffort: "Ongoing"
-category: "Development Process"
-businessImpact: "Creates self-documenting development process and validates platform capabilities"
-createdAt: 2025-08-03T07:45:00.000Z
-updatedAt: 2025-08-03T07:45:00.000Z
-userRequested: true
+smartCategory:
+  id: frontend-ui
+  name: frontend-ui-improvements
+  team: Frontend
+  color: #3B82F6
+  categorizedAt: 2025-08-07T03:45:01.013Z
 ---
+
+
 
 # Self-Dogfooding Development Workflow
 

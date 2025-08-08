@@ -341,20 +341,79 @@ export function MaverickMarkdownRenderer({
     return <div>Failed to parse markdown</div>
   }
 
+  // Replace [SNIPPET:id] placeholders with React components
+  const renderContentWithSnippets = () => {
+    let html = parsed.html
+    const parts: (string | React.ReactNode)[] = []
+    let lastIndex = 0
+    
+    console.log('🔍 Processing HTML:', html.substring(0, 200) + '...')
+    console.log('📄 Available snippets:', parsed.snippets.map(s => ({ id: s.id, type: s.type, text: s.text })))
+    
+    // Find all snippet placeholders
+    const snippetRegex = /\[SNIPPET:([^\]]+)\]/g
+    let match
+    
+    while ((match = snippetRegex.exec(html)) !== null) {
+      const [placeholder, snippetId] = match
+      const snippet = parsed.snippets.find(s => s.id === snippetId)
+      
+      // Add HTML before this snippet
+      if (match.index > lastIndex) {
+        const beforeHtml = html.slice(lastIndex, match.index)
+        if (beforeHtml.trim()) {
+          parts.push(
+            <div 
+              key={`html-${lastIndex}`}
+              dangerouslySetInnerHTML={{ __html: beforeHtml }} 
+              className="prose prose-sm max-w-none"
+            />
+          )
+        }
+      }
+      
+      // Add the snippet component
+      if (snippet) {
+        parts.push(
+          <div key={`snippet-${snippetId}`} className="my-2">
+            {renderSmartSnippet(snippet)}
+          </div>
+        )
+      }
+      
+      lastIndex = match.index + placeholder.length
+    }
+    
+    // Add remaining HTML after last snippet
+    if (lastIndex < html.length) {
+      const remainingHtml = html.slice(lastIndex)
+      if (remainingHtml.trim()) {
+        parts.push(
+          <div 
+            key={`html-${lastIndex}`}
+            dangerouslySetInnerHTML={{ __html: remainingHtml }} 
+            className="prose prose-sm max-w-none"
+          />
+        )
+      }
+    }
+    
+    // If no snippets found, render the HTML normally
+    if (parts.length === 0) {
+      return (
+        <div 
+          dangerouslySetInnerHTML={{ __html: html }} 
+          className="prose prose-sm max-w-none"
+        />
+      )
+    }
+    
+    return parts
+  }
+
   return (
     <div className={className}>
-      {/* Render the markdown HTML */}
-      <div 
-        className="prose prose-sm max-w-none"
-        dangerouslySetInnerHTML={{ __html: parsed.html }}
-      />
-      
-      {/* Render snippets that were extracted */}
-      {parsed.snippets.length > 0 && (
-        <div className="mt-4 space-y-2">
-          {parsed.snippets.map(snippet => renderSmartSnippet(snippet))}
-        </div>
-      )}
+      {renderContentWithSnippets()}
     </div>
   )
 }

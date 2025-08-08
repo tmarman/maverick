@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import CockpitShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/ProjectShell'
 import { usePageTitle, PAGE_TITLES } from '@/hooks/use-page-title'
 import { useLogger, usePageTracking } from '@/hooks/use-logger'
 import { Button } from '@/components/ui/button'
@@ -271,7 +271,7 @@ export default function RepositoriesPage() {
   }
 
   return (
-    <CockpitShell title="Import Repository">
+    <ProjectShell title="Import Repository">
       <div className="p-6 space-y-6">
       {/* Header */}
       <div className="mb-8">
@@ -531,6 +531,6 @@ export default function RepositoriesPage() {
         </DialogContent>
       </Dialog>
       </div>
-    </CockpitShell>
+    </ProjectShell>
   )
 }

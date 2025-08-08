@@ -1,21 +1,13 @@
 ---
-id: automated-reports-system
-title: "Build AI-Powered Automated Report Generation System"
-type: FEATURE
-status: PLANNED
-priority: HIGH
-functionalArea: SOFTWARE
-parentId: null
-depth: 0
-orderIndex: 100
-estimatedEffort: "2-3 weeks"
-assignedTo: null
-dueDate: null
-createdAt: 2025-08-05T05:00:00.000Z
-updatedAt: 2025-08-05T05:00:00.000Z
-projectName: maverick
-tags: ["ai", "reporting", "square-integration", "business-intelligence"]
+smartCategory:
+  id: data-analytics
+  name: Data & Analytics
+  team: Data & Analytics
+  color: #8B5CF6
+  categorizedAt: 2025-08-07T06:55:44.897Z
 ---
+
+
 
 # Build AI-Powered Automated Report Generation System
 

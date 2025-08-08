@@ -1,18 +1,13 @@
 ---
-id: cap-table-management-platform-i2j3k4l5-m6n7-8901-opqr-234567890123
-title: "Cap Table Management Platform"
-type: EPIC
-status: PLANNED
-priority: MEDIUM
-functionalArea: BUSINESS_OPERATIONS
-estimatedEffort: "4m"
-category: "Equity Management"
-businessImpact: "Comprehensive equity and ownership management for growing businesses"
-createdAt: 2025-08-03T08:27:00.000Z
-updatedAt: 2025-08-03T08:27:00.000Z
-roadmapQuarter: "2026-Q1"
-strategicTheme: "business-operations-platform"
+smartCategory:
+  id: ui-ux
+  name: User Interface & Experience
+  team: User Interface & Experience
+  color: #3B82F6
+  categorizedAt: 2025-08-07T06:55:47.081Z
 ---
+
+
 
 # Cap Table Management Platform
 

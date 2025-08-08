@@ -1,21 +1,13 @@
 ---
-id: maverick-metadata-browser
-title: "Build Interactive .maverick Metadata Browser with Core Instructions Viewer"
-type: FEATURE
-status: PLANNED
-priority: HIGH
-functionalArea: SOFTWARE
-parentId: null
-depth: 0
-orderIndex: 101
-estimatedEffort: "1-2 weeks"
-assignedTo: null
-dueDate: null
-createdAt: 2025-08-05T05:00:00.000Z
-updatedAt: 2025-08-05T05:00:00.000Z
-projectName: maverick
-tags: ["ui", "documentation", "file-system", "metadata"]
+smartCategory:
+  id: ui-ux
+  name: User Interface & Experience
+  team: User Interface & Experience
+  color: #3B82F6
+  categorizedAt: 2025-08-07T06:55:54.406Z
 ---
+
+
 
 # Build Interactive .maverick Metadata Browser with Core Instructions Viewer
 

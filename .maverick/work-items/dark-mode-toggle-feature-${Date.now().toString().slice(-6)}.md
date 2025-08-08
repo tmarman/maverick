@@ -1,17 +1,13 @@
 ---
-id: dark-mode-toggle-e8f9g0h1-i2j3-4567-klmn-890123456789
-title: "Dark Mode Toggle with Inverted Color Scheme"
-type: FEATURE
-status: PLANNED
-priority: MEDIUM
-functionalArea: SOFTWARE
-estimatedEffort: "3d"
-category: "User Interface"
-businessImpact: "Essential for developer tool usability and user preference"
-createdAt: 2025-08-03T08:16:00.000Z
-updatedAt: 2025-08-03T08:16:00.000Z
-userRequested: true
+smartCategory:
+  id: ui-ux
+  name: User Interface & Experience
+  team: User Interface & Experience
+  color: #3B82F6
+  categorizedAt: 2025-08-07T06:55:49.556Z
 ---
+
+
 
 # Dark Mode Toggle with Inverted Color Scheme
 

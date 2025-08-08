@@ -1,18 +1,13 @@
 ---
-id: vibe-chat-markdown-formatting-001
-title: Enhanced Vibe Chat Context Display with Markdown Formatting
-type: FEATURE
-status: DONE
-priority: HIGH
-category: User Experience
-functionalArea: AI Chat Interface
-estimatedEffort: 2 hours
-createdAt: 2025-08-03T21:30:00Z
-completedAt: 2025-08-03T21:45:00Z
-tags: [markdown, ui-enhancement, vibe-chat, context-display]
-assignedTo: @tim
-mentionedUsers: []
+smartCategory:
+  id: ui-ux
+  name: User Interface & Experience
+  team: User Interface & Experience
+  color: #3B82F6
+  categorizedAt: 2025-08-07T06:55:59.647Z
 ---
+
+
 
 # Enhanced Vibe Chat Context Display with Markdown Formatting
 

@@ -1,20 +1,13 @@
 ---
-id: urgent-production-deployment-p9q0r1s2-t3u4-5678-vwxy-901234567890
-title: "URGENT: Deploy Maverick to Production for Demo Links"
-type: TASK
-status: IN_PROGRESS
-priority: CRITICAL
-functionalArea: INFRASTRUCTURE
-effortLevel: "L"
-scopeSize: "FOCUSED"
-category: "Emergency Deployment"
-businessImpact: "CRITICAL - Need live links for demos and sharing"
-createdAt: 2025-08-03T09:05:00.000Z
-updatedAt: 2025-08-03T09:05:00.000Z
-userRequested: true
-aiCredits: 75
-confidence: 90
+smartCategory:
+  id: infrastructure-devops
+  name: Infrastructure & DevOps
+  team: Infrastructure & DevOps
+  color: #EF4444
+  categorizedAt: 2025-08-07T06:55:58.188Z
 ---
+
+
 
 # URGENT: Deploy Maverick to Production for Demo Links
 

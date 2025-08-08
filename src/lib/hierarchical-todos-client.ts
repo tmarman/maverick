@@ -34,6 +34,20 @@ export interface HierarchicalTodo {
   // File reference
   filename?: string
   filePath?: string
+
+  // Worktree integration
+  worktreeName?: string
+  worktreePath?: string
+  worktreeStatus?: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+  
+  // Smart categorization
+  smartCategory?: {
+    id: string
+    name: string
+    team: string
+    color: string
+    categorizedAt: string
+  }
 }
 
 export class HierarchicalTodoClientService {

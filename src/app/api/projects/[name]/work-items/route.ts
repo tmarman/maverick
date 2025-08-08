@@ -83,58 +83,13 @@ export async function GET(
   { params }: { params: Promise<{ name: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const resolvedParams = await params
     const projectName = resolvedParams.name.toLowerCase()
     
-    // Find user's accessible organizations first
-    const userOrganizations = await prisma.organization.findMany({
-      where: {
-        OR: [
-          { ownerId: session.user.id },
-          {
-            members: {
-              some: {
-                userId: session.user.id,
-                status: 'ACCEPTED',
-                role: { in: ['ADMIN', 'MEMBER'] }
-              }
-            }
-          }
-        ]
-      }
-    })
-
-    if (userOrganizations.length === 0) {
-      return NextResponse.json({ error: 'No accessible organizations found' }, { status: 403 })
-    }
-
-    // Find project by name within user's accessible organizations
-    const project = await prisma.project.findFirst({
-      where: {
-        name: projectName,
-        organizationId: { in: userOrganizations.map(org => org.id) }
-      }
-    })
-
-    if (!project) {
-      return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 })
-    }
-
-    // Load work items from SQL Server
-    const workItems = await prisma.workItem.findMany({
-      where: {
-        projectId: project.id
-      },
-      orderBy: [
-        { orderIndex: 'asc' },
-        { createdAt: 'asc' }
-      ]
-    })
+    // Load work items from filesystem (pure filesystem approach - no auth needed)
+    console.log(`🔍 Loading work items for project: ${projectName}`)
+    const workItems = await loadWorkItemsFromMarkdown(projectName)
+    console.log(`✅ Loaded ${workItems.length} work items from filesystem`)
 
     return NextResponse.json({ workItems })
   } catch (error) {
@@ -156,6 +111,8 @@ async function loadWorkItemsFromMarkdown(projectName: string) {
     // Read all .md files in the work-items directory
     const files = await fs.readdir(workItemsDir)
     const markdownFiles = files.filter(file => file.endsWith('.md'))
+    
+    console.log(`📁 Found ${markdownFiles.length} work item files in ${workItemsDir}`)
     
     const workItems = []
     
@@ -196,7 +153,8 @@ function parseWorkItemMarkdown(content: string, filename: string) {
     let frontmatterEnd = -1
     
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
+      const originalLine = lines[i]
+      const line = originalLine.trim()
       
       if (line === '---') {
         if (!inFrontmatter) {
@@ -210,9 +168,8 @@ function parseWorkItemMarkdown(content: string, filename: string) {
       
       if (inFrontmatter) {
         // Parse YAML frontmatter
-        if (line.startsWith('id:')) {
-          workItem.id = line.substring(3).trim()
-        } else if (line.startsWith('title:')) {
+        // Skip parsing 'id:' from frontmatter - always use filename as ID to avoid confusion
+        if (line.startsWith('title:')) {
           workItem.title = line.substring(6).trim().replace(/^"(.*)"$/, '$1')
         } else if (line.startsWith('type:')) {
           workItem.type = line.substring(5).trim()
@@ -245,6 +202,19 @@ function parseWorkItemMarkdown(content: string, filename: string) {
           workItem.depth = parseInt(line.substring(6).trim()) || 0
         } else if (line.startsWith('orderIndex:')) {
           workItem.orderIndex = parseInt(line.substring(11).trim()) || 0
+        } else if (line.startsWith('smartCategory:')) {
+          // Start parsing nested smartCategory object
+          workItem.smartCategory = {}
+        } else if (originalLine.startsWith('  id:') && workItem.smartCategory !== undefined) {
+          workItem.smartCategory.id = originalLine.substring(6).trim()
+        } else if (originalLine.startsWith('  name:') && workItem.smartCategory !== undefined) {
+          workItem.smartCategory.name = originalLine.substring(8).trim()
+        } else if (originalLine.startsWith('  team:') && workItem.smartCategory !== undefined) {
+          workItem.smartCategory.team = originalLine.substring(8).trim()
+        } else if (originalLine.startsWith('  color:') && workItem.smartCategory !== undefined) {
+          workItem.smartCategory.color = originalLine.substring(9).trim()
+        } else if (originalLine.startsWith('  categorizedAt:') && workItem.smartCategory !== undefined) {
+          workItem.smartCategory.categorizedAt = originalLine.substring(17).trim()
         }
       }
     }
@@ -383,35 +353,27 @@ export async function POST(
     // Generate UUID for this work item
     const workItemUuid = uuidv4()
     
-    // Create the work item
-    const workItem = await prisma.workItem.create({
-      data: {
-        title: body.title,
-        description: body.description || null,
-        type: body.type,
-        status: body.status || 'PLANNED',
-        priority: body.priority || 'MEDIUM',
-        functionalArea: body.functionalArea || 'SOFTWARE',
-        parentId: body.parentId || null,
-        orderIndex,
-        depth,
-        worktreeName,
-        githubBranch,
-        worktreeStatus: worktreeName ? 'PENDING' : null,
-        estimatedEffort: body.estimatedEffort || null,
-        projectId: project.id,
-        assignedToId: body.assignedToId || null
-      },
-      include: {
-        assignedTo: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      }
-    })
+    // Create the work item (filesystem-only approach)
+    const workItem = {
+      id: uuidv4(),
+      uuid: workItemUuid,
+      title: body.title,
+      description: body.description || null,
+      type: body.type,
+      status: body.status || 'PLANNED',
+      priority: body.priority || 'MEDIUM',
+      functionalArea: body.functionalArea || 'SOFTWARE',
+      parentId: body.parentId || null,
+      orderIndex,
+      depth,
+      worktreeName,
+      githubBranch,
+      worktreeStatus: worktreeName ? 'PENDING' : null,
+      estimatedEffort: body.estimatedEffort || null,
+      assignedToId: body.assignedToId || null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
 
     // Create markdown file with UUID frontmatter
     await createWorkItemMarkdownFile(project.name, workItem, workItemUuid)

@@ -1,17 +1,13 @@
 ---
-id: vibe-chat-feature-a1b2c3d4-e5f6-7890-abcd-ef1234567890
-title: "VibeChat: Natural Language Task Creation Interface"
-type: FEATURE
-status: ACTIVE
-priority: HIGH
-functionalArea: SOFTWARE
-estimatedEffort: "2w"
-category: "AI & User Experience"
-businessImpact: "Revolutionary user experience that transforms natural language into structured project management"
-createdAt: 2025-08-03T07:00:00.000Z
-updatedAt: 2025-08-03T07:00:00.000Z
-aiGenerated: true
+smartCategory:
+  id: ui-ux
+  name: User Interface & Experience
+  team: User Interface & Experience
+  color: #3B82F6
+  categorizedAt: 2025-08-07T06:55:58.622Z
 ---
+
+
 
 # VibeChat: Natural Language Task Creation Interface
 

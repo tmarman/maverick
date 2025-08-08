@@ -1,21 +1,13 @@
 ---
-id: 9fb9284b-69db-46eb-9cdd-0d35acaa9c1f
-title: "Most of those drop-down should be auto populated by the AI"
-type: SUBTASK
-status: PLANNED
-priority: MEDIUM
-functionalArea: SOFTWARE
-parentId: d0cd253e-2e7c-46a8-93e3-23019b23cb1a
-depth: 1
-orderIndex: 1
-estimatedEffort: ""
-assignedTo: null
-dueDate: null
-createdAt: 2025-08-04T17:59:58.564Z
-updatedAt: 2025-08-04T17:59:58.564Z
-projectName: maverick
-tags: []
+smartCategory:
+  id: database-data
+  name: database-optimizations
+  team: Data
+  color: #8B5CF6
+  categorizedAt: 2025-08-07T03:45:01.003Z
 ---
+
+
 
 # Most of those drop-down should be auto populated by the AI
 

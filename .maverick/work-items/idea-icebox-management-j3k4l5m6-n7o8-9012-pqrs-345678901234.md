@@ -1,20 +1,13 @@
 ---
-id: idea-icebox-management-j3k4l5m6-n7o8-9012-pqrs-345678901234
-title: "Idea Icebox & Strategic Roadmap Management"
-type: FEATURE
-status: PLANNED
-priority: HIGH
-functionalArea: SOFTWARE
-effortLevel: "L"
-scopeSize: "BROAD"
-category: "Product Management"
-businessImpact: "Captures and organizes strategic ideas for future development"
-createdAt: 2025-08-03T08:35:00.000Z
-updatedAt: 2025-08-03T08:35:00.000Z
-userRequested: true
-aiCredits: 150
-confidence: 85
+smartCategory:
+  id: frontend-ui
+  name: frontend-ui-improvements
+  team: Frontend
+  color: #3B82F6
+  categorizedAt: 2025-08-07T03:45:01.011Z
 ---
+
+
 
 # Idea Icebox & Strategic Roadmap Management
 

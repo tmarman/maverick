@@ -79,16 +79,44 @@ export class AgentOrchestrator {
       // Step 1: Analyze codebase and plan the task
       this.log(sessionId, 'info', 'Analyzing codebase and planning task...')
       
-      const context = await taskPlanner.analyzeCodebase(process.cwd())
+      const workingDirectory = options.projectPath || process.cwd()
+      const context = await taskPlanner.analyzeCodebase(workingDirectory)
       const taskPlan = await taskPlanner.planTask(requirement, context, userId)
 
-      // Step 2: Create isolated worktree
-      this.log(sessionId, 'info', 'Creating isolated worktree...')
+      // Step 2: Use existing worktree if provided, or create new one using hierarchical system
+      let worktreeSession: WorktreeSession
       
-      const worktreeSession = await worktreeManager.createWorktree(
-        taskPlan.taskId,
-        taskPlan.agentType
-      )
+      if (options.projectName && options.projectPath) {
+        // For hierarchical system, create a mock worktree session that points to existing path
+        this.log(sessionId, 'info', `Using existing worktree: ${options.projectPath}`)
+        
+        worktreeSession = {
+          id: sessionId,
+          taskId: taskPlan.taskId,
+          branch: 'current', // Will be updated by task integration
+          path: options.projectPath,
+          baseBranch: 'main',
+          createdAt: new Date(),
+          status: 'active',
+          agentType: taskPlan.agentType,
+          progress: {
+            currentStep: 0,
+            totalSteps: taskPlan.steps.length,
+            stepDescription: 'Initializing...',
+            filesChanged: [],
+            testsStatus: 'pending',
+            lastActivity: new Date()
+          }
+        }
+      } else {
+        // Fallback to old worktree system for backwards compatibility
+        this.log(sessionId, 'info', 'Creating isolated worktree...')
+        
+        worktreeSession = await worktreeManager.createWorktree(
+          taskPlan.taskId,
+          taskPlan.agentType
+        )
+      }
 
       // Step 3: Initialize agent session
       const agentSession: AgentSession = {

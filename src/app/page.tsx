@@ -80,15 +80,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Call to Action */}
-            <div className="text-center">
-              <a 
-                href="/waitlist" 
-                className="inline-flex items-center px-8 py-4 bg-accent-primary text-white rounded-lg hover:bg-accent-hover font-bold text-lg shadow-xl transform hover:scale-105 transition-all duration-200"
-              >
-                🚀 Join the Waitlist →
-              </a>
-            </div>
           </div>
         </section>
 

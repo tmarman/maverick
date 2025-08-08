@@ -1,17 +1,13 @@
 ---
-id: automatic-feature-extraction-b2c3d4e5-f6g7-8901-bcde-f23456789012
-title: "Automatic Feature Extraction & Analysis System"
-type: EPIC
-status: COMPLETED
-priority: CRITICAL
-functionalArea: SOFTWARE
-estimatedEffort: "3w"
-category: "AI & Repository Analysis"
-businessImpact: "Transforms repository import from simple code copying to comprehensive feature cataloging and enhancement planning"
-createdAt: 2025-08-03T07:15:00.000Z
-updatedAt: 2025-08-03T07:15:00.000Z
-userRequested: true
+smartCategory:
+  id: auth-security
+  name: auth-security-features
+  team: Security
+  color: #F59E0B
+  categorizedAt: 2025-08-07T03:45:01.006Z
 ---
+
+
 
 # Automatic Feature Extraction & Analysis System
 

@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import ProjectShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/ProjectShell'
 import { ProjectTreeSidebar } from '@/components/ProjectTreeSidebar'
 import { WorkspaceTeamManager } from '@/components/WorkspaceTeamManager'
 

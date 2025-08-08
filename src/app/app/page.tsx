@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import CockpitShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/ProjectShell'
 import { usePageTitle, PAGE_TITLES, formatProjectTitle } from '@/hooks/use-page-title'
 
 interface Project {
@@ -236,16 +236,16 @@ function CockpitPageContent() {
 
   if (loading) {
     return (
-      <CockpitShell>
+      <ProjectShell>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
-      </CockpitShell>
+      </ProjectShell>
     )
   }
 
   return (
-    <CockpitShell sidebarContent={customSidebarContent}>
+    <ProjectShell sidebarContent={customSidebarContent}>
       <div className="h-full flex flex-col">
         {/* Header Bar */}
         <div className="h-16 bg-background-primary border-b border-border-standard flex items-center justify-between px-6 shadow-sm">
@@ -430,7 +430,7 @@ function CockpitPageContent() {
           )}
         </div>
       </div>
-    </CockpitShell>
+    </ProjectShell>
   )
 }
 

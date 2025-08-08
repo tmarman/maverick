@@ -1,21 +1,13 @@
 ---
-id: project-remixing-system
-title: "Build Project Remixing System with Explicit Naming and Structure Recreation"
-type: FEATURE
-status: PLANNED
-priority: MEDIUM
-functionalArea: SOFTWARE
-parentId: null
-depth: 0
-orderIndex: 104
-estimatedEffort: "1-2 weeks"
-assignedTo: null
-dueDate: null
-createdAt: 2025-08-05T05:00:00.000Z
-updatedAt: 2025-08-05T05:00:00.000Z
-projectName: maverick
-tags: ["project-management", "templating", "naming", "structure-recreation"]
+smartCategory:
+  id: ui-ux
+  name: User Interface & Experience
+  team: User Interface & Experience
+  color: #3B82F6
+  categorizedAt: 2025-08-07T06:55:56.375Z
 ---
+
+
 
 # Build Project Remixing System with Explicit Naming and Structure Recreation
 

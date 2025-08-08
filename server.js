@@ -944,6 +944,9 @@ app.prepare().then(async () => {
   claudeTerminalWss.on('error', (error) => {
     console.error('💥 Claude Terminal WebSocket Server Error:', error)
   })
+  
+  // Add debugging for WebSocket server events
+  console.log('🔧 Claude Terminal WebSocket server created')
 
   wss.on('connection', (ws, request) => {
     const url = new URL(request.url, `http://${request.headers.host}`)

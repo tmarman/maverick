@@ -134,12 +134,28 @@ export class MaverickMarkdownParser {
   async parse(markdown: string): Promise<ParsedMarkdown> {
     const result = await this.processor.process(markdown)
     
-    // Extract snippets from the processed tree
-    const snippets = result.data?.maverickSnippets || []
+    // Extract snippets from both processed tree and direct extraction (for HTML snippets)
+    const treeSnippets = result.data?.maverickSnippets || []
+    const extractedSnippets = this.extractSnippets(markdown)
+    
+    // Combine and deduplicate snippets
+    const allSnippets = [...treeSnippets, ...extractedSnippets]
+    const uniqueSnippets = allSnippets.filter((snippet, index, array) => 
+      array.findIndex(s => s.id === snippet.id) === index
+    )
+    
+    // Clean HTML by removing snippet divs (they'll be rendered as React components)
+    let cleanHtml = String(result)
+    uniqueSnippets.forEach(snippet => {
+      if (snippet.metadata?.htmlGenerated) {
+        const snippetRegex = new RegExp(`<div class="maverick-snippet" data-snippet-id="${snippet.id}"[^>]*><\/div>`, 'g')
+        cleanHtml = cleanHtml.replace(snippetRegex, `[SNIPPET:${snippet.id}]`)
+      }
+    })
     
     return {
-      html: String(result),
-      snippets,
+      html: cleanHtml,
+      snippets: uniqueSnippets,
       rawContent: markdown
     }
   }
@@ -147,6 +163,8 @@ export class MaverickMarkdownParser {
   // Helper to extract just snippets without full processing
   extractSnippets(markdown: string): SmartSnippet[] {
     const snippets: SmartSnippet[] = []
+    
+    // Extract ::syntax snippets
     const snippetRegex = /::([\w-]+)\[([^\]]*)\](?:\{([^}]*)\})?/g
     let match
     
@@ -175,7 +193,47 @@ export class MaverickMarkdownParser {
       })
     }
     
+    // Extract HTML div snippets from AI responses
+    const htmlSnippetRegex = /<div class="maverick-snippet" data-snippet-id="([^"]+)"[^>]*><\/div>/g
+    let htmlMatch
+    
+    while ((htmlMatch = htmlSnippetRegex.exec(markdown)) !== null) {
+      const [, snippetId] = htmlMatch
+      
+      // Parse snippet ID to extract action info
+      const action = this.getActionFromSnippetId(snippetId)
+      const text = this.getTextFromAction(action)
+      
+      snippets.push({
+        id: snippetId,
+        type: 'task', // Default to task for HTML snippets
+        text,
+        attributes: {},
+        action,
+        metadata: { htmlGenerated: true }
+      })
+    }
+    
     return snippets
+  }
+  
+  private getActionFromSnippetId(snippetId: string): string {
+    // Parse the snippet ID to determine action
+    if (snippetId.includes('task') || snippetId.includes('create')) return 'create-task'
+    if (snippetId.includes('agent')) return 'add-agent'
+    if (snippetId.includes('team') || snippetId.includes('invite')) return 'invite-member'
+    if (snippetId.includes('plan')) return 'plan-feature'
+    return 'create-task' // Default action
+  }
+  
+  private getTextFromAction(action: string): string {
+    switch (action) {
+      case 'create-task': return 'Create Task'
+      case 'add-agent': return 'Add Agent'
+      case 'invite-member': return 'Invite Member'
+      case 'plan-feature': return 'Plan Feature'
+      default: return 'Take Action'
+    }
   }
 }
 

@@ -1,21 +1,13 @@
 ---
-id: square-integration-templates
-title: "Create Comprehensive Square Integration Template Library"
-type: FEATURE
-status: PLANNED
-priority: HIGH
-functionalArea: SOFTWARE
-parentId: null
-depth: 0
-orderIndex: 103
-estimatedEffort: "4-6 weeks"
-assignedTo: null
-dueDate: null
-createdAt: 2025-08-05T05:00:00.000Z
-updatedAt: 2025-08-05T05:00:00.000Z
-projectName: maverick
-tags: ["square", "templates", "ios", "website", "integration"]
+smartCategory:
+  id: api-services
+  name: API & Services
+  team: API & Services
+  color: #10B981
+  categorizedAt: 2025-08-07T06:55:57.351Z
 ---
+
+
 
 # Create Comprehensive Square Integration Template Library
 

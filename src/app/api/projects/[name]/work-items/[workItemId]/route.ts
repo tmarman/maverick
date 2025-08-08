@@ -122,6 +122,74 @@ export async function DELETE(
   }
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ name: string; workItemId: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const resolvedParams = await params
+    const projectName = resolvedParams.name.toLowerCase()
+    const workItemId = resolvedParams.workItemId
+    const body = await request.json()
+
+    console.log(`🔄 PATCH work item: ${workItemId}`)
+    console.log(`📝 Updates:`, body)
+
+    // Check if this looks like a category ID being used as work item ID
+    // We can detect this by checking if the ID is not a typical filename pattern
+    const isLikelyFilename = workItemId.match(/^[a-z0-9\-]+$/) && workItemId.length > 8 // Typical work item filenames are longer
+    const isLikelyCategoryId = workItemId.match(/^[a-z\-]+$/) && workItemId.length <= 20 && workItemId.includes('-')
+    
+    if (!isLikelyFilename && isLikelyCategoryId) {
+      console.error(`❌ Invalid request: '${workItemId}' appears to be a category ID being used as work item ID`)
+      console.error(`📍 Request origin: ${request.headers.get('referer') || 'unknown'}`)
+      console.error(`📍 User agent: ${request.headers.get('user-agent') || 'unknown'}`)
+      return NextResponse.json({ 
+        error: 'Invalid work item ID',
+        message: `'${workItemId}' appears to be a category ID, not a work item ID`,
+        hint: 'Work item IDs should match the filename pattern, not category IDs'
+      }, { status: 400 })
+    }
+
+    // Load existing work item from correct location (.maverick/work-items/)
+    const workItemPath = path.join(process.cwd(), '.maverick', 'work-items', `${workItemId}.md`)
+    
+    try {
+      const existingContent = await fs.readFile(workItemPath, 'utf-8')
+      console.log(`📁 Found existing work item at: ${workItemPath}`)
+      
+      // Update the markdown content with partial updates
+      const updatedContent = updateWorkItemMarkdown(existingContent, body)
+      
+      // Write updated content
+      await fs.writeFile(workItemPath, updatedContent, 'utf-8')
+      console.log(`✅ Successfully updated work item file`)
+      
+      // Parse the updated markdown to return the work item
+      const workItem = parseWorkItemMarkdown(updatedContent, `${workItemId}.md`)
+      
+      return NextResponse.json({ 
+        workItem,
+        message: 'Work item updated successfully'
+      })
+    } catch (error) {
+      console.error(`❌ Work item not found at: ${workItemPath}`, error)
+      return NextResponse.json({ error: 'Work item not found' }, { status: 404 })
+    }
+  } catch (error) {
+    console.error('❌ Error updating work item:', error)
+    return NextResponse.json(
+      { error: 'Failed to update work item' },
+      { status: 500 }
+    )
+  }
+}
+
 async function updateWorkItemsIndex(projectName: string) {
   const workItemsDir = path.join(process.cwd(), 'projects', projectName, 'work-items')
   const indexPath = path.join(process.cwd(), 'projects', projectName, '.maverick.work-items.json')
@@ -155,6 +223,9 @@ function updateWorkItemMarkdown(content: string, updates: any): string {
   }
 
   // Update frontmatter
+  let smartCategoryStartIndex = -1
+  let smartCategoryEndIndex = -1
+  
   for (let i = 1; i < frontmatterEnd; i++) {
     const line = lines[i]
     
@@ -166,6 +237,43 @@ function updateWorkItemMarkdown(content: string, updates: any): string {
       lines[i] = `priority: ${updates.priority}`
     } else if (line.startsWith('updatedAt:')) {
       lines[i] = `updatedAt: ${new Date().toISOString()}`
+    } else if (line.startsWith('smartCategory:')) {
+      smartCategoryStartIndex = i
+    } else if (smartCategoryStartIndex !== -1 && !line.startsWith('  ') && smartCategoryEndIndex === -1) {
+      smartCategoryEndIndex = i
+    }
+  }
+  
+  // If we found a smartCategory section and have updates for it
+  if (updates.smartCategory) {
+    if (smartCategoryStartIndex !== -1) {
+      // Replace existing smartCategory section
+      if (smartCategoryEndIndex === -1) {
+        smartCategoryEndIndex = frontmatterEnd
+      }
+      
+      const smartCategoryLines = [
+        'smartCategory:',
+        `  id: ${updates.smartCategory.id}`,
+        `  name: ${updates.smartCategory.name}`,
+        `  team: ${updates.smartCategory.team}`,
+        `  color: ${updates.smartCategory.color}`,
+        `  categorizedAt: ${updates.smartCategory.categorizedAt}`
+      ]
+      
+      lines.splice(smartCategoryStartIndex, smartCategoryEndIndex - smartCategoryStartIndex, ...smartCategoryLines)
+    } else {
+      // Add new smartCategory section before the closing frontmatter
+      const smartCategoryLines = [
+        'smartCategory:',
+        `  id: ${updates.smartCategory.id}`,
+        `  name: ${updates.smartCategory.name}`,
+        `  team: ${updates.smartCategory.team}`,
+        `  color: ${updates.smartCategory.color}`,
+        `  categorizedAt: ${updates.smartCategory.categorizedAt}`
+      ]
+      
+      lines.splice(frontmatterEnd, 0, ...smartCategoryLines)
     }
   }
 
@@ -232,6 +340,7 @@ function parseWorkItemMarkdown(content: string, filename: string) {
       }
       
       if (inFrontmatter) {
+        // Skip parsing 'id:' from frontmatter - always use filename as ID to avoid confusion
         if (line.startsWith('title:')) {
           workItem.title = line.substring(6).trim().replace(/^"(.*)"$/, '$1')
         } else if (line.startsWith('type:')) {
@@ -254,6 +363,19 @@ function parseWorkItemMarkdown(content: string, filename: string) {
           workItem.createdAt = line.substring(10).trim()
         } else if (line.startsWith('updatedAt:')) {
           workItem.updatedAt = line.substring(10).trim()
+        } else if (line.startsWith('smartCategory:')) {
+          // Start parsing nested smartCategory object
+          workItem.smartCategory = {}
+        } else if (line.startsWith('  id:') && workItem.smartCategory) {
+          workItem.smartCategory.id = line.substring(5).trim()
+        } else if (line.startsWith('  name:') && workItem.smartCategory) {
+          workItem.smartCategory.name = line.substring(7).trim()
+        } else if (line.startsWith('  team:') && workItem.smartCategory) {
+          workItem.smartCategory.team = line.substring(7).trim()
+        } else if (line.startsWith('  color:') && workItem.smartCategory) {
+          workItem.smartCategory.color = line.substring(8).trim()
+        } else if (line.startsWith('  categorizedAt:') && workItem.smartCategory) {
+          workItem.smartCategory.categorizedAt = line.substring(16).trim()
         }
       }
     }

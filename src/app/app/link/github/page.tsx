@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import CockpitShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/ProjectShell'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -87,7 +87,7 @@ export default function GitHubImportPage() {
   ]
 
   return (
-    <CockpitShell title="Connect GitHub">
+    <ProjectShell title="Connect GitHub">
       <div className="p-6 max-w-4xl mx-auto space-y-8">
         {/* Hero Section */}
         <div className="text-center">
@@ -233,6 +233,6 @@ export default function GitHubImportPage() {
           </div>
         )}
       </div>
-    </CockpitShell>
+    </ProjectShell>
   )
 }

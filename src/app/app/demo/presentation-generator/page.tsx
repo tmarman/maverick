@@ -1,7 +1,7 @@
 'use client'
 
 import PresentationGenerator from '@/components/PresentationGenerator'
-import ProjectShell from '@/components/CockpitShell'
+import ProjectShell from '@/components/ProjectShell'
 
 const PITCH_DECK_MARKDOWN = `# Goose + Maverick: The Self-Evolving Business Development Platform
 

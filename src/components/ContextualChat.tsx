@@ -20,6 +20,7 @@ import {
 import { toast } from '@/hooks/use-toast'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { MaverickMarkdownRenderer } from '@/components/MaverickMarkdownRenderer'
 
 export interface ChatScope {
   type: 'project' | 'task' | 'feature' | 'epic'
@@ -411,15 +412,29 @@ export function ContextualChat({
                   ? 'bg-blue-500 text-white' 
                   : 'bg-gray-100 text-gray-900'
               }`}>
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
-                    code: ({ children }) => <code className="bg-black/10 px-1 rounded text-xs">{children}</code>
+                <MaverickMarkdownRenderer 
+                  markdown={message.content}
+                  context={{
+                    projectName: scope.projectName,
+                    taskId: scope.id,
+                    userRole: 'user'
                   }}
-                >
-                  {message.content}
-                </ReactMarkdown>
+                  onSnippetAction={async (snippet) => {
+                    // Handle snippet actions
+                    console.log('Snippet action:', snippet)
+                    if (typeof snippet === 'object' && snippet !== null && 'action' in snippet) {
+                      const action = (snippet as any).action
+                      if (action?.type === 'create_task') {
+                        // Handle task creation
+                        toast({
+                          title: "Creating task...",
+                          description: action.data?.title || "New task"
+                        })
+                      }
+                    }
+                  }}
+                  className="text-sm"
+                />
                 
                 {message.actions && message.actions.length > 0 && (
                   <div className="mt-2 space-y-1">
@@ -528,19 +543,29 @@ export function ContextualChat({
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-900'
               }`}>
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                    ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
-                    ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
-                    li: ({ children }) => <li className="mb-1">{children}</li>,
-                    code: ({ children }) => <code className="bg-black/10 px-1 rounded text-sm">{children}</code>,
-                    pre: ({ children }) => <pre className="bg-black/10 p-2 rounded text-sm overflow-x-auto">{children}</pre>
+                <MaverickMarkdownRenderer 
+                  markdown={message.content}
+                  context={{
+                    projectName: scope.projectName,
+                    taskId: scope.id,
+                    userRole: 'user'
                   }}
-                >
-                  {message.content}
-                </ReactMarkdown>
+                  onSnippetAction={async (snippet) => {
+                    // Handle snippet actions
+                    console.log('Snippet action:', snippet)
+                    if (typeof snippet === 'object' && snippet !== null && 'action' in snippet) {
+                      const action = (snippet as any).action
+                      if (action?.type === 'create_task') {
+                        // Handle task creation
+                        toast({
+                          title: "Creating task...",
+                          description: action.data?.title || "New task"
+                        })
+                      }
+                    }
+                  }}
+                  className="text-sm"
+                />
                 
                 {message.actions && message.actions.length > 0 && (
                   <div className="mt-3 space-y-2">

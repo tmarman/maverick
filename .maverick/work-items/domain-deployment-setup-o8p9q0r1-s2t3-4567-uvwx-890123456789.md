@@ -1,20 +1,13 @@
 ---
-id: domain-deployment-setup-o8p9q0r1-s2t3-4567-uvwx-890123456789
-title: "Deploy Maverick Node.js App to flywithmaverick.com"
-type: TASK
-status: PLANNED
-priority: HIGH
-functionalArea: INFRASTRUCTURE
-effortLevel: "M"
-scopeSize: "STANDARD"
-category: "Deployment & DNS"
-businessImpact: "Establishes official production presence for Maverick platform"
-createdAt: 2025-08-03T09:00:00.000Z
-updatedAt: 2025-08-03T09:00:00.000Z
-userRequested: true
-aiCredits: 50
-confidence: 85
+smartCategory:
+  id: infrastructure-devops
+  name: Infrastructure & DevOps
+  team: Infrastructure & DevOps
+  color: #EF4444
+  categorizedAt: 2025-08-07T06:55:51.588Z
 ---
+
+
 
 # Deploy Maverick Node.js App to flywithmaverick.com
 

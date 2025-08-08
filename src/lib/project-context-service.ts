@@ -229,7 +229,7 @@ export class ProjectContextService {
           name: projectName
         },
         include: {
-          business: true
+          organization: true
         }
       })
 

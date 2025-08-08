@@ -1,17 +1,13 @@
 ---
-id: feature-status-tracking-001
-title: Feature Status Tracking and Branch-Based Development Workflow
-type: FEATURE
-status: PLANNED
-priority: HIGH
-category: Development Operations
-functionalArea: Project Management
-estimatedEffort: 8 hours
-createdAt: 2025-08-03T22:15:00Z
-tags: [git-workflow, feature-tracking, deployment-status, branch-management]
-assignedTo: @tim
-mentionedUsers: []
+smartCategory:
+  id: content-marketing
+  name: Content & Marketing
+  team: Content & Marketing
+  color: #EC4899
+  categorizedAt: 2025-08-07T06:55:52.541Z
 ---
+
+
 
 # Feature Status Tracking and Branch-Based Development Workflow
 

@@ -71,37 +71,49 @@ export async function POST(
     }
 
     try {
-      // Start agent execution with full documentation capture
-      const result = await taskAgentIntegration.executeTask(executionRequest)
+      // Start agent execution asynchronously (don't await)
+      console.log('🚀 Starting async agent execution...')
       
-      if (result.success) {
-        return NextResponse.json({
-          success: true,
-          message: 'Agent work started successfully',
-          sessionId: result.sessionId,
-          worktreePath: result.worktreePath,
-          branchName: result.branchName,
-          features: [
-            '🤖 AI agent assigned to task',
-            '📸 Screenshots being captured',
-            '🎥 Demo video recording',
-            '📝 Documentation auto-generated',
-            '🔄 Real-time progress tracking'
-          ]
+      taskAgentIntegration.executeTask(executionRequest)
+        .then((result) => {
+          console.log(`✅ Agent execution completed for task ${taskId}:`, result.success ? 'SUCCESS' : 'FAILED')
+          if (!result.success) {
+            console.error('Agent execution error:', result.error)
+          }
         })
-      } else {
-        return NextResponse.json(
-          { error: 'Failed to start agent work', details: result.error },
-          { status: 500 }
-        )
-      }
+        .catch((error) => {
+          console.error('Agent execution failed:', error)
+        })
 
-    } catch (agentError) {
-      console.error('Agent execution failed:', agentError)
+      // Return immediately with async status
+      return NextResponse.json({
+        success: true,
+        message: 'Agent work started in background',
+        status: 'INITIALIZING',
+        taskId,
+        projectName,
+        async: true,
+        steps: [
+          { step: 1, status: 'COMPLETED', message: '🔍 Analyzed task requirements' },
+          { step: 2, status: 'COMPLETED', message: '🤖 Smart categorization applied' },
+          { step: 3, status: 'IN_PROGRESS', message: '🌳 Setting up worktree environment...' },
+          { step: 4, status: 'PENDING', message: '📋 Adding to work queue' },
+          { step: 5, status: 'PENDING', message: '🚀 Starting AI agent execution' }
+        ],
+        features: [
+          '🤖 AI agent assigned to task',
+          '🌳 Smart worktree organization', 
+          '📋 Queue-based task management',
+          '🔄 Real-time progress tracking'
+        ]
+      })
+
+    } catch (initError) {
+      console.error('Failed to initialize agent work:', initError)
       return NextResponse.json(
         { 
-          error: 'Failed to start agent execution', 
-          details: agentError instanceof Error ? agentError.message : 'Unknown error'
+          error: 'Failed to initialize agent work', 
+          details: initError instanceof Error ? initError.message : 'Unknown error'
         },
         { status: 500 }
       )
@@ -192,7 +204,7 @@ export async function GET(
     }
 
     // Check worktree status
-    const worktreeManager = new WorktreeManager()
+    const worktreeManager = new WorktreeManager(context.worktreePath)
     const worktreePath = worktreeManager.getWorktreePath(projectName, taskData.worktreeName)
     
     // Simple progress calculation (could be enhanced with actual git analysis)

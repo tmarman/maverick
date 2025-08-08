@@ -1,20 +1,13 @@
 ---
-id: sidebar-windows-explorer-style-n7o8p9q0-r1s2-3456-tuvw-789012345678
-title: "Redesign Sidebar to Windows Explorer Style"
-type: ENHANCEMENT
-status: IN_PROGRESS
-priority: MEDIUM
-functionalArea: SOFTWARE
-effortLevel: "S"
-scopeSize: "FOCUSED"
-category: "UI Enhancement"
-businessImpact: "Improves navigation UX by simplifying project folder structure"
-createdAt: 2025-08-03T08:55:00.000Z
-updatedAt: 2025-08-03T08:55:00.000Z
-userRequested: true
-aiCredits: 35
-confidence: 95
+smartCategory:
+  id: ui-ux
+  name: User Interface & Experience
+  team: User Interface & Experience
+  color: #3B82F6
+  categorizedAt: 2025-08-07T06:55:56.894Z
 ---
+
+
 
 # Redesign Sidebar to Windows Explorer Style
 

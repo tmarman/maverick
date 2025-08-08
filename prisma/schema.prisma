@@ -425,6 +425,22 @@ model Recommendation {
   @@map("recommendations")
 }
 
+// Waitlist model for beta access control
+model Waitlist {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  company     String?
+  useCase     String?  @db.Text
+  inviteCode  String?  // Generated invite code for this user
+  status      String   @default("PENDING") // PENDING, INVITED, REGISTERED, DECLINED
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("waitlist")
+}
+
 // Enums converted to String fields with validation comments for SQL Server compatibility
 // OrganizationStatus: DRAFT, IN_FORMATION, FORMED, ACTIVE, SUSPENDED (formerly BusinessStatus)
 // FormationStatus: INITIATED, DOCUMENTS_GENERATED, LEGAL_REVIEW, STATE_FILING, EIN_ASSIGNED, BANKING_SETUP, APP_GENERATION, COMPLETED, FAILED

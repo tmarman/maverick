@@ -28,13 +28,22 @@ export interface TaskExecutionResult {
   success: boolean
   worktreePath?: string
   branchName?: string
+  error?: string
   artifacts?: {
     screenshots: string[]
     demoVideo?: string
     documentation?: string
     codeChanges: string[]
   }
-  error?: string
+  // Smart worktree additions
+  category?: {
+    id: string
+    name: string
+    description: string
+    team: string
+    color: string
+  }
+  queuePosition?: number
 }
 
 export class TaskAgentIntegration {
@@ -53,7 +62,7 @@ export class TaskAgentIntegration {
   }
 
   /**
-   * Execute a task using the agent orchestrator with full documentation
+   * Execute a task using the smart worktree system with queue management
    */
   async executeTask(request: TaskExecutionRequest): Promise<TaskExecutionResult> {
     const { taskId, projectName, options = {} } = request
@@ -70,24 +79,92 @@ export class TaskAgentIntegration {
         throw new Error(`Task ${taskId} not found`)
       }
 
+      // Use smart worktree categorization
+      const { SmartWorktreeManager } = await import('./smart-worktree-manager')
+      const { WorktreeQueueService } = await import('./worktree-queue-service')
+      
+      const suggestion = SmartWorktreeManager.suggestWorktreeName(
+        task.title,
+        task.description || '',
+        task.type || 'TASK',
+        task.functionalArea || '',
+        [] // TODO: Load categories from project
+      )
+      
+      const worktreeName = suggestion.worktreeName
+      const category = suggestion.category
+      
+      console.log(`🤖 Smart categorization: ${task.title} → ${category?.team || 'uncategorized'} (${worktreeName})`)
+      
       // Convert task to agent requirement
       const requirement = this.convertTaskToRequirement(task)
       
-      // Configure agent options with documentation capture
+      // Create or use existing smart worktree
+      const { WorktreeManager } = await import('./worktree-manager')
+      const worktreeManager = new WorktreeManager(context.worktreePath)
+      await worktreeManager.initialize()
+      
+      let worktreePath: string
+      
+      try {
+        // Try to create the smart worktree (will succeed if it doesn't exist)
+        worktreePath = await worktreeManager.createHierarchicalWorktree(
+          projectName, 
+          worktreeName, 
+          'main'
+        )
+        console.log(`✅ Created new worktree: ${worktreeName}`)
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('already exists')) {
+          // Worktree already exists, use it
+          worktreePath = worktreeManager.getWorktreePath(projectName, worktreeName)
+          console.log(`🔄 Using existing worktree: ${worktreeName}`)
+        } else {
+          throw error
+        }
+      }
+      
+      // Add task to the worktree queue
+      const queueService = WorktreeQueueService.getInstance()
+      try {
+        await queueService.addTaskToQueue(
+          projectName,
+          worktreeName,
+          taskId,
+          task.title,
+          (task.type || 'TASK') as any,
+          (task.priority || 'MEDIUM') as any
+        )
+        console.log(`📋 Added task to ${worktreeName} queue`)
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('already exists')) {
+          console.log(`⚠️ Task already in queue: ${taskId}`)
+        } else {
+          throw error
+        }
+      }
+      
+      // Start working on this task in the queue
+      await queueService.startNextTask(projectName, worktreeName)
+      
+      // Configure agent options with smart worktree path
       const agentOptions: AgentExecutionOptions = {
         dryRun: options.dryRun || false,
         skipTests: options.skipTests || false,
         skipDemo: options.skipDemo || false,
         autoMerge: options.autoMerge || false,
         projectName: projectName,
-        projectPath: context.worktreePath,
+        projectPath: worktreePath,
         ...options
       }
 
-      // Update task status to IN_PROGRESS
+      // Update task status to IN_PROGRESS and store smart worktree info
       if (options.autoUpdateStatus !== false) {
         await hierarchicalTodoService.updateTodo(context.maverickPath, taskId, {
-          status: 'IN_PROGRESS'
+          status: 'IN_PROGRESS',
+          worktreeName: worktreeName,
+          worktreePath: worktreePath,
+          worktreeStatus: 'ACTIVE'
         })
       }
 
@@ -97,24 +174,18 @@ export class TaskAgentIntegration {
         agentOptions
       )
 
-      // TODO: Monitor execution and capture artifacts
-      // For now, return basic success response
-      const result = {
+      return {
+        sessionId,
         success: true,
-        worktreePath: context.worktreePath,
-        branchName: taskId, // Use task ID as branch name for now
+        worktreePath: worktreePath,
+        branchName: worktreeName, // Now using smart team-based names
         artifacts: {
           screenshots: [],
           codeChanges: []
-        }
-      }
-
-      return {
-        sessionId,
-        success: result.success,
-        worktreePath: result.worktreePath,
-        branchName: result.branchName,
-        artifacts: result.artifacts
+        },
+        // Additional smart worktree info
+        category: category || undefined,
+        queuePosition: await this.getQueuePosition(projectName, worktreeName, taskId)
       }
 
     } catch (error) {
@@ -124,6 +195,22 @@ export class TaskAgentIntegration {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       }
+    }
+  }
+  
+  /**
+   * Get the position of a task in the worktree queue
+   */
+  private async getQueuePosition(projectName: string, worktreeName: string, taskId: string): Promise<number> {
+    try {
+      const { WorktreeQueueService } = await import('./worktree-queue-service')
+      const queueService = WorktreeQueueService.getInstance()
+      const queue = await queueService.loadQueue(projectName, worktreeName)
+      
+      const taskIndex = queue.tasks.findIndex(t => t.taskId === taskId)
+      return taskIndex + 1 // 1-based position
+    } catch (error) {
+      return 0
     }
   }
 
@@ -363,6 +450,34 @@ ${session.artifacts.demoVideo ? `## Demo Video
     const seconds = Math.floor((diff % 60000) / 1000)
     
     return `${minutes}m ${seconds}s`
+  }
+
+  /**
+   * Generate a standardized branch name from task title and type
+   */
+  private generateBranchName(title: string, type: string): string {
+    // Determine prefix based on task type
+    const prefixMap: Record<string, string> = {
+      'BUG': 'fix',
+      'FEATURE': 'feat',
+      'TASK': 'task',
+      'SUBTASK': 'fix', // Most subtasks are improvements/fixes
+      'STORY': 'feat',
+      'EPIC': 'feat'
+    }
+    
+    const prefix = prefixMap[type] || 'task'
+    
+    // Clean and slugify the title
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Collapse multiple hyphens
+      .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+      .slice(0, 50) // Limit length
+    
+    return `${prefix}-${slug}`
   }
 }
 
