@@ -105,8 +105,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-background-secondary border-t border-border-subtle py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="col-span-1 md:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
               <h3 className="text-lg font-bold text-text-primary mb-4">Maverick</h3>
               <p className="text-text-secondary text-sm mb-4">
                 AI-native software development platform that generates production-ready applications 
@@ -115,45 +115,41 @@ export default function Home() {
             </div>
             
             <div>
-              <h4 className="text-md font-semibold text-text-primary mb-3">Documentation</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="/docs" className="text-text-secondary hover:text-accent-primary transition-colors">
-                    Getting Started
+              <h4 className="text-md font-semibold text-text-primary mb-3">Join the Waitlist</h4>
+              <div className="space-y-3">
+                <div className="flex space-x-2">
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="flex-1 px-3 py-2 text-sm border border-border-standard rounded-md focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary bg-background-primary"
+                  />
+                  <a
+                    href="/waitlist"
+                    className="px-4 py-2 bg-accent-primary text-white text-sm font-medium rounded-md hover:bg-accent-hover transition-colors inline-flex items-center"
+                  >
+                    Join
                   </a>
-                </li>
-                <li>
-                  <a href="/docs/maverick-structure" className="text-text-secondary hover:text-accent-primary transition-colors">
-                    .maverick Structure
-                  </a>
-                </li>
-                <li>
-                  <a href="https://github.com/your-org/maverick" className="text-text-secondary hover:text-accent-primary transition-colors" target="_blank" rel="noopener noreferrer">
-                    GitHub Repository
-                  </a>
-                </li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-md font-semibold text-text-primary mb-3">Resources</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="/app" className="text-text-secondary hover:text-accent-primary transition-colors">
-                    Build Your App
-                  </a>
-                </li>
-                <li>
-                  <a href="/examples" className="text-text-secondary hover:text-accent-primary transition-colors">
-                    Examples
-                  </a>
-                </li>
-                <li>
-                  <a href="/pricing" className="text-text-secondary hover:text-accent-primary transition-colors">
-                    Pricing
-                  </a>
-                </li>
-              </ul>
+                </div>
+                <p className="text-xs text-text-muted">
+                  Be among the first to experience AI-native development.
+                </p>
+              </div>
+              
+              <div className="mt-6">
+                <h4 className="text-md font-semibold text-text-primary mb-3">Resources</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>
+                    <a href="/docs" className="text-text-secondary hover:text-accent-primary transition-colors">
+                      Documentation
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/pricing" className="text-text-secondary hover:text-accent-primary transition-colors">
+                      Pricing
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
           
